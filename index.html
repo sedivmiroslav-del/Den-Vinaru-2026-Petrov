@@ -192,8 +192,6 @@
 
     .admin-grid { display: grid; gap: 16px; }
 
-    /* Modal for admin login (optional; we use inline prompt anyway) */
-
     @media (min-width: 720px) {
       .vinar-hero { grid-template-columns: 360px 1fr; }
     }
@@ -427,14 +425,11 @@
         document.getElementById('year').textContent = new Date().getFullYear();
         window.addEventListener('hashchange', router);
         router();
-        // Bind buttons
         const refresh = document.getElementById('refresh-list');
         if (refresh) refresh.addEventListener('click', () => loadAllData(true).then(renderHome).catch(showLoadError));
-        // Admin events
         const loginBtn = document.getElementById('admin-login-btn');
         if (loginBtn) loginBtn.addEventListener('click', adminLogin);
         bindAdminButtons();
-        // Load initial data from local files (if exist)
         loadAllData().then(() => {
           renderGlobalSocial(document.getElementById('global-social'));
           renderGlobalSocial(document.getElementById('global-social-footer'));
@@ -625,7 +620,6 @@
 
         container.appendChild(wrap);
 
-        // Vína
         const myWines = state.vina.filter(w => w.idVinare === v.id);
         if (!myWines.length) {
           if (vinaList) vinaList.innerHTML = "";
@@ -727,7 +721,6 @@
             renderAdminGlobal();
             renderAdminVinariTable();
             renderAdminVinaTable();
-            // Po načtení obnovíme sociální odkazy i pro veřejnou část
             renderGlobalSocial(document.getElementById('global-social'));
             renderGlobalSocial(document.getElementById('global-social-footer'));
             renderHome();
@@ -791,6 +784,7 @@
         state.vinari.push(novy);
         renderAdminVinariTable();
         renderAdminVinarSelect();
+        renderHome();
       }
 
       function adminDeleteVinar(id) {
@@ -1004,9 +998,16 @@
       const GH_BASE = "https://api.github.com";
       function b64encode(txt) { return btoa(unescape(encodeURIComponent(txt))); }
 
+      // Nové: jednotná tvorba hlavičiek (kompatibilné s Classic PAT aj Fine-grained)
+      function buildGhHeaders(token) {
+        const h = { Accept: 'application/vnd.github+json' };
+        if (token) h.Authorization = `token ${token}`;
+        return h;
+      }
+
       async function githubGetFile({owner, repo, path, ref, token}) {
         const url = `${GH_BASE}/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}?ref=${encodeURIComponent(ref)}`;
-        const headers = token ? { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json' } : { Accept: 'application/vnd.github+json' };
+        const headers = buildGhHeaders(token);
         const res = await fetch(url, { headers });
         if (res.status === 404) return { content: "", sha: null, exists: false };
         if (!res.ok) {
@@ -1020,11 +1021,8 @@
 
       async function githubPutFile({owner, repo, path, branch, token, content, message, sha}) {
         const url = `${GH_BASE}/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}`;
-        const headers = {
-          Authorization: `Bearer ${token}`,
-          Accept: 'application/vnd.github+json',
-          'Content-Type': 'application/json'
-        };
+        const headers = buildGhHeaders(token);
+        headers['Content-Type'] = 'application/json';
         const body = { message, content: b64encode(content), branch };
         if (sha) body.sha = sha;
         const res = await fetch(url, { method: 'PUT', headers, body: JSON.stringify(body) });
