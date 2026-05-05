@@ -741,7 +741,7 @@
           try {
             const created = await githubSaveAll({owner, repo, branch, token});
             q('repo-msg').textContent = created
-              ? 'Uloženo na GitHub. Soubory (a zložka data/) byly vytvořeny.'
+              ? 'Uloženo na GitHub. Soubory (a složka data/) byly vytvořeny.'
               : 'Uloženo na GitHub.';
           } catch (e) {
             q('repo-msg').textContent = 'Chyba při ukládání: ' + (e && e.message ? e.message : 'neznámá chyba') +
@@ -1004,9 +1004,12 @@
       const GH_BASE = "https://api.github.com";
       function b64encode(txt) { return btoa(unescape(encodeURIComponent(txt))); }
 
-      // Jednotná tvorba hlavičiek + automatický fallback 'token' -> 'Bearer'
+      // Jednotná tvorba hlaviček + automatický fallback 'token' -> 'Bearer'
       function buildGhHeaders(token, scheme) {
-        const h = { Accept: 'application/vnd.github+json' };
+        const h = {
+          Accept: 'application/vnd.github+json',
+          'X-GitHub-Api-Version': '2022-11-28'
+        };
         if (token) h.Authorization = `${scheme} ${token}`;
         return h;
       }
@@ -1087,7 +1090,7 @@
           const sha = state.github.shas[p] || null;
           const res = await githubPutFile({owner, repo, path: p, branch, token, content: payloads[p], message: msgs[p], sha});
           const newSha = res.content && res.content.sha ? res.content.sha : null;
-          if (!sha && newSha) createdAny = true; // indikace, že soubor vznikl nově
+          if (!sha && newSha) createdAny = true; // indikace, že soubor vznikl nově (tím i složka data/)
           state.github.shas[p] = newSha;
         }
         return createdAny;
