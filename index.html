@@ -155,6 +155,7 @@
     .table { display: grid; gap: 6px; }
     .table-row { display: grid; grid-template-columns: 1.2fr 1.4fr 1fr 1.6fr 0.9fr; gap: 6px; align-items: center; }
     .table-header { font-weight: 700; background: var(--surface); padding: 8px; border-radius: 6px; }
+
     .table .cell { padding: 8px; background: var(--white); border: 1px solid var(--light); border-radius: 6px; }
 
     .form-grid { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
@@ -284,7 +285,7 @@
             </label>
             <form onsubmit="return false" aria-label="GitHub přístup">
               <label>GitHub Token (PAT)
-                <input type="password" id="repo-token" placeholder="Zadejte PAT s oprávněním repo:contents" />
+                <input type="password" id="repo-token" placeholder="Zadejte PAT s oprávněním repo:contents" autocomplete="new-password" />
               </label>
             </form>
             <div class="form-row">
@@ -719,7 +720,7 @@
           q('repo-msg').textContent = 'Načítám data z GitHubu...';
           try {
             await githubLoadAll({owner, repo, branch, token});
-            q('repo-msg').textContent = 'Data načtena.';
+            q('repo-msg').textContent = 'Data načtena z GitHubu.';
             renderAdminGlobal();
             renderAdminVinariTable();
             renderAdminVinaTable();
@@ -738,8 +739,10 @@
           const token = q('repo-token').value.trim();
           q('repo-msg').textContent = 'Ukládám data na GitHub...';
           try {
-            await githubSaveAll({owner, repo, branch, token});
-            q('repo-msg').textContent = 'Uloženo na GitHub.';
+            const created = await githubSaveAll({owner, repo, branch, token});
+            q('repo-msg').textContent = created
+              ? 'Uloženo na GitHub. Soubory (a zložka data/) byly vytvořeny.'
+              : 'Uloženo na GitHub.';
           } catch (e) {
             q('repo-msg').textContent = 'Chyba při ukládání: ' + (e && e.message ? e.message : 'neznámá chyba') +
               '. Zkontrolujte, že PAT má Contents: write a Owner/Repo/Branch jsou správně.';
@@ -1009,7 +1012,7 @@
       }
 
       async function ghFetch(url, options, token) {
-        // 1) skúsi 'token', 2) ak 401/403/404 (Not Found pri nedostatočných právach) skúsi 'Bearer'
+        // 1) skúsi 'token', 2) ak 401/403/404 skúsi 'Bearer'
         const opt1 = Object.assign({}, options, { headers: Object.assign({}, options.headers || {}, buildGhHeaders(token, 'token')) });
         let res = await fetch(url, opt1);
         if (token && [401,403,404].includes(res.status)) {
@@ -1019,8 +1022,13 @@
         return res;
       }
 
+      // Bezpečné enkódovanie cesty po segmentoch (lomítka zostanú)
+      function encodePathSegments(p) {
+        return p.split('/').map(encodeURIComponent).join('/');
+      }
+
       async function githubGetFile({owner, repo, path, ref, token}) {
-        const url = `${GH_BASE}/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}?ref=${encodeURIComponent(ref)}`;
+        const url = `${GH_BASE}/repos/${owner}/${repo}/contents/${encodePathSegments(path)}?ref=${encodeURIComponent(ref)}`;
         const res = await ghFetch(url, { method: 'GET' }, token);
         if (res.status === 404) return { content: "", sha: null, exists: false };
         if (!res.ok) {
@@ -1033,7 +1041,7 @@
       }
 
       async function githubPutFile({owner, repo, path, branch, token, content, message, sha}) {
-        const url = `${GH_BASE}/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}`;
+        const url = `${GH_BASE}/repos/${owner}/${repo}/contents/${encodePathSegments(path)}`;
         const body = { message, content: b64encode(content), branch };
         if (sha) body.sha = sha;
         const res = await ghFetch(url, {
@@ -1050,7 +1058,6 @@
       }
 
       async function githubLoadAll({owner, repo, branch, token}) {
-        // Load files and cache SHAs
         for (const p of [paths.global, paths.vinari, paths.vina]) {
           const {content, sha} = await githubGetFile({owner, repo, path: p, ref: branch, token});
           state.github.shas[p] = sha || null;
@@ -1075,11 +1082,15 @@
           [paths.vinari]: `chore(data): update vinari (${now})`,
           [paths.vina]: `chore(data): update vina (${now})`,
         };
+        let createdAny = false;
         for (const p of [paths.global, paths.vinari, paths.vina]) {
           const sha = state.github.shas[p] || null;
           const res = await githubPutFile({owner, repo, path: p, branch, token, content: payloads[p], message: msgs[p], sha});
-          state.github.shas[p] = res.content && res.content.sha ? res.content.sha : null;
+          const newSha = res.content && res.content.sha ? res.content.sha : null;
+          if (!sha && newSha) createdAny = true; // indikace, že soubor vznikl nově
+          state.github.shas[p] = newSha;
         }
+        return createdAny;
       }
 
       return {
