@@ -139,12 +139,14 @@
       border: 2px solid #cc0000;
       color: #660000;
       padding: 10px 12px; border-radius: 8px; margin-top: 12px;
+      white-space: pre-wrap;
     }
     .info-box {
       background: #eef9ff;
       border: 2px solid var(--secondary);
       color: var(--black);
       padding: 10px 12px; border-radius: 8px; margin-top: 12px;
+      white-space: pre-wrap;
     }
     .empty-state {
       background: var(--surface);
@@ -744,8 +746,10 @@
               ? 'Uloženo na GitHub. Soubory (a složka data/) byly vytvořeny.'
               : 'Uloženo na GitHub.';
           } catch (e) {
-            q('repo-msg').textContent = 'Chyba při ukládání: ' + (e && e.message ? e.message : 'neznámá chyba') +
-              '. Zkontrolujte, že PAT má Contents: write a Owner/Repo/Branch jsou správně.';
+            q('repo-msg').textContent =
+              'Chyba při ukládání: ' +
+              (e && e.message ? e.message : 'neznámá chyba') +
+              '\nNejčastěji: špatný Owner/Repo/Branch, nebo PAT nemá přístup (u soukromého repa GitHub vrací 404, pokud token nemá práva).';
           }
         });
         const expBtn = q('btn-export');
@@ -1004,7 +1008,7 @@
       const GH_BASE = "https://api.github.com";
       function b64encode(txt) { return btoa(unescape(encodeURIComponent(txt))); }
 
-      // Jednotná tvorba hlaviček + automatický fallback 'token' -> 'Bearer'
+      // Jednotná tvorba hlavičiek + automatický fallback 'token' -> 'Bearer'
       function buildGhHeaders(token, scheme) {
         const h = {
           Accept: 'application/vnd.github+json',
@@ -1030,8 +1034,16 @@
         return p.split('/').map(encodeURIComponent).join('/');
       }
 
+      function encOwnerRepo(owner, repo) {
+        return {
+          o: encodeURIComponent(owner),
+          r: encodeURIComponent(repo)
+        };
+      }
+
       async function githubGetFile({owner, repo, path, ref, token}) {
-        const url = `${GH_BASE}/repos/${owner}/${repo}/contents/${encodePathSegments(path)}?ref=${encodeURIComponent(ref)}`;
+        const {o, r} = encOwnerRepo(owner, repo);
+        const url = `${GH_BASE}/repos/${o}/${r}/contents/${encodePathSegments(path)}?ref=${encodeURIComponent(ref)}`;
         const res = await ghFetch(url, { method: 'GET' }, token);
         if (res.status === 404) return { content: "", sha: null, exists: false };
         if (!res.ok) {
@@ -1044,7 +1056,8 @@
       }
 
       async function githubPutFile({owner, repo, path, branch, token, content, message, sha}) {
-        const url = `${GH_BASE}/repos/${owner}/${repo}/contents/${encodePathSegments(path)}`;
+        const {o, r} = encOwnerRepo(owner, repo);
+        const url = `${GH_BASE}/repos/${o}/${r}/contents/${encodePathSegments(path)}`;
         const body = { message, content: b64encode(content), branch };
         if (sha) body.sha = sha;
         const res = await ghFetch(url, {
@@ -1090,7 +1103,7 @@
           const sha = state.github.shas[p] || null;
           const res = await githubPutFile({owner, repo, path: p, branch, token, content: payloads[p], message: msgs[p], sha});
           const newSha = res.content && res.content.sha ? res.content.sha : null;
-          if (!sha && newSha) createdAny = true; // indikace, že soubor vznikl nově (tím i složka data/)
+          if (!sha && newSha) createdAny = true;
           state.github.shas[p] = newSha;
         }
         return createdAny;
