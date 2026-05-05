@@ -282,9 +282,11 @@
             <label>Branch
               <input type="text" id="repo-branch" value="main" />
             </label>
-            <label>GitHub Token (PAT)
-              <input type="password" id="repo-token" placeholder="Zadejte PAT s oprávněním repo:contents" />
-            </label>
+            <form onsubmit="return false" aria-label="GitHub přístup">
+              <label>GitHub Token (PAT)
+                <input type="password" id="repo-token" placeholder="Zadejte PAT s oprávněním repo:contents" />
+              </label>
+            </form>
             <div class="form-row">
               <button id="btn-load-github" class="btn btn-secondary" type="button">Načíst z GitHubu</button>
               <button id="btn-save-github" class="btn btn-primary" type="button">Uložit na GitHub</button>
@@ -739,7 +741,8 @@
             await githubSaveAll({owner, repo, branch, token});
             q('repo-msg').textContent = 'Uloženo na GitHub.';
           } catch (e) {
-            q('repo-msg').textContent = 'Chyba při ukládání: ' + (e && e.message ? e.message : 'neznámá chyba');
+            q('repo-msg').textContent = 'Chyba při ukládání: ' + (e && e.message ? e.message : 'neznámá chyba') +
+              '. Zkontrolujte, že PAT má Contents: write a Owner/Repo/Branch jsou správně.';
           }
         });
         const expBtn = q('btn-export');
@@ -998,17 +1001,27 @@
       const GH_BASE = "https://api.github.com";
       function b64encode(txt) { return btoa(unescape(encodeURIComponent(txt))); }
 
-      // Nové: jednotná tvorba hlavičiek (kompatibilné s Classic PAT aj Fine-grained)
-      function buildGhHeaders(token) {
+      // Jednotná tvorba hlavičiek + automatický fallback 'token' -> 'Bearer'
+      function buildGhHeaders(token, scheme) {
         const h = { Accept: 'application/vnd.github+json' };
-        if (token) h.Authorization = `token ${token}`;
+        if (token) h.Authorization = `${scheme} ${token}`;
         return h;
+      }
+
+      async function ghFetch(url, options, token) {
+        // 1) skúsi 'token', 2) ak 401/403/404 (Not Found pri nedostatočných právach) skúsi 'Bearer'
+        const opt1 = Object.assign({}, options, { headers: Object.assign({}, options.headers || {}, buildGhHeaders(token, 'token')) });
+        let res = await fetch(url, opt1);
+        if (token && [401,403,404].includes(res.status)) {
+          const opt2 = Object.assign({}, options, { headers: Object.assign({}, options.headers || {}, buildGhHeaders(token, 'Bearer')) });
+          res = await fetch(url, opt2);
+        }
+        return res;
       }
 
       async function githubGetFile({owner, repo, path, ref, token}) {
         const url = `${GH_BASE}/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}?ref=${encodeURIComponent(ref)}`;
-        const headers = buildGhHeaders(token);
-        const res = await fetch(url, { headers });
+        const res = await ghFetch(url, { method: 'GET' }, token);
         if (res.status === 404) return { content: "", sha: null, exists: false };
         if (!res.ok) {
           const t = await res.text().catch(() => "");
@@ -1021,11 +1034,13 @@
 
       async function githubPutFile({owner, repo, path, branch, token, content, message, sha}) {
         const url = `${GH_BASE}/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}`;
-        const headers = buildGhHeaders(token);
-        headers['Content-Type'] = 'application/json';
         const body = { message, content: b64encode(content), branch };
         if (sha) body.sha = sha;
-        const res = await fetch(url, { method: 'PUT', headers, body: JSON.stringify(body) });
+        const res = await ghFetch(url, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        }, token);
         if (!res.ok) {
           const t = await res.text().catch(() => "");
           throw new Error(`PUT ${path} failed: ${res.status} ${t}`);
