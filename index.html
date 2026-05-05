@@ -1,1 +1,104 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Den Vinařů Petrov — Katalog vinařů a vín</title>
+  <meta name="description" content="Katalog vinařů a vín pro Den Vinařů v Petrově. Přehled vinařů, jejich sklepů a vín." />
+  <link rel="preload" href="assets/css/styles.css" as="style">
+  <link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main">Přeskočit na obsah</a>
+  <header class="site-header" role="banner">
+    <div class="container header-inner">
+      <div class="brand">
+        <a href="index.html" class="brand-link" aria-label="Domů — Den Vinařů Petrov">
+          <span class="brand-logo" aria-hidden="true">🍇</span>
+          <span class="brand-title">Den Vinařů Petrov</span>
+        </a>
+      </div>
+      <nav class="social-nav" aria-label="Sociální odkazy">
+        <ul id="global-social" class="social-list">
+          <!-- Dynamicky doplněno z data/global.json -->
+        </ul>
+      </nav>
+      <div class="header-actions">
+        <a class="btn btn-outline" href="admin.html" aria-label="Přejít do admin rozhraní">
+          Admin
+        </a>
+      </div>
+    </div>
+  </header>
 
+  <main id="main" class="container" role="main">
+    <section class="hero" aria-labelledby="uvod-nadpis">
+      <div class="hero-inner">
+        <h1 id="uvod-nadpis">Vítejte na Dni vinařů v Petrově</h1>
+        <p class="lead">
+          Objevte místní vinaře, jejich sklepy a skvělá vína. Klikněte na vinaře a prohlédněte si jeho nabídku.
+        </p>
+      </div>
+    </section>
+
+    <section aria-labelledby="seznam-vinaru-nadpis" class="section">
+      <div class="section-header">
+        <h2 id="seznam-vinaru-nadpis">Seznam vinařů</h2>
+        <div class="section-tools">
+          <button id="refresh-list" class="btn btn-secondary" type="button" aria-label="Obnovit seznam">
+            Obnovit
+          </button>
+        </div>
+      </div>
+      <div id="vinari-grid" class="grid grid-vinari" role="list">
+        <!-- Karty vinařů (renderováno JS) -->
+      </div>
+      <div id="empty-state" class="empty-state" hidden>
+        Zatím nejsou k dispozici žádní vinaři.
+      </div>
+      <div id="load-error" class="error-box" hidden role="alert">
+        Nepodařilo se načíst data. Zkuste to prosím znovu.
+      </div>
+      <div class="info-box">
+        Tip: Pro přidání nebo úpravu vinařů a vín použijte tlačítko Admin vpravo nahoře.
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer" role="contentinfo">
+    <div class="container footer-inner">
+      <p>&copy; <span id="year"></span> Den Vinařů Petrov. Všechna práva vyhrazena.</p>
+      <nav class="social-nav" aria-label="Sociální odkazy patička">
+        <ul id="global-social-footer" class="social-list">
+          <!-- Duplicitní render sociálních odkazů pro patičku -->
+        </ul>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="assets/js/app.js"></script>
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // Inicializace: načtení globálních odkazů a vinařů
+    App.init().then(() => {
+      App.renderGlobalSocial(document.getElementById('global-social'));
+      App.renderGlobalSocial(document.getElementById('global-social-footer'));
+      App.loadAllData().then(() => {
+        App.renderVinarsList(document.getElementById('vinari-grid'));
+      }).catch(() => {
+        document.getElementById('load-error').hidden = false;
+      });
+    });
+
+    document.getElementById('refresh-list').addEventListener('click', () => {
+      App.loadAllData(true).then(() => {
+        App.renderVinarsList(document.getElementById('vinari-grid'));
+        document.getElementById('load-error').hidden = true;
+      }).catch(() => {
+        document.getElementById('load-error').hidden = false;
+      });
+    });
+  </script>
+</body>
+</html>
