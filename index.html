@@ -739,17 +739,21 @@
           const repo = q('repo-name').value.trim();
           const branch = q('repo-branch').value.trim();
           const token = q('repo-token').value.trim();
-          q('repo-msg').textContent = 'Ukládám data na GitHub...';
+          q('repo-msg').textContent = 'Kontroluji repo/branch/práva...';
           try {
+            const check = await githubValidateAccess({owner, repo, branch, token});
+            if (!check.ok) {
+              q('repo-msg').textContent = 'Nelze ukládat: ' + check.msg;
+              return;
+            }
+            q('repo-msg').textContent = 'Ukládám data na GitHub...';
             const created = await githubSaveAll({owner, repo, branch, token});
             q('repo-msg').textContent = created
               ? 'Uloženo na GitHub. Soubory (a složka data/) byly vytvořeny.'
               : 'Uloženo na GitHub.';
           } catch (e) {
-            q('repo-msg').textContent =
-              'Chyba při ukládání: ' +
-              (e && e.message ? e.message : 'neznámá chyba') +
-              '\nNejčastěji: špatný Owner/Repo/Branch, nebo PAT nemá přístup (u soukromého repa GitHub vrací 404, pokud token nemá práva).';
+            q('repo-msg').textContent = 'Chyba při ukládání: ' + (e && e.message ? e.message : 'neznámá chyba') +
+              '\nZkontrolujte Owner/Repo/Branch a že PAT má Contents: Read & Write. U soukromého repa GitHub vrací 404, pokud token nemá práva.';
           }
         });
         const expBtn = q('btn-export');
@@ -1008,18 +1012,17 @@
       const GH_BASE = "https://api.github.com";
       function b64encode(txt) { return btoa(unescape(encodeURIComponent(txt))); }
 
-      // Jednotná tvorba hlavičiek + automatický fallback 'token' -> 'Bearer'
       function buildGhHeaders(token, scheme) {
         const h = {
           Accept: 'application/vnd.github+json',
-          'X-GitHub-Api-Version': '2022-11-28'
+          'X-GitHub-Api-Version': '2022-11-28',
+          'User-Agent': 'Den-Vinaru-Petrov-App'
         };
         if (token) h.Authorization = `${scheme} ${token}`;
         return h;
       }
 
       async function ghFetch(url, options, token) {
-        // 1) skúsi 'token', 2) ak 401/403/404 skúsi 'Bearer'
         const opt1 = Object.assign({}, options, { headers: Object.assign({}, options.headers || {}, buildGhHeaders(token, 'token')) });
         let res = await fetch(url, opt1);
         if (token && [401,403,404].includes(res.status)) {
@@ -1029,7 +1032,6 @@
         return res;
       }
 
-      // Bezpečné enkódovanie cesty po segmentoch (lomítka zostanú)
       function encodePathSegments(p) {
         return p.split('/').map(encodeURIComponent).join('/');
       }
@@ -1039,6 +1041,28 @@
           o: encodeURIComponent(owner),
           r: encodeURIComponent(repo)
         };
+      }
+
+      // Kontrola repo/branch/práv
+      async function githubValidateAccess({owner, repo, branch, token}) {
+        try {
+          const {o, r} = encOwnerRepo(owner, repo);
+          // repo existuje?
+          let res = await ghFetch(`${GH_BASE}/repos/${o}/${r}`, { method: 'GET' }, token);
+          if (res.status === 404) return { ok: false, msg: 'Repozitář neexistuje nebo k němu nemáte přístup (404).' };
+          if (!res.ok) return { ok: false, msg: `Kontrola repo selhala: ${res.status} ${await res.text().catch(()=> '')}` };
+
+          // branch existuje?
+          res = await ghFetch(`${GH_BASE}/repos/${o}/${r}/branches/${encodeURIComponent(branch)}`, { method: 'GET' }, token);
+          if (res.status === 404) return { ok: false, msg: `Větev "${branch}" neexistuje (404).` };
+          if (!res.ok) return { ok: false, msg: `Kontrola větve selhala: ${res.status} ${await res.text().catch(()=> '')}` };
+
+          // oprávnění obsah?
+          // pokus o HEAD na contents (někdy vrací 404), ale hlavní je PUT níže. Tady jen informativně:
+          return { ok: true, msg: 'OK' };
+        } catch (e) {
+          return { ok: false, msg: e && e.message ? e.message : 'neznámá chyba validace' };
+        }
       }
 
       async function githubGetFile({owner, repo, path, ref, token}) {
