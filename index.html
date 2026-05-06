@@ -4,16 +4,16 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Dobrih Vin – Katalóg vinárov</title>
-  <meta name="description" content="Katalóg vinárov s admin CRUD (GitHub Contents API). Verejné čítanie bez tokenu; admin sa prihlasuje heslom a token nastaví až po prihlásení (lokálne). Poznámky k vínam do localStorage. Export ponuky vín do PDF." />
+  <meta name="description" content="Katalóg vinárov – verejné čítanie bez tokenu. Admin s heslom, token sa nastavuje až po prihlásení (lokálne). Poznámky k vínam do localStorage. Export celého katalógu do PDF vrátane mojich poznámok." />
 
-  <!-- jsPDF + AutoTable (pre export PDF ponuky vín) -->
+  <!-- jsPDF + AutoTable (PDF export) -->
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js" defer></script>
 
   <style>
     :root{
-      /* Paleta – moravský štýl + vaša modrá */
-      --morava-blue: rgb(0,79,152);      /* hlavná modrá */
+      /* Moravský štýl + vaša modrá */
+      --morava-blue: rgb(0,79,152);
       --morava-blue-strong: rgb(1,62,120);
       --vine-green: rgb(0,137,6);
       --soft-green: rgb(161,200,97);
@@ -34,16 +34,14 @@
     *{box-sizing:border-box}
     html,body{margin:0;padding:0;background:var(--bg);color:var(--black);font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;line-height:1.54}
     a{color:var(--morava-blue)}
-    img{max-width:100%;height:auto;vertical-align:middle}
     button:focus, a:focus, input:focus, textarea:focus, select:focus{outline:3px solid var(--lemon); outline-offset:2px}
     .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 
-    /* HEADER – moravský pás v modrej */
+    /* HEADER – modrý pás */
     header.header{
       position:relative; color:var(--white);
       background: linear-gradient(90deg, var(--morava-blue-strong) 0%, var(--morava-blue) 100%);
       border-bottom:6px solid var(--vine-green);
-      overflow:hidden;
     }
     .header__inner{
       position:relative; z-index:1; max-width:1200px; margin:0 auto;
@@ -53,7 +51,8 @@
     .title{ margin:0; font-size:clamp(26px, 3.2vw, 42px); font-weight:900; letter-spacing:.4px }
     .subtitle{ margin:0; opacity:.95; font-weight:600; font-size:.95rem }
 
-    /* Gear */
+    /* Tlačidlá vpravo hore */
+    .actions{display:flex; gap:.5rem; flex-wrap:wrap; align-items:center}
     .icon-btn{
       appearance:none; border:none; background:rgba(255,255,255,.15); color:#fff; border:1px solid rgba(255,255,255,.35);
       width:42px; height:42px; border-radius:999px; display:inline-flex; align-items:center; justify-content:center; cursor:pointer;
@@ -62,26 +61,25 @@
     .icon-btn:hover{ filter:brightness(0.96) }
     .icon{ width:22px; height:22px; display:inline-block }
 
-    /* Buttons */
     .btn{ border:1px solid transparent; border-radius:999px; padding:.7rem 1rem; cursor:pointer; font-weight:700; transition:transform .05s, filter .15s, background-color .15s; display:inline-flex; align-items:center; gap:.5rem; }
     .btn:active{ transform: translateY(1px) }
     .btn-primary{ background:var(--morava-blue-strong); color:var(--white); }
     .btn-primary:hover{ filter:brightness(.97) }
     .btn-ghost{ background: var(--white); color: var(--black); border-color: var(--border) }
     .btn-soft{ background: var(--stone); color: var(--black) }
-    .btn-danger{ background:#b00020; color:#fff }
     .btn-green{ background:var(--vine-green); color:#fff }
 
     main{ max-width:1200px; margin: 18px auto 64px; padding: 0 16px }
     .pill{ padding:.25rem .6rem; border-radius:999px; border:1px solid var(--border); background:var(--white); color:var(--muted); font-size:.9rem }
 
-    /* Karty */
+    /* Karty – rovnaká veľkosť obrázku všade (pevná výška, orezanie cover) */
     .cards{ display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:14px }
     .card{ border:1px solid var(--border); border-radius:12px; background:var(--white); box-shadow:var(--shadow-1); overflow:clip; display:flex; flex-direction:column; transition:.15s transform ease, .15s box-shadow ease; cursor:pointer }
     .card:hover{ transform:translateY(-2px); box-shadow:var(--shadow-2) }
-    .card .cover{ aspect-ratio:16/10; background:var(--stone); display:flex; align-items:center; justify-content:center; color:var(--muted); font-weight:700; position:relative }
+    .card .cover{ height:200px; background:var(--stone); display:block; }
     .card .cover img{ width:100%; height:100%; object-fit:cover; display:block }
-    .fallback-cover{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:var(--muted); font-weight:700 }
+    /* Vypnutie textu fallbacku na kartách */
+    .fallback-cover{ display:none !important; }
 
     .card .body{ padding:12px }
     .card h3{ margin:.2rem 0 .15rem; font-size:1.05rem }
@@ -90,9 +88,10 @@
     .detail{ display:none }
     .detail.active{ display:block }
     .detail .head{ display:flex; gap:16px; flex-wrap:wrap; align-items:flex-start; margin-bottom:12px }
-    .detail .photo{ width:240px; max-width:100%; border-radius:12px; border:1px solid var(--border); background:var(--stone); display:block }
-    .photo-wrap{ position:relative; width:240px; max-width:100% }
-    .photo-fallback{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:var(--muted); font-weight:700; padding:8px; text-align:center }
+    .detail .photo{ width:280px; max-width:100%; border-radius:12px; border:1px solid var(--border); background:var(--stone); display:block; height:200px; object-fit:cover }
+    .photo-wrap{ position:relative; width:280px; max-width:100% }
+    /* skryj fallback text aj v detaile */
+    .photo-fallback{ display:none !important; }
 
     .muted{ color:var(--muted) }
     .tag{ background:var(--soft-green); color:var(--black); padding:4px 8px; border-radius:999px; font-weight:700; font-size:.85rem; display:inline-block; margin-right:6px }
@@ -114,10 +113,13 @@
     input[type="text"], input[type="number"], input[type="url"], input[type="password"], textarea, select{
       width:100%; border:1px solid var(--border); border-radius:10px; padding:.6rem .7rem; background:#fff; font-size:1rem
     }
+    /* Ponuka vín – bez názvu vína: Odrôda, Ročník, Cena */
     .wines-editor .wine-row{ display:grid; grid-template-columns:1.4fr .8fr .8fr auto; gap:8px; align-items:center; margin-bottom:8px }
     .wines-editor .wine-row input{ width:100% }
 
     footer{ border-top:6px solid var(--vine-green); background:#f7fafb; color:#333; padding:16px; text-align:center }
+
+    /* Modal login */
     .modal{ position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.5); z-index:9998 }
     .modal.show{ display:flex }
     .modal-card{ width:min(560px,92vw); background:#fff; border-radius:14px; box-shadow:var(--shadow-2); padding:16px }
@@ -134,9 +136,17 @@
         <h1 class="title">Dobrih Vin – Katalóg vinárov</h1>
         <p class="subtitle">Verejné čítanie bez tokenu. Admin po prihlásení môže zapisovať do GitHubu.</p>
       </div>
-      <button id="btnGear" class="icon-btn" aria-label="Admin prihlásenie">
-        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 8.75a3.25 3.25 0 1 0 0 6.5 3.25 3.25 0 0 0 0-6.5Zm8.94 2.58-.88-.5a7.95 7.95 0 0 0-.2-1.06l.68-.78a1 1 0 0 0-.08-1.4l-1.2-1.2a1 1 0 0 0-1.4-.08l-.78.68c-.35-.12-.71-.22-1.07-.29l-.5-.88a1 1 0 0 0-.88-.5h-1.7a1 1 0 0 0-.9.5l-.49.88c-.37.07-.73.17-1.08.3l-.78-.68a1 1 0 0 0-1.4.08l-1.2 1.2a1 1 0 0 0-.08 1.4l.68.78c-.12.35-.21.71-.28 1.07l-.88.5a1 1 0 0 0-.5.88v1.7a1 1 0 0 0 .5.88l.88.5c.07.36.16.72.28 1.07l-.68.78a1 1 0 0 0 .08 1.4l1.2 1.2a1 1 0 0 0 1.4.08l.78-.68c.35.12.71.21 1.08.28l.49.88a1 1 0 0 0 .9.5h1.7a1 1 0 0 0 .88-.5l.5-.88c.36-.07.72-.17 1.07-.29l.78.68a1 1 0 0 0 1.4-.08l1.2-1.2a1 1 0 0 0 .08-1.4l-.68-.78c.12-.35.21-.71.28-1.07l.88-.5a1 1 0 0 0 .5-.88Z"/></svg>
-      </button>
+
+      <div class="actions">
+        <!-- Export celého katalógu (PDF) – hlavné tlačidlo -->
+        <button id="btnExportAll" class="btn btn-green" title="Stiahnuť celý katalóg (PDF) s mojimi poznámkami">Stiahnuť celý katalóg (PDF)</button>
+        <!-- Admin gear -->
+        <button id="btnGear" class="icon-btn" aria-label="Admin prihlásenie">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path fill="currentColor" d="M12 8.75a3.25 3.25 0 1 0 0 6.5 3.25 3.25 0 0 0 0-6.5Zm8.94 2.58-.88-.5a7.95 7.95 0 0 0-.2-1.06l.68-.78a1 1 0 0 0-.08-1.4l-1.2-1.2a1 1 0 0 0-1.4-.08l-.78.68c-.35-.12-.71-.22-1.07-.29l-.5-.88a1 1 0 0 0-.88-.5h-1.7a1 1 0 0 0-.9.5l-.49.88c-.37.07-.73.17-1.08.3l-.78-.68a1 1 0 0 0-1.4.08l-1.2 1.2a1 1 0 0 0-.08 1.4l.68.78c-.12.35-.21.71-.28 1.07l-.88.5a1 1 0 0 0-.5.88v1.7a1 1 0 0 0 .5.88l.88.5c.07.36.16.72.28 1.07l-.68.78a1 1 0 0 0 .08 1.4l1.2 1.2a1 1 0 0 0 1.4.08l.78-.68c.35.12.71.21 1.08.28l.49.88a1 1 0 0 0 .9.5h1.7a1 1 0 0 0 .88-.5l.5-.88c.36-.07.72-.17 1.07-.29l.78.68a1 1 0 0 0 1.4-.08l1.2-1.2a1 1 0 0 0 .08-1.4l-.68-.78c.12-.35.21-.71.28-1.07l.88-.5a1 1 0 0 0 .5-.88Z"/>
+          </svg>
+        </button>
+      </div>
     </div>
   </header>
 
@@ -163,7 +173,7 @@
   </div>
 
   <main id="obsah">
-    <!-- Nastavenia (verejné parametre) – len pre admina -->
+    <!-- Nastavenia – admin -->
     <section id="settingsPanel" class="panel admin-only" aria-labelledby="settingsHeading">
       <h2 id="settingsHeading">Nastavenia repozitára</h2>
       <p class="muted">Tieto hodnoty slúžia na čítanie JSON pre všetky zariadenia bez tokenu. Admin ich vie upraviť.</p>
@@ -181,7 +191,7 @@
       </div>
     </section>
 
-    <!-- Token management – len pre admina (lokálne uloženie) -->
+    <!-- Token – admin -->
     <section id="tokenPanel" class="panel admin-only" aria-labelledby="tokenHeading">
       <h2 id="tokenHeading">Privátne nastavenie tokenu</h2>
       <p class="muted">PAT sa uloží iba na tomto zariadení (session/local). Všetky zariadenia bez tokenu čítajú aktuálne dáta z raw.githubusercontent.com.</p>
@@ -202,7 +212,7 @@
       </div>
     </section>
 
-    <!-- Admin CRUD – len pre admina -->
+    <!-- Admin CRUD -->
     <section id="adminPanel" class="panel admin-only" aria-labelledby="adminHeading">
       <h2 id="adminHeading">Admin (pridávanie a úprava vinárov)</h2>
 
@@ -220,7 +230,6 @@
 
       <div class="section">
         <h4>Ponuka vín</h4>
-        <!-- POZOR: odstránený „Názov vína“ – ostáva Odrôda, Ročník, Cena -->
         <div id="winesEditor" class="wines-editor"></div>
         <button id="btnAddWine" class="btn btn-soft" type="button">+ Pridať víno</button>
       </div>
@@ -244,10 +253,8 @@
       <div id="cardsContainer" class="cards" role="list"></div>
     </section>
 
-    <!-- Detail vinára – verejné (s tlačidlom PDF) -->
-    <section id="detailView" class="detail" aria-live="polite">
-      <!-- skeleton vygeneruje skript buildDetailSkeleton() -->
-    </section>
+    <!-- Detail vinára – verejné -->
+    <section id="detailView" class="detail" aria-live="polite"></section>
   </main>
 
   <footer>
@@ -264,10 +271,8 @@
     const uid = (p='id') => p + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2,8);
     const debounce = (fn,ms)=>{ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a),ms); }; };
 
-    /* ===== Úložiská kľúče ===== */
     const LS_CFG='dv_cfg', LS_PAT='dv_pat', SS_ADMIN='dv_admin', SS_PAT='dv_pat_session';
 
-    /* ===== Konfigurácia ===== */
     const defaultConfig = { owner:'sedivmiroslav-del', repo:'Den-Vinaru-2026-Petrov', branch:'main', dataPath:'data/winemakers.json', imagesPath:'assets/uploads' };
     function loadCfg(){ try{ return {...defaultConfig, ...(JSON.parse(localStorage.getItem(LS_CFG)||'{}')||{})}; }catch{ return {...defaultConfig}; } }
     function saveCfg(cfg){ localStorage.setItem(LS_CFG, JSON.stringify(cfg)); }
@@ -377,25 +382,24 @@
       const items = state.data.winemakers||[];
       if(!items.length){
         const none=document.createElement('div'); none.className='card';
-        none.innerHTML=`<div class="cover"><div class="fallback-cover">Žiadni vinári</div></div><div class="body"><h3>Prázdny katalóg</h3><p class="muted">Admin môže pridať prvé záznamy po prihlásení.</p></div>`;
+        none.innerHTML=`<div class="cover"></div><div class="body"><h3>Prázdny katalóg</h3><p class="muted">Admin môže pridať prvé záznamy po prihlásení.</p></div>`;
         host.appendChild(none); showCards(); return;
       }
       for(const w of items){
         const art=document.createElement('article'); art.className='card'; art.setAttribute('role','listitem'); art.dataset.id=w.id;
-        const hasPhoto = Boolean(w.photoUrl && String(w.photoUrl).trim());
-        art.innerHTML = `
-          <div class="cover">
-            ${hasPhoto ? `<img alt="Foto vinára ${escapeAttr(w.name||'')}" src="${escapeAttr(w.photoUrl)}">` : ''}
-            <div class="fallback-cover" ${hasPhoto?'hidden':''}>Bez obrázka</div>
-          </div>
-          <div class="body">
-            <h3>${escapeHtml(w.name||'')}</h3>
-            <div class="muted">Sklep č. ${escapeHtml(w.cellar||'?')}</div>
-          </div>`;
-        if(hasPhoto){
-          const img=$('img',art);
-          img.onerror=()=>{ img.remove(); const fb=$('.fallback-cover',art); if(fb) fb.hidden=false; };
+        const cover=document.createElement('div'); cover.className='cover';
+        if(w.photoUrl && String(w.photoUrl).trim()){
+          const img=new Image(); img.alt='Foto vinára'; img.src=w.photoUrl; img.loading='lazy';
+          img.onerror=()=>{ /* žiadny textový fallback */ cover.style.background='#e9eef2'; };
+          cover.appendChild(img);
+        }else{
+          cover.style.background='#e9eef2';
         }
+        const body=document.createElement('div'); body.className='body';
+        const h=document.createElement('h3'); h.textContent=w.name||'';
+        const m=document.createElement('div'); m.className='muted'; m.textContent='Sklep č. '+(w.cellar||'?');
+        body.appendChild(h); body.appendChild(m);
+        art.appendChild(cover); art.appendChild(body);
         host.appendChild(art);
       }
       showCards();
@@ -408,7 +412,6 @@
       if(id) openDetailSafe(id);
     });
 
-    /* Robustný skeleton detailu – vracia referencie na prvky + tlačidlo PDF */
     function buildDetailSkeleton(){
       const dv = byId('detailView');
       dv.innerHTML = '';
@@ -426,8 +429,7 @@
 
       const photoWrap=document.createElement('div'); photoWrap.className='photo-wrap';
       const img=document.createElement('img'); img.className='photo'; img.alt='Fotografia vinára';
-      const fb=document.createElement('div'); fb.className='photo-fallback'; fb.textContent='Bez obrázka'; fb.hidden=true;
-      photoWrap.appendChild(img); photoWrap.appendChild(fb);
+      photoWrap.appendChild(img); /* žiadny text fallback */
 
       const info=document.createElement('div');
       const heading=document.createElement('h2');
@@ -445,7 +447,7 @@
 
       dv.appendChild(topBar); dv.appendChild(head); dv.appendChild(section);
 
-      return { heading, cellar, desc, img, fallback:fb, tags, list, pdfBtn };
+      return { heading, cellar, desc, img, tags, list, pdfBtn };
     }
 
     function openDetailSafe(idVal){
@@ -458,24 +460,23 @@
       if(!w) return;
 
       const refs = buildDetailSkeleton();
-      const { heading, cellar, desc, img, fallback, tags, list, pdfBtn } = refs;
+      const { heading, cellar, desc, img, tags, list, pdfBtn } = refs;
 
       heading.textContent = w.name || '';
       cellar.textContent = 'Sklep č. ' + (w.cellar||'?');
       desc.textContent = w.description || '';
 
       if(w.photoUrl && String(w.photoUrl).trim()){
-        img.src = w.photoUrl; img.hidden=false; fallback.hidden=true;
-        img.onerror = ()=>{ img.hidden=true; fallback.hidden=false; };
+        img.src = w.photoUrl;
+        img.onerror = ()=>{ img.remove(); };  // bez textu
       }else{
-        img.hidden=true; img.removeAttribute('src'); fallback.hidden=false;
+        img.remove(); // nič nezobrazuj
       }
 
       tags.innerHTML='';
       const t=document.createElement('span'); t.className='tag'; t.textContent=`${(w.wines||[]).length} vín v ponuke`;
       tags.appendChild(t);
 
-      // Vypis vín – bez „názvu vína“, zobrazujeme Odrôda + Ročník + Cena
       list.innerHTML='';
       (w.wines||[]).forEach((wine, idx)=>{
         const wrap=document.createElement('div'); wrap.className='wine';
@@ -486,13 +487,12 @@
           <label>Vaša poznámka k vínu</label>
           <textarea class="note" placeholder="Jedna dlhá osobná poznámka – ukladá sa len do tohto prehliadača."></textarea>
           <div class="note-status" aria-live="polite">Neuložené</div>`;
-        const ta=$('textarea',wrap); const status=$('.note-status',wrap); const key=`dv_note_${w.id}_${wine.id||('i'+idx)}`;
+        const ta=$('textarea',wrap); const status=$('.note-status',wrap); const key=noteKey(w, wine, idx);
         ta.value=localStorage.getItem(key)||''; status.textContent='Načítané z prehliadača';
         ta.addEventListener('input', debounce(()=>{ localStorage.setItem(key, ta.value); status.textContent='Uložené lokálne'; }, 400));
         list.appendChild(wrap);
       });
 
-      // PDF export – klikom vygeneruje ponuku vín
       if(pdfBtn){
         pdfBtn.onclick = ()=> exportOfferPDF(w);
       }
@@ -500,7 +500,9 @@
       showDetail();
     }
 
-    /* ===== Export ponuky vín do PDF (jsPDF + AutoTable) ===== */
+    function noteKey(win, wine, idx){ return `dv_note_${win.id}_${wine.id || ('i'+idx)}`; }
+
+    /* ===== Export ponuky vín jedného vinára ===== */
     async function exportOfferPDF(w){
       try{
         const { jsPDF } = window.jspdf || window;
@@ -520,27 +522,28 @@
         doc.setTextColor(0,0,0);
         doc.setFont('helvetica','normal');
         const desc = (w.description||'').trim();
+        let y = 80;
         if(desc){
           doc.setFontSize(11);
           const lines = doc.splitTextToSize(desc, 515);
-          doc.text(lines, 40, 80);
+          doc.text(lines, 40, y);
+          y += lines.length*14 + 20;
         }
 
-        // Tabuľka vín (Odrôda, Ročník, Cena)
-        const head = [['Odrôda', 'Ročník', 'Cena (Kč)']];
-        const body = (w.wines||[]).map(v => [
+        // Tabuľka vín (Odrôda, Ročník, Cena, Poznámka – moja z localStorage)
+        const head = [['Odrôda', 'Ročník', 'Cena (Kč)', 'Moja poznámka']];
+        const body = (w.wines||[]).map((v, i) => [
           String(v.variety||''),
           String(v.year||''),
-          String(v.price||'')
+          String(v.price||''),
+          String(localStorage.getItem(noteKey(w, v, i))||'')
         ]);
 
-        const startY = desc ? 110 + (doc.splitTextToSize(desc, 515).length * 14) : 110;
-
         doc.autoTable({
-          startY,
+          startY: y,
           head,
           body,
-          styles:{ font:'helvetica', fontSize:10, cellPadding:6 },
+          styles:{ font:'helvetica', fontSize:10, cellPadding:6, overflow:'linebreak' },
           headStyles:{ fillColor:[0,79,152], textColor:[255,255,255] },
           alternateRowStyles:{ fillColor:[245,245,245] },
           theme:'grid',
@@ -555,10 +558,70 @@
       }
     }
 
+    /* ===== Export CELÉHO katalógu do PDF (vrátane mojich poznámok) ===== */
+    async function exportWholeCatalogPDF(){
+      try{
+        const { jsPDF } = window.jspdf || window;
+        if(!jsPDF){ alert('Knižnica jsPDF sa nenačítala.'); return; }
+        const doc = new jsPDF({unit:'pt', format:'a4'});
+
+        const winemakers = state.data.winemakers || [];
+        if(!winemakers.length){ alert('Katalóg je prázdny.'); return; }
+
+        winemakers.forEach((w, widx) => {
+          if(widx>0) doc.addPage();
+
+          // Hlavička
+          doc.setFillColor(0,79,152);
+          doc.rect(0,0,595,60,'F');
+          doc.setTextColor(255,255,255);
+          doc.setFont('helvetica','bold');
+          doc.setFontSize(16);
+          doc.text('Katalóg vín – ' + (w.name||''), 40, 38);
+          doc.setFontSize(11);
+          doc.text('Sklep č. ' + (w.cellar||'?'), 460, 38, {align:'right'});
+
+          // Popis
+          doc.setTextColor(0,0,0);
+          doc.setFont('helvetica','normal');
+          const desc=(w.description||'').trim();
+          let y=80;
+          if(desc){
+            const lines=doc.splitTextToSize(desc, 515);
+            doc.text(lines,40,y);
+            y += lines.length*14 + 20;
+          }
+
+          // Tabuľka vín s poznámkami používateľa
+          const head=[['Odrôda','Ročník','Cena (Kč)','Moja poznámka']];
+          const body=(w.wines||[]).map((v,i)=>[
+            String(v.variety||''),
+            String(v.year||''),
+            String(v.price||''),
+            String(localStorage.getItem(noteKey(w,v,i))||'')
+          ]);
+          doc.autoTable({
+            startY:y,
+            head, body,
+            styles:{ font:'helvetica', fontSize:10, cellPadding:6, overflow:'linebreak' },
+            headStyles:{ fillColor:[0,79,152], textColor:[255,255,255] },
+            alternateRowStyles:{ fillColor:[245,245,245] },
+            theme:'grid',
+            margin:{ left:40, right:40 }
+          });
+        });
+
+        const outName='katalog_dobrih_vin.pdf';
+        doc.save(outName);
+      }catch(err){
+        console.error(err);
+        alert('Export PDF zlyhal.');
+      }
+    }
+
     /* ===== Admin CRUD ===== */
     function fillForm(w){ byId('wName').value=w?.name||''; byId('wCellar').value=w?.cellar||''; byId('wDesc').value=w?.description||''; byId('wPhoto').value=''; byId('winesEditor').innerHTML=''; (w?.wines||[]).forEach(addWineRow); }
 
-    // POZOR: odstránený „Názov vína“ – už len Odrôda, Ročník, Cena
     function addWineRow(data={}){
       const row=document.createElement('div');
       row.className='wine-row';
@@ -614,6 +677,8 @@
     }
 
     /* ===== Handlery UI ===== */
+    byId('btnExportAll').addEventListener('click', exportWholeCatalogPDF);
+
     byId('btnGear').addEventListener('click', ()=>{
       refreshAuthUI();
       byId('authModal').classList.add('show');
