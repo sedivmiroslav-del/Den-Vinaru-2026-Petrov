@@ -4,10 +4,11 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Dobrih Vin – Katalóg vinárov</title>
-  <meta name="description" content="Katalóg vinárov s admin CRUD (GitHub Contents API) a poznámkami k vínam v localStorage. Verejné čítanie bez tokenu; admin zapisuje s PAT, ktorý sa ukladá len lokálne." />
+  <meta name="description" content="Katalóg vinárov s admin CRUD (GitHub Contents API). Verejné čítanie bez tokenu; admin sa prihlasuje heslom a token nastaví až po prihlásení (lokálne). Poznámky k vínam do localStorage." />
 
   <style>
     :root{
+      /* Paleta */
       --green: rgb(0,137,6);
       --gray: rgb(135,135,135);
       --light: rgb(206,213,218);
@@ -17,6 +18,7 @@
       --black: rgb(0,0,0);
       --yellow: rgb(255,255,96);
 
+      /* Odvodené */
       --bg: linear-gradient(180deg, rgba(206,213,218,.35), rgba(255,255,255,1) 30%);
       --border: var(--light);
       --muted: var(--gray);
@@ -35,17 +37,22 @@
     button:focus, a:focus, input:focus, textarea:focus, select:focus{outline:3px solid var(--yellow); outline-offset:2px}
     .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 
+    /* HEADER */
     header.header{
       position:relative; color:var(--white);
       background: linear-gradient(90deg, var(--primary-strong) 0%, var(--primary) 100%);
       border-bottom:4px solid var(--green);
       overflow:hidden;
     }
-    .header__inner{ position:relative; z-index:1; max-width:1200px; margin:0 auto; padding:18px 16px 12px; display:flex; align-items:center; justify-content:space-between; gap:12px }
+    .header__inner{
+      position:relative; z-index:1; max-width:1200px; margin:0 auto;
+      padding:18px 16px 12px; display:flex; align-items:center; justify-content:space-between; gap:12px
+    }
     .brand-wrap{ display:flex; align-items:baseline; gap:12px; flex-wrap:wrap }
     .title{ margin:0; font-size:clamp(26px, 3.2vw, 42px); font-weight:900; letter-spacing:.4px }
     .subtitle{ margin:0; opacity:.95; font-weight:600; font-size:.95rem }
 
+    /* Gear */
     .icon-btn{
       appearance:none; border:none; background:rgba(255,255,255,.15); color:#fff; border:1px solid rgba(255,255,255,.35);
       width:42px; height:42px; border-radius:999px; display:inline-flex; align-items:center; justify-content:center; cursor:pointer;
@@ -54,6 +61,7 @@
     .icon-btn:hover{ filter:brightness(0.96) }
     .icon{ width:22px; height:22px; display:inline-block }
 
+    /* Buttons */
     .btn{ border:1px solid transparent; border-radius:999px; padding:.7rem 1rem; cursor:pointer; font-weight:700; transition:transform .05s, filter .15s, background-color .15s; display:inline-flex; align-items:center; gap:.5rem; }
     .btn:active{ transform: translateY(1px) }
     .btn-primary{ background:var(--primary-strong); color:var(--white); }
@@ -65,6 +73,7 @@
     main{ max-width:1200px; margin: 18px auto 64px; padding: 0 16px }
     .pill{ padding:.25rem .6rem; border-radius:999px; border:1px solid var(--border); background:var(--white); color:var(--muted); font-size:.9rem }
 
+    /* Karty */
     .cards{ display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:14px }
     .card{ border:1px solid var(--border); border-radius:12px; background:var(--white); box-shadow:var(--shadow-1); overflow:clip; display:flex; flex-direction:column; transition:.15s transform ease, .15s box-shadow ease; cursor:pointer }
     .card:hover{ transform:translateY(-2px); box-shadow:var(--shadow-2) }
@@ -75,6 +84,7 @@
     .card .body{ padding:12px }
     .card h3{ margin:.2rem 0 .15rem; font-size:1.05rem }
 
+    /* Detail */
     .detail{ display:none }
     .detail.active{ display:block }
     .detail .head{ display:flex; gap:16px; flex-wrap:wrap; align-items:flex-start; margin-bottom:12px }
@@ -91,6 +101,7 @@
     .note{ width:100%; min-height:90px; resize:vertical; border:1px solid var(--border); border-radius:10px; padding:8px }
     .note-status{ font-size:.9rem; color:var(--muted) }
 
+    /* Admin-only (po prihlásení) */
     .admin-only{ display:none }
     .admin-only.visible{ display:block }
 
@@ -105,6 +116,7 @@
 
     footer{ border-top:4px solid var(--green); background:#f7fafb; color:#333; padding:16px; text-align:center }
 
+    /* Modal login */
     .modal{ position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.5); z-index:9998 }
     .modal.show{ display:flex }
     .modal-card{ width:min(560px,92vw); background:#fff; border-radius:14px; box-shadow:var(--shadow-2); padding:16px }
@@ -115,6 +127,7 @@
 <body>
   <a class="sr-only" href="#obsah">Preskočiť na obsah</a>
 
+  <!-- HEADER -->
   <header class="header" role="banner" aria-label="Hlavný banner">
     <div class="header__inner">
       <div class="brand-wrap">
@@ -127,13 +140,14 @@
     </div>
   </header>
 
+  <!-- LOGIN MODAL (iba heslo) -->
   <div id="authModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="authTitle" aria-describedby="authDesc">
     <div class="modal-card">
       <div class="modal-head">
         <h2 id="authTitle" style="margin:0">Admin prihlásenie</h2>
         <button class="close-btn" aria-label="Zavrieť" id="btnModalClose">×</button>
       </div>
-      <p id="authDesc" class="muted">Zadajte administrátorské heslo. Token sa nastaví až po prihlásení v sekcii „Privátne nastavenie tokenu“ (lokálne uloženie, nie do repozitára).</p>
+      <p id="authDesc" class="muted">Zadajte administrátorské heslo. Token sa nastavuje až po prihlásení v časti „Privátne nastavenie tokenu“ a ukladá sa iba lokálne.</p>
       <div class="form-grid" style="margin-top:8px">
         <div>
           <label for="adminPassword">Heslo</label>
@@ -149,9 +163,10 @@
   </div>
 
   <main id="obsah">
+    <!-- Nastavenia (verejné parametre) – len pre admina -->
     <section id="settingsPanel" class="panel admin-only" aria-labelledby="settingsHeading">
       <h2 id="settingsHeading">Nastavenia repozitára</h2>
-      <p class="muted">Parametre čítania (verejné). Po uložení adminom sa používajú na všetkých zariadeniach bez tokenu.</p>
+      <p class="muted">Tieto hodnoty slúžia na čítanie JSON pre všetky zariadenia bez tokenu. Admin ich vie upraviť.</p>
       <div class="form-grid">
         <div><label for="cfgOwner">Owner/organizácia</label><input id="cfgOwner" type="text" /></div>
         <div><label for="cfgRepo">Repozitár</label><input id="cfgRepo" type="text" /></div>
@@ -166,11 +181,12 @@
       </div>
     </section>
 
+    <!-- Token management – len pre admina (lokálne uloženie) -->
     <section id="tokenPanel" class="panel admin-only" aria-labelledby="tokenHeading">
       <h2 id="tokenHeading">Privátne nastavenie tokenu</h2>
-      <p class="muted">PAT sa ukladá len lokálne (session/local). Všetci používatelia bez tokenu čítajú aktuálne dáta z GitHubu cez raw.githubusercontent.com.</p>
+      <p class="muted">PAT sa uloží iba na tomto zariadení (session/local). Všetky zariadenia bez tokenu čítajú aktuálne dáta z raw.githubusercontent.com.</p>
       <div class="form-grid">
-        <div><label for="patInput">GitHub token (Contents:write)</label><input id="patInput" type="password" placeholder="ghp_…" /></div>
+        <div><label for="patInput">GitHub token (Contents: write)</label><input id="patInput" type="password" placeholder="ghp_…" /></div>
         <div><label for="rememberMode">Uloženie tokenu</label>
           <select id="rememberMode">
             <option value="session">Iba relácia (sessionStorage)</option>
@@ -186,37 +202,48 @@
       </div>
     </section>
 
+    <!-- Admin CRUD – len pre admina -->
     <section id="adminPanel" class="panel admin-only" aria-labelledby="adminHeading">
       <h2 id="adminHeading">Admin (pridávanie a úprava vinárov)</h2>
+
       <h3>Nový / Upraviť vinára</h3>
       <div class="form-grid">
         <div><label for="wName">Názov vinára</label><input id="wName" type="text" /></div>
         <div><label for="wCellar">Číslo sklepa</label><input id="wCellar" type="text" /></div>
-        <div><label for="wPhoto">Foto (upload → GitHub)</label><input id="wPhoto" type="file" accept="image/*" /><div class="muted" style="font-size:.9rem">Ak token chýba, upload sa preskočí.</div></div>
+        <div>
+          <label for="wPhoto">Foto (upload → GitHub)</label>
+          <input id="wPhoto" type="file" accept="image/*" />
+          <div class="muted" style="font-size:.9rem">Ak token chýba, upload sa preskočí a uloží sa len JSON.</div>
+        </div>
         <div style="grid-column:1/-1"><label for="wDesc">Popis</label><textarea id="wDesc" rows="3"></textarea></div>
       </div>
+
       <div class="section">
         <h4>Ponuka vín</h4>
         <div id="winesEditor" class="wines-editor"></div>
         <button id="btnAddWine" class="btn btn-soft" type="button">+ Pridať víno</button>
       </div>
+
       <div style="margin-top:12px; display:flex; gap:.5rem; flex-wrap:wrap">
         <button id="btnSaveWinemaker" class="btn btn-primary" type="button" disabled>Uložiť vinára</button>
         <button id="btnResetForm" class="btn btn-ghost" type="button">Vyčistiť formulár</button>
         <button id="btnDeleteWinemaker" class="btn btn-danger" type="button" disabled>Vymazať vybraného vinára</button>
         <span id="saveStatus" class="pill" role="status" aria-live="polite">Pripravené</span>
       </div>
+
       <div class="section">
         <h4>Existujúci vinári</h4>
         <select id="existingSelect" aria-label="Výber vinára na úpravu"><option value="">— vyberte vinára —</option></select>
       </div>
     </section>
 
+    <!-- Karty vinárov – verejné -->
     <section id="cardsView" aria-labelledby="cardsHeading">
       <h2 id="cardsHeading" class="sr-only">Karty vinárov</h2>
       <div id="cardsContainer" class="cards" role="list"></div>
     </section>
 
+    <!-- Detail vinára – verejné -->
     <section id="detailView" class="detail" aria-live="polite" aria-labelledby="detailHeading">
       <div style="margin-bottom:8px; display:flex; gap:.5rem; flex-wrap:wrap">
         <button id="btnBack" class="btn btn-soft" type="button">← Späť na karty</button>
@@ -245,6 +272,7 @@
   </footer>
 
   <script>
+    /* ===== Helpery ===== */
     const $ = (sel,ctx=document)=>ctx.querySelector(sel);
     const $$ = (sel,ctx=document)=>Array.from(ctx.querySelectorAll(sel));
     const byId = id => document.getElementById(id);
@@ -253,14 +281,25 @@
     const uid = (p='id') => p + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2,8);
     const debounce = (fn,ms)=>{ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a),ms); }; };
 
+    /* ===== Úložiská kľúče ===== */
     const LS_CFG='dv_cfg', LS_PAT='dv_pat', SS_ADMIN='dv_admin', SS_PAT='dv_pat_session';
 
+    /* ===== Konfigurácia ===== */
     const defaultConfig = { owner:'sedivmiroslav-del', repo:'Den-Vinaru-2026-Petrov', branch:'main', dataPath:'data/winemakers.json', imagesPath:'assets/uploads' };
     function loadCfg(){ try{ return {...defaultConfig, ...(JSON.parse(localStorage.getItem(LS_CFG)||'{}')||{})}; }catch{ return {...defaultConfig}; } }
     function saveCfg(cfg){ localStorage.setItem(LS_CFG, JSON.stringify(cfg)); }
 
-    const state = { cfg: loadCfg(), data: {winemakers:[]}, admin: { logged:false, token:null }, currentId: null };
+    const state = {
+      cfg: loadCfg(),
+      data: { winemakers: [] },
+      admin: { logged:false, token:null },
+      currentId: null
+    };
 
+    function hasToken(){ return Boolean(resolveToken()); }
+    function resolveToken(){ return state.admin.token || sessionStorage.getItem(SS_PAT) || localStorage.getItem(LS_PAT) || null; }
+
+    /* ===== Viditeľnosť admin panelov ===== */
     function setAdminVisibility(){
       const v = state.admin.logged;
       for(const el of $$('.admin-only')) el.classList.toggle('visible', v);
@@ -270,9 +309,8 @@
       const tokenStatus = byId('tokenStatus');
       if(tokenStatus) tokenStatus.textContent = 'Token: ' + (hasToken() ? 'uložený' : 'neuložený');
     }
-    function hasToken(){ return Boolean(resolveToken()); }
-    function resolveToken(){ return state.admin.token || sessionStorage.getItem(SS_PAT) || localStorage.getItem(LS_PAT) || null; }
 
+    /* ===== Nastavenia (form) ===== */
     function applyCfgToForm(){
       byId('cfgOwner').value = state.cfg.owner || '';
       byId('cfgRepo').value = state.cfg.repo || '';
@@ -291,63 +329,80 @@
     function rawDataUrl(){ return `https://raw.githubusercontent.com/${state.cfg.owner}/${state.cfg.repo}/${state.cfg.branch}/${state.cfg.dataPath}`; }
     function apiContentUrl(path){ return `https://api.github.com/repos/${state.cfg.owner}/${state.cfg.repo}/contents/${encodeURIComponent(path)}`; }
 
+    /* ===== Načítanie dát (verejné) ===== */
     async function fetchData(){
-      const status = byId('globalStatus'); if(status) status.textContent='Načítavam...';
+      const s = byId('globalStatus'); if(s) s.textContent='Načítavam...';
       try{
         const res = await fetch(rawDataUrl(), {cache:'no-store'});
-        if(res.status===404){ state.data={winemakers:[]}; if(status) status.textContent='Súbor neexistuje – vytvorí sa pri prvom uložení'; }
+        if(res.status===404){ state.data={winemakers:[]}; if(s) s.textContent='Súbor neexistuje – vytvorí sa pri prvom uložení'; }
         else if(!res.ok){ throw new Error('HTTP '+res.status); }
-        else{ const json = await res.json(); state.data = json && Array.isArray(json.winemakers) ? json : {winemakers:[]}; if(status) status.textContent='Dáta načítané'; }
-      }catch(e){ console.error(e); state.data={winemakers:[]}; if(status) status.textContent='Chyba načítania'; }
+        else { const json = await res.json(); state.data = json && Array.isArray(json.winemakers) ? json : {winemakers:[]}; if(s) s.textContent='Dáta načítané'; }
+      }catch(e){ console.error(e); state.data={winemakers:[]}; if(s) s.textContent='Chyba načítania'; }
       renderCards();
       refreshExistingSelect();
     }
 
+    /* ===== GitHub Contents API (write) ===== */
     async function getFileSha(path){
       const url = apiContentUrl(path) + `?ref=${encodeURIComponent(state.cfg.branch||'main')}`;
       const headers = { 'Accept':'application/vnd.github+json' };
-      const tok=resolveToken(); if(tok) headers['Authorization']=`Bearer ${tok}`;
-      const r=await fetch(url,{headers}); if(r.status===404) return null;
+      const tok = resolveToken(); if(tok) headers['Authorization'] = `Bearer ${tok}`;
+      const r = await fetch(url,{headers});
+      if(r.status===404) return null;
       if(!r.ok) throw new Error('GitHub GET sha error '+r.status);
-      const j=await r.json(); return j.sha||null;
+      const j = await r.json();
+      return j.sha || null;
     }
     function abToB64(ab){ let bin=''; const bytes=new Uint8Array(ab); for(let i=0;i<bytes.byteLength;i++) bin+=String.fromCharCode(bytes[i]); return btoa(bin); }
-    async function putFileBase64(path, b64, message){
-      const tok=resolveToken(); if(!tok) throw new Error('Chýba token (PAT). Nastavte ho v „Privátne nastavenie tokenu“.');
-      const url=apiContentUrl(path); const sha=await getFileSha(path);
-      const body={message:message||'update via app', content:b64, branch:state.cfg.branch||'main'}; if(sha) body.sha=sha;
-      const res=await fetch(url,{method:'PUT',headers:{'Accept':'application/vnd.github+json','Authorization':`Bearer ${tok}`,'Content-Type':'application/json'},body:JSON.stringify(body)});
+    async function putFileBase64(path, contentBase64, message){
+      const tok = resolveToken(); if(!tok) throw new Error('Chýba token (PAT). Nastavte ho v „Privátne nastavenie tokenu“.');
+      const url = apiContentUrl(path);
+      const sha = await getFileSha(path);
+      const body = { message: message||'update via app', content: contentBase64, branch: state.cfg.branch||'main' };
+      if(sha) body.sha = sha;
+      const res = await fetch(url,{
+        method:'PUT',
+        headers:{ 'Accept':'application/vnd.github+json','Authorization':`Bearer ${tok}`, 'Content-Type':'application/json' },
+        body: JSON.stringify(body)
+      });
       if(!res.ok){ const txt=await res.text(); throw new Error(`GitHub PUT ${res.status}: ${txt}`); }
       return res.json();
     }
-    async function putJson(path, obj, msg){ const text=JSON.stringify(obj,null,2); return putFileBase64(path, btoa(unescape(encodeURIComponent(text))), msg||'update json'); }
+    async function putJson(path, obj, message){
+      const text = JSON.stringify(obj, null, 2);
+      const b64 = btoa(unescape(encodeURIComponent(text)));
+      return putFileBase64(path, b64, message||'update json');
+    }
     async function uploadImage(file){
       if(!file) return null;
       if(!resolveToken()){ byId('saveStatus').textContent='Bez tokenu – preskakujem upload fotky'; return null; }
-      const buf=await file.arrayBuffer(); const b64=abToB64(buf);
+      const buf = await file.arrayBuffer();
+      const b64 = abToB64(buf);
       const ext=(file.name.split('.').pop()||'jpg').toLowerCase();
       const base=file.name.replace(/\.[^.]+$/,'').toLowerCase().replace(/[^a-z0-9-_]+/g,'-').replace(/-+/g,'-').replace(/^-|-$/g,'');
-      const fname=`${base}-${Date.now()}.${ext}`; const path=`${state.cfg.imagesPath.replace(/\/$/,'')}/${fname}`;
-      await putFileBase64(path,b64,`add image ${fname}`);
-      const raw=`https://raw.githubusercontent.com/${state.cfg.owner}/${state.cfg.repo}/${state.cfg.branch}/${path}`;
-      return {path,url:raw};
+      const fname = `${base}-${Date.now()}.${ext}`;
+      const path = `${state.cfg.imagesPath.replace(/\/$/,'')}/${fname}`;
+      await putFileBase64(path, b64, `add image ${fname}`);
+      const raw = `https://raw.githubusercontent.com/${state.cfg.owner}/${state.cfg.repo}/${state.cfg.branch}/${path}`;
+      return { path, url: raw };
     }
 
+    /* ===== Karty a detail ===== */
     function showCards(){ byId('cardsView').style.display='block'; byId('detailView').classList.remove('active'); }
     function showDetail(){ byId('cardsView').style.display='none'; byId('detailView').classList.add('active'); }
 
     function renderCards(){
-      const host=byId('cardsContainer'); host.innerHTML='';
-      const arr=state.data.winemakers||[];
-      if(!arr.length){
+      const host = byId('cardsContainer'); host.innerHTML='';
+      const items = state.data.winemakers||[];
+      if(!items.length){
         const none=document.createElement('div'); none.className='card';
         none.innerHTML=`<div class="cover"><div class="fallback-cover">Žiadni vinári</div></div><div class="body"><h3>Prázdny katalóg</h3><p class="muted">Admin môže pridať prvé záznamy po prihlásení.</p></div>`;
         host.appendChild(none); showCards(); return;
       }
-      for(const w of arr){
+      for(const w of items){
         const art=document.createElement('article'); art.className='card'; art.setAttribute('role','listitem'); art.dataset.id=w.id;
-        const hasPhoto=Boolean(w.photoUrl && String(w.photoUrl).trim());
-        art.innerHTML=`
+        const hasPhoto = Boolean(w.photoUrl && String(w.photoUrl).trim());
+        art.innerHTML = `
           <div class="cover">
             ${hasPhoto ? `<img alt="Foto vinára ${escapeAttr(w.name||'')}" src="${escapeAttr(w.photoUrl)}">` : ''}
             <div class="fallback-cover" ${hasPhoto?'hidden':''}>Bez obrázka</div>
@@ -365,35 +420,45 @@
       showCards();
     }
 
-    // Delegovaný klik handler na karty (robustné aj po re-rendere)
+    // Delegovaný klik – odolné po re-rendere
     byId('cardsContainer').addEventListener('click', (ev)=>{
-      const art = ev.target.closest('.card[role="listitem"]');
-      if(!art) return;
-      const id = art.dataset.id;
+      const card = ev.target.closest('.card[role="listitem"]');
+      if(!card) return;
+      const id = card.dataset.id;
       if(id) openDetailSafe(id);
     });
 
     function openDetailSafe(idVal){
       try{ openDetail(idVal); }
-      catch(err){ console.error('openDetail error:', err); alert('Niečo zlyhalo pri otváraní detailu. Obnovte stránku a skúste znova.'); }
+      catch(err){ console.error('openDetail error:', err); alert('Chyba pri otváraní detailu. Obnovte stránku a skúste znova.'); }
     }
 
     function openDetail(idVal){
-      const w=(state.data.winemakers||[]).find(x=>x.id===idVal); if(!w) return;
-      const h=byId('detailHeading'), c=byId('detailCellar'), d=byId('detailDesc'), img=byId('detailPhoto'), fb=byId('detailPhotoFallback'), tags=byId('detailTags'), list=byId('detailWines');
-      if(!h||!c||!d||!img||!fb||!tags||!list) throw new Error('Detailové prvky neexistujú v DOM.');
+      const w = (state.data.winemakers||[]).find(x=>x.id===idVal);
+      if(!w) return;
 
-      state.currentId=w.id;
-      h.textContent=w.name||'';
-      c.textContent='Sklep č. '+(w.cellar||'?');
-      d.textContent=w.description||'';
+      const h=byId('detailHeading'), c=byId('detailCellar'), d=byId('detailDesc'),
+            img=byId('detailPhoto'), fb=byId('detailPhotoFallback'),
+            tags=byId('detailTags'), list=byId('detailWines');
+
+      if(!h||!c||!d||!img||!fb||!tags||!list) throw new Error('Detailové prvky v DOM neexistujú.');
+
+      state.currentId = w.id;
+
+      h.textContent = w.name || '';
+      c.textContent = 'Sklep č. ' + (w.cellar||'?');
+      d.textContent = w.description || '';
 
       if(w.photoUrl && String(w.photoUrl).trim()){
-        img.src=w.photoUrl; img.hidden=false; fb.hidden=true;
-        img.onerror=()=>{ img.hidden=true; fb.hidden=false; };
-      }else{ img.hidden=true; img.removeAttribute('src'); fb.hidden=false; }
+        img.src = w.photoUrl; img.hidden=false; fb.hidden=true;
+        img.onerror = ()=>{ img.hidden=true; fb.hidden=false; };
+      }else{
+        img.hidden=true; img.removeAttribute('src'); fb.hidden=false;
+      }
 
-      tags.innerHTML=''; const t=document.createElement('span'); t.className='tag'; t.textContent=`${(w.wines||[]).length} vín v ponuke`; tags.appendChild(t);
+      tags.innerHTML='';
+      const t=document.createElement('span'); t.className='tag'; t.textContent=`${(w.wines||[]).length} vín v ponuke`;
+      tags.appendChild(t);
 
       list.innerHTML='';
       (w.wines||[]).forEach(wine=>{
@@ -413,11 +478,29 @@
       showDetail();
     }
 
+    /* ===== Admin CRUD ===== */
     function fillForm(w){ byId('wName').value=w?.name||''; byId('wCellar').value=w?.cellar||''; byId('wDesc').value=w?.description||''; byId('wPhoto').value=''; byId('winesEditor').innerHTML=''; (w?.wines||[]).forEach(addWineRow); }
     function addWineRow(data={}){ const row=document.createElement('div'); row.className='wine-row'; const wid=data.id||uid('wine'); row.dataset.id=wid;
-      row.innerHTML=`<input type="text" placeholder="Názov vína" value="${escapeAttr(data.name||'')}"><input type="text" placeholder="Odrôda (Rizling…)" value="${escapeAttr(data.variety||'')}"><input type="number" placeholder="Ročník" value="${escapeAttr(data.year||'')}"><input type="text" placeholder="Cena" value="${escapeAttr(data.price||'')}"><button type="button" class="btn btn-soft">🗑️</button>`; $('button',row).addEventListener('click',()=>row.remove()); byId('winesEditor').appendChild(row); }
-    function readForm(){ const wines=$$('.wine-row', byId('winesEditor')).map(r=>({id:r.dataset.id||uid('wine'),name:$('input:nth-child(1)',r).value.trim(),variety:$('input:nth-child(2)',r).value.trim(),year:$('input:nth-child(3)',r).value.trim(),price:$('input:nth-child(4)',r).value.trim()})).filter(x=>x.name); return {id:byId('existingSelect').value||uid('winemaker'),name:byId('wName').value.trim(),cellar:byId('wCellar').value.trim(),description:byId('wDesc').value.trim(),photoFile:byId('wPhoto').files[0]||null,wines}; }
-    function refreshExistingSelect(){ const sel=byId('existingSelect'); if(!sel) return; const cur=sel.value; sel.innerHTML='<option value="">— vyberte vinára —</option>'; (state.data.winemakers||[]).forEach(w=>{ const o=document.createElement('option'); o.value=w.id; o.textContent=`${w.name} (sklep ${w.cellar||'?'})`; sel.appendChild(o); }); sel.value=cur||''; }
+      row.innerHTML=`<input type="text" placeholder="Názov vína" value="${escapeAttr(data.name||'')}"><input type="text" placeholder="Odrôda (Rizling…)" value="${escapeAttr(data.variety||'')}"><input type="number" placeholder="Ročník" value="${escapeAttr(data.year||'')}"><input type="text" placeholder="Cena" value="${escapeAttr(data.price||'')}"><button type="button" class="btn btn-soft">🗑️</button>`;
+      $('button',row).addEventListener('click',()=>row.remove());
+      byId('winesEditor').appendChild(row);
+    }
+    function readForm(){
+      const wines=$$('.wine-row', byId('winesEditor')).map(r=>({
+        id:r.dataset.id||uid('wine'),
+        name:$('input:nth-child(1)',r).value.trim(),
+        variety:$('input:nth-child(2)',r).value.trim(),
+        year:$('input:nth-child(3)',r).value.trim(),
+        price:$('input:nth-child(4)',r).value.trim()
+      })).filter(x=>x.name);
+      return { id: byId('existingSelect').value || uid('winemaker'), name: byId('wName').value.trim(), cellar: byId('wCellar').value.trim(), description: byId('wDesc').value.trim(), photoFile: byId('wPhoto').files[0]||null, wines };
+    }
+    function refreshExistingSelect(){
+      const sel=byId('existingSelect'); if(!sel) return; const cur=sel.value;
+      sel.innerHTML='<option value="">— vyberte vinára —</option>';
+      (state.data.winemakers||[]).forEach(w=>{ const o=document.createElement('option'); o.value=w.id; o.textContent=`${w.name} (sklep ${w.cellar||'?'})`; sel.appendChild(o); });
+      sel.value=cur||'';
+    }
 
     async function saveWinemaker(){
       const st=byId('saveStatus'); st.textContent='Ukladám...';
@@ -440,28 +523,66 @@
       catch(err){ console.error(err); st.textContent='Chyba mazania'; alert('Mazanie zlyhalo: '+err.message); }
     }
 
+    /* ===== Handlery UI ===== */
+    // gear -> modal
     byId('btnGear').addEventListener('click', ()=>{ byId('authModal').classList.add('show'); byId('adminPassword').focus(); });
     byId('btnModalClose').addEventListener('click', ()=> byId('authModal').classList.remove('show'));
-    byId('btnLogin').addEventListener('click', ()=>{ const pw=byId('adminPassword').value; if(pw!=='PetrovSedivy492'){ alert('Nesprávne heslo.'); return; } state.admin.logged=true; sessionStorage.setItem(SS_ADMIN,'1'); byId('authModal').classList.remove('show'); setAdminVisibility(); applyCfgToForm(); byId('settingsPanel').scrollIntoView({behavior:'smooth'}); });
-    byId('btnLogout').addEventListener('click', ()=>{ state.admin.logged=false; sessionStorage.removeItem(SS_ADMIN); setAdminVisibility(); alert('Admin odhlásený.'); });
 
-    byId('btnSaveToken').addEventListener('click', ()=>{ const val=(byId('patInput').value||'').trim(); const mode=byId('rememberMode').value; if(!val){ alert('Zadajte token.'); return; } state.admin.token=val; if(mode==='local'){ localStorage.setItem(LS_PAT,val); sessionStorage.removeItem(SS_PAT); } else if(mode==='session'){ sessionStorage.setItem(SS_PAT,val); localStorage.removeItem(LS_PAT); } else { sessionStorage.removeItem(SS_PAT); localStorage.removeItem(LS_PAT); } setAdminVisibility(); alert('Token nastavený lokálne.'); });
-    byId('btnClearToken').addEventListener('click', ()=>{ state.admin.token=null; sessionStorage.removeItem(SS_PAT); localStorage.removeItem(LS_PAT); setAdminVisibility(); alert('Token odstránený.'); });
+    // login iba heslom
+    byId('btnLogin').addEventListener('click', ()=>{
+      const pw=byId('adminPassword').value;
+      if(pw!=='PetrovSedivy492'){ alert('Nesprávne heslo.'); return; }
+      state.admin.logged=true; sessionStorage.setItem(SS_ADMIN,'1');
+      byId('authModal').classList.remove('show');
+      setAdminVisibility();
+      applyCfgToForm();
+      byId('settingsPanel').scrollIntoView({behavior:'smooth'});
+    });
+    byId('btnLogout').addEventListener('click', ()=>{
+      state.admin.logged=false; sessionStorage.removeItem(SS_ADMIN);
+      setAdminVisibility(); alert('Admin odhlásený.');
+    });
 
+    // token panel
+    byId('btnSaveToken').addEventListener('click', ()=>{
+      const val=(byId('patInput').value||'').trim(); const mode=byId('rememberMode').value;
+      if(!val){ alert('Zadajte token.'); return; }
+      state.admin.token = val;
+      if(mode==='local'){ localStorage.setItem(LS_PAT,val); sessionStorage.removeItem(SS_PAT); }
+      else if(mode==='session'){ sessionStorage.setItem(SS_PAT,val); localStorage.removeItem(LS_PAT); }
+      else{ sessionStorage.removeItem(SS_PAT); localStorage.removeItem(LS_PAT); }
+      setAdminVisibility();
+      alert('Token nastavený lokálne. Zmeny publikované adminom budú viditeľné na všetkých zariadeniach bez tokenu.');
+    });
+    byId('btnClearToken').addEventListener('click', ()=>{
+      state.admin.token=null; sessionStorage.removeItem(SS_PAT); localStorage.removeItem(LS_PAT);
+      setAdminVisibility(); alert('Token odstránený z tohto zariadenia.');
+    });
+
+    // nastavenia
     byId('btnSaveConfig').addEventListener('click', ()=>{ readCfgFromForm(); const s=byId('globalStatus'); if(s) s.textContent='Uložené nastavenia'; });
     byId('btnReloadData').addEventListener('click', fetchData);
 
+    // CRUD handlery
     byId('btnAddWine').addEventListener('click', ()=>addWineRow());
-    byId('existingSelect').addEventListener('change', e=>{ const w=(state.data.winemakers||[]).find(x=>x.id===e.target.value); fillForm(w||null); byId('btnDeleteWinemaker').disabled = !state.admin.logged || !hasToken() || !e.target.value; });
-    byId('btnResetForm').addEventListener('click', ()=>{ byId('existingSelect').value=''; fillForm(null); byId('btnDeleteWinemaker').disabled = !state.admin.logged || !hasToken(); });
+    byId('existingSelect').addEventListener('change', e=>{
+      const w=(state.data.winemakers||[]).find(x=>x.id===e.target.value);
+      fillForm(w||null);
+      byId('btnDeleteWinemaker').disabled = !state.admin.logged || !hasToken() || !e.target.value;
+    });
+    byId('btnResetForm').addEventListener('click', ()=>{
+      byId('existingSelect').value=''; fillForm(null);
+      byId('btnDeleteWinemaker').disabled = !state.admin.logged || !hasToken();
+    });
     byId('btnSaveWinemaker').addEventListener('click', saveWinemaker);
     byId('btnDeleteWinemaker').addEventListener('click', deleteWinemaker);
-
     byId('btnBack').addEventListener('click', showCards);
 
+    /* ===== INIT ===== */
     async function init(){
+      // admin stav a token z úložísk
       state.admin.logged = sessionStorage.getItem(SS_ADMIN)==='1';
-      state.admin.token = sessionStorage.getItem(SS_PAT) || localStorage.getItem(LS_PAT) || null;
+      state.admin.token  = sessionStorage.getItem(SS_PAT) || localStorage.getItem(LS_PAT) || null;
       setAdminVisibility();
       applyCfgToForm();
       await fetchData();
