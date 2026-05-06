@@ -156,7 +156,7 @@
       </div>
       <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:12px">
         <button id="btnLogin" class="btn btn-primary" type="button">Prihlásiť</button>
-        <button id="btnLogout" class="btn btn-soft" type="button" disabled>Odhlásiť</button>
+        <button id="btnLogout" class="btn btn-soft" type="button">Odhlásiť</button>
         <span id="adminStatus" class="pill" role="status" aria-live="polite">Odhlásený</span>
       </div>
     </div>
@@ -296,8 +296,18 @@
       currentId: null
     };
 
+    /* ===== Pomocné: token a admin stav ===== */
     function hasToken(){ return Boolean(resolveToken()); }
     function resolveToken(){ return state.admin.token || sessionStorage.getItem(SS_PAT) || localStorage.getItem(LS_PAT) || null; }
+
+    /* ===== UI: auth (modal) ===== */
+    function refreshAuthUI(){
+      // tlačidlá a stav priamo v modale
+      const isLogged = state.admin.logged;
+      byId('btnLogout').disabled = !isLogged ? true : false;
+      byId('btnLogin').disabled  = false; // login je vždy k dispozícii (prepíše stav)
+      byId('adminStatus').textContent = isLogged ? 'Prihlásený' : 'Odhlásený';
+    }
 
     /* ===== Viditeľnosť admin panelov ===== */
     function setAdminVisibility(){
@@ -305,9 +315,9 @@
       for(const el of $$('.admin-only')) el.classList.toggle('visible', v);
       byId('btnSaveWinemaker').disabled = !v || !hasToken();
       byId('btnDeleteWinemaker').disabled = !v || !hasToken() || !byId('existingSelect').value;
-      byId('adminStatus').textContent = v ? 'Prihlásený' : 'Odhlásený';
       const tokenStatus = byId('tokenStatus');
       if(tokenStatus) tokenStatus.textContent = 'Token: ' + (hasToken() ? 'uložený' : 'neuložený');
+      refreshAuthUI();
     }
 
     /* ===== Nastavenia (form) ===== */
@@ -524,8 +534,12 @@
     }
 
     /* ===== Handlery UI ===== */
-    // gear -> modal
-    byId('btnGear').addEventListener('click', ()=>{ byId('authModal').classList.add('show'); byId('adminPassword').focus(); });
+    // gear -> modal (vždy obnov UI, aby bol „Odhlásiť“ správne povolený)
+    byId('btnGear').addEventListener('click', ()=>{
+      refreshAuthUI();
+      byId('authModal').classList.add('show');
+      byId('adminPassword').focus();
+    });
     byId('btnModalClose').addEventListener('click', ()=> byId('authModal').classList.remove('show'));
 
     // login iba heslom
@@ -533,14 +547,20 @@
       const pw=byId('adminPassword').value;
       if(pw!=='PetrovSedivy492'){ alert('Nesprávne heslo.'); return; }
       state.admin.logged=true; sessionStorage.setItem(SS_ADMIN,'1');
-      byId('authModal').classList.remove('show');
+      refreshAuthUI();
       setAdminVisibility();
       applyCfgToForm();
+      byId('authModal').classList.remove('show');
       byId('settingsPanel').scrollIntoView({behavior:'smooth'});
     });
+
+    // OPRAVA: Odhlásenie – aktivované vždy, zároveň po odhlásení hneď aktualizujeme UI v modale
     byId('btnLogout').addEventListener('click', ()=>{
-      state.admin.logged=false; sessionStorage.removeItem(SS_ADMIN);
-      setAdminVisibility(); alert('Admin odhlásený.');
+      state.admin.logged=false;
+      sessionStorage.removeItem(SS_ADMIN);
+      setAdminVisibility();      // skryje admin-only sekcie
+      refreshAuthUI();           // nastaví stav v modale (Admin status + tlačidlá)
+      alert('Admin odhlásený.');
     });
 
     // token panel
@@ -556,7 +576,8 @@
     });
     byId('btnClearToken').addEventListener('click', ()=>{
       state.admin.token=null; sessionStorage.removeItem(SS_PAT); localStorage.removeItem(LS_PAT);
-      setAdminVisibility(); alert('Token odstránený z tohto zariadenia.');
+      setAdminVisibility(); refreshAuthUI();
+      alert('Token odstránený z tohto zariadenia.');
     });
 
     // nastavenia
@@ -585,6 +606,7 @@
       state.admin.token  = sessionStorage.getItem(SS_PAT) || localStorage.getItem(LS_PAT) || null;
       setAdminVisibility();
       applyCfgToForm();
+      refreshAuthUI();
       await fetchData();
       showCards();
     }
