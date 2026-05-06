@@ -8,7 +8,6 @@
 
   <style>
     :root{
-      /* Paleta */
       --green: rgb(0,137,6);
       --gray: rgb(135,135,135);
       --light: rgb(206,213,218);
@@ -18,7 +17,6 @@
       --black: rgb(0,0,0);
       --yellow: rgb(255,255,96);
 
-      /* Odvodené */
       --bg: linear-gradient(180deg, rgba(206,213,218,.35), rgba(255,255,255,1) 30%);
       --border: var(--light);
       --muted: var(--gray);
@@ -37,7 +35,6 @@
     button:focus, a:focus, input:focus, textarea:focus, select:focus{outline:3px solid var(--yellow); outline-offset:2px}
     .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 
-    /* HEADER */
     header.header{
       position:relative; color:var(--white);
       background: linear-gradient(90deg, var(--primary-strong) 0%, var(--primary) 100%);
@@ -52,7 +49,6 @@
     .title{ margin:0; font-size:clamp(26px, 3.2vw, 42px); font-weight:900; letter-spacing:.4px }
     .subtitle{ margin:0; opacity:.95; font-weight:600; font-size:.95rem }
 
-    /* Gear */
     .icon-btn{
       appearance:none; border:none; background:rgba(255,255,255,.15); color:#fff; border:1px solid rgba(255,255,255,.35);
       width:42px; height:42px; border-radius:999px; display:inline-flex; align-items:center; justify-content:center; cursor:pointer;
@@ -61,7 +57,6 @@
     .icon-btn:hover{ filter:brightness(0.96) }
     .icon{ width:22px; height:22px; display:inline-block }
 
-    /* Buttons */
     .btn{ border:1px solid transparent; border-radius:999px; padding:.7rem 1rem; cursor:pointer; font-weight:700; transition:transform .05s, filter .15s, background-color .15s; display:inline-flex; align-items:center; gap:.5rem; }
     .btn:active{ transform: translateY(1px) }
     .btn-primary{ background:var(--primary-strong); color:var(--white); }
@@ -73,7 +68,6 @@
     main{ max-width:1200px; margin: 18px auto 64px; padding: 0 16px }
     .pill{ padding:.25rem .6rem; border-radius:999px; border:1px solid var(--border); background:var(--white); color:var(--muted); font-size:.9rem }
 
-    /* Karty */
     .cards{ display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:14px }
     .card{ border:1px solid var(--border); border-radius:12px; background:var(--white); box-shadow:var(--shadow-1); overflow:clip; display:flex; flex-direction:column; transition:.15s transform ease, .15s box-shadow ease; cursor:pointer }
     .card:hover{ transform:translateY(-2px); box-shadow:var(--shadow-2) }
@@ -84,7 +78,6 @@
     .card .body{ padding:12px }
     .card h3{ margin:.2rem 0 .15rem; font-size:1.05rem }
 
-    /* Detail */
     .detail{ display:none }
     .detail.active{ display:block }
     .detail .head{ display:flex; gap:16px; flex-wrap:wrap; align-items:flex-start; margin-bottom:12px }
@@ -101,7 +94,6 @@
     .note{ width:100%; min-height:90px; resize:vertical; border:1px solid var(--border); border-radius:10px; padding:8px }
     .note-status{ font-size:.9rem; color:var(--muted) }
 
-    /* Admin-only (po prihlásení) */
     .admin-only{ display:none }
     .admin-only.visible{ display:block }
 
@@ -116,7 +108,6 @@
 
     footer{ border-top:4px solid var(--green); background:#f7fafb; color:#333; padding:16px; text-align:center }
 
-    /* Modal login */
     .modal{ position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.5); z-index:9998 }
     .modal.show{ display:flex }
     .modal-card{ width:min(560px,92vw); background:#fff; border-radius:14px; box-shadow:var(--shadow-2); padding:16px }
@@ -127,7 +118,6 @@
 <body>
   <a class="sr-only" href="#obsah">Preskočiť na obsah</a>
 
-  <!-- HEADER -->
   <header class="header" role="banner" aria-label="Hlavný banner">
     <div class="header__inner">
       <div class="brand-wrap">
@@ -135,12 +125,11 @@
         <p class="subtitle">Verejné čítanie bez tokenu. Admin po prihlásení môže zapisovať do GitHubu.</p>
       </div>
       <button id="btnGear" class="icon-btn" aria-label="Admin prihlásenie">
-        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 8.75a3.25 3.25 0 1 0 0 6.5 3.25 3.25 0 0 0 0-6.5Zm8.94 2.58-.88-.5a7.95 7.95 0 0 0-.2-1.06l.68-.78a1 1 0 0 0-.08-1.4l-1.2-1.2a1 1 0 0 0-1.4-.08l-.78.68c-.35-.12-.71-.22-1.07-.29l-.5-.88a1 1 0 0 0-.88-.5h-1.7a1 1 0 0 0-.9.5l-.49.88c-.37.07-.73.17-1.08.3l-.78-.68a1 1 0 0 0-1.4.08l-1.2 1.2a1 1 0 0 0-.08 1.4l.68.78c-.12.35-.21.71-.28 1.07l-.88.5a1 1 0 0 0-.5.88v1.7a1 1 0 0 0 .5.88l.88.5c.07.36.16.72.28 1.07l-.68.78a1 1 0 0 0 .08 1.4l1.2 1.2a1 1 0 0 0 1.4.08l.78-.68c.35.12.71.21 1.08.28l.49.88a1 1 0 0 0 .9.5h1.7a1 1 0 0 0 .88-.5l.5-.88c.36-.07.72-.17 1.07-.29l.78.68a1 1 0 0 0 1.4-.08l1.2-1.2a1 1 0 0 0 .08-1.4l-.68-.78c.12-.35.21-.71.28-1.07l.88-.5a1 1 0 0 0 .5-.88v-1.7a1 1 0 0 0-.5-.88Z"/></svg>
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 8.75a3.25 3.25 0 1 0 0 6.5 3.25 3.25 0 0 0 0-6.5Zm8.94 2.58-.88-.5a7.95 7.95 0 0 0-.2-1.06l.68-.78a1 1 0 0 0-.08-1.4l-1.2-1.2a1 1 0 0 0-1.4-.08l-.78.68c-.35-.12-.71-.22-1.07-.29l-.5-.88a1 1 0 0 0-.88-.5h-1.7a1 1 0 0 0-.9.5l-.49.88c-.37.07-.73.17-1.08.3l-.78-.68a1 1 0 0 0-1.4.08l-1.2 1.2a1 1 0 0 0-.08 1.4l.68.78c-.12.35-.21.71-.28 1.07l-.88.5a1 1 0 0 0-.5.88v1.7a1 1 0 0 0 .5.88l.88.5c.07.36.16.72.28 1.07l-.68.78a1 1 0 0 0 .08 1.4l1.2 1.2a1 1 0 0 0 1.4.08l.78-.68c.35.12.71.21 1.08.28l.49.88a1 1 0 0 0 .9.5h1.7a1 1 0 0 0 .88-.5l.5-.88c.36-.07.72-.17 1.07-.29l.78.68a1 1 0 0 0 1.4-.08l1.2-1.2a1 1 0 0 0 .08-1.4l-.68-.78c.12-.35.21-.71.28-1.07l.88-.5a1 1 0 0 0 .5-.88Z"/></svg>
       </button>
     </div>
   </header>
 
-  <!-- LOGIN MODAL (iba heslo) -->
   <div id="authModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="authTitle" aria-describedby="authDesc">
     <div class="modal-card">
       <div class="modal-head">
@@ -163,7 +152,6 @@
   </div>
 
   <main id="obsah">
-    <!-- Nastavenia (verejné parametre) – len pre admina -->
     <section id="settingsPanel" class="panel admin-only" aria-labelledby="settingsHeading">
       <h2 id="settingsHeading">Nastavenia repozitára</h2>
       <p class="muted">Tieto hodnoty slúžia na čítanie JSON pre všetky zariadenia bez tokenu. Admin ich vie upraviť.</p>
@@ -181,7 +169,6 @@
       </div>
     </section>
 
-    <!-- Token management – len pre admina (lokálne uloženie) -->
     <section id="tokenPanel" class="panel admin-only" aria-labelledby="tokenHeading">
       <h2 id="tokenHeading">Privátne nastavenie tokenu</h2>
       <p class="muted">PAT sa uloží iba na tomto zariadení (session/local). Všetky zariadenia bez tokenu čítajú aktuálne dáta z raw.githubusercontent.com.</p>
@@ -202,7 +189,6 @@
       </div>
     </section>
 
-    <!-- Admin CRUD – len pre admina -->
     <section id="adminPanel" class="panel admin-only" aria-labelledby="adminHeading">
       <h2 id="adminHeading">Admin (pridávanie a úprava vinárov)</h2>
 
@@ -237,13 +223,11 @@
       </div>
     </section>
 
-    <!-- Karty vinárov – verejné -->
     <section id="cardsView" aria-labelledby="cardsHeading">
       <h2 id="cardsHeading" class="sr-only">Karty vinárov</h2>
       <div id="cardsContainer" class="cards" role="list"></div>
     </section>
 
-    <!-- Detail vinára – verejné -->
     <section id="detailView" class="detail" aria-live="polite" aria-labelledby="detailHeading">
       <div style="margin-bottom:8px; display:flex; gap:.5rem; flex-wrap:wrap">
         <button id="btnBack" class="btn btn-soft" type="button">← Späť na karty</button>
@@ -272,7 +256,6 @@
   </footer>
 
   <script>
-    /* ===== Helpery ===== */
     const $ = (sel,ctx=document)=>ctx.querySelector(sel);
     const $$ = (sel,ctx=document)=>Array.from(ctx.querySelectorAll(sel));
     const byId = id => document.getElementById(id);
@@ -281,35 +264,23 @@
     const uid = (p='id') => p + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2,8);
     const debounce = (fn,ms)=>{ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a),ms); }; };
 
-    /* ===== Úložiská kľúče ===== */
     const LS_CFG='dv_cfg', LS_PAT='dv_pat', SS_ADMIN='dv_admin', SS_PAT='dv_pat_session';
 
-    /* ===== Konfigurácia ===== */
     const defaultConfig = { owner:'sedivmiroslav-del', repo:'Den-Vinaru-2026-Petrov', branch:'main', dataPath:'data/winemakers.json', imagesPath:'assets/uploads' };
     function loadCfg(){ try{ return {...defaultConfig, ...(JSON.parse(localStorage.getItem(LS_CFG)||'{}')||{})}; }catch{ return {...defaultConfig}; } }
     function saveCfg(cfg){ localStorage.setItem(LS_CFG, JSON.stringify(cfg)); }
 
-    const state = {
-      cfg: loadCfg(),
-      data: { winemakers: [] },
-      admin: { logged:false, token:null },
-      currentId: null
-    };
+    const state = { cfg: loadCfg(), data: {winemakers:[]}, admin: { logged:false, token:null }, currentId: null };
 
-    /* ===== Pomocné: token a admin stav ===== */
     function hasToken(){ return Boolean(resolveToken()); }
     function resolveToken(){ return state.admin.token || sessionStorage.getItem(SS_PAT) || localStorage.getItem(LS_PAT) || null; }
 
-    /* ===== UI: auth (modal) ===== */
     function refreshAuthUI(){
-      // tlačidlá a stav priamo v modale
       const isLogged = state.admin.logged;
       byId('btnLogout').disabled = !isLogged ? true : false;
-      byId('btnLogin').disabled  = false; // login je vždy k dispozícii (prepíše stav)
+      byId('btnLogin').disabled  = false;
       byId('adminStatus').textContent = isLogged ? 'Prihlásený' : 'Odhlásený';
     }
-
-    /* ===== Viditeľnosť admin panelov ===== */
     function setAdminVisibility(){
       const v = state.admin.logged;
       for(const el of $$('.admin-only')) el.classList.toggle('visible', v);
@@ -320,7 +291,6 @@
       refreshAuthUI();
     }
 
-    /* ===== Nastavenia (form) ===== */
     function applyCfgToForm(){
       byId('cfgOwner').value = state.cfg.owner || '';
       byId('cfgRepo').value = state.cfg.repo || '';
@@ -339,7 +309,6 @@
     function rawDataUrl(){ return `https://raw.githubusercontent.com/${state.cfg.owner}/${state.cfg.repo}/${state.cfg.branch}/${state.cfg.dataPath}`; }
     function apiContentUrl(path){ return `https://api.github.com/repos/${state.cfg.owner}/${state.cfg.repo}/contents/${encodeURIComponent(path)}`; }
 
-    /* ===== Načítanie dát (verejné) ===== */
     async function fetchData(){
       const s = byId('globalStatus'); if(s) s.textContent='Načítavam...';
       try{
@@ -352,7 +321,6 @@
       refreshExistingSelect();
     }
 
-    /* ===== GitHub Contents API (write) ===== */
     async function getFileSha(path){
       const url = apiContentUrl(path) + `?ref=${encodeURIComponent(state.cfg.branch||'main')}`;
       const headers = { 'Accept':'application/vnd.github+json' };
@@ -397,7 +365,6 @@
       return { path, url: raw };
     }
 
-    /* ===== Karty a detail ===== */
     function showCards(){ byId('cardsView').style.display='block'; byId('detailView').classList.remove('active'); }
     function showDetail(){ byId('cardsView').style.display='none'; byId('detailView').classList.add('active'); }
 
@@ -430,13 +397,53 @@
       showCards();
     }
 
-    // Delegovaný klik – odolné po re-rendere
+    // Delegovaný klik
     byId('cardsContainer').addEventListener('click', (ev)=>{
       const card = ev.target.closest('.card[role="listitem"]');
       if(!card) return;
       const id = card.dataset.id;
       if(id) openDetailSafe(id);
     });
+
+    // Bezpečne postaví vnútro sekcie detailu, ak by chýbalo
+    function ensureDetailDom(){
+      const dv = byId('detailView');
+      if(!dv) return null;
+      const need = !byId('detailHeading') || !byId('detailCellar') || !byId('detailDesc') || !byId('detailPhoto') || !byId('detailPhotoFallback') || !byId('detailTags') || !byId('detailWines');
+      if(need){
+        dv.innerHTML = `
+          <div style="margin-bottom:8px; display:flex; gap:.5rem; flex-wrap:wrap">
+            <button id="btnBack" class="btn btn-soft" type="button">← Späť na karty</button>
+          </div>
+          <div class="head">
+            <div class="photo-wrap">
+              <img id="detailPhoto" class="photo" alt="Fotografia vinára" src="">
+              <div id="detailPhotoFallback" class="photo-fallback" aria-hidden="true" hidden>Bez obrázka</div>
+            </div>
+            <div>
+              <h2 id="detailHeading"></h2>
+              <div id="detailCellar" class="muted"></div>
+              <div id="detailTags"></div>
+              <p id="detailDesc"></p>
+            </div>
+          </div>
+          <div class="section">
+            <h3>Víno a vaše poznámky</h3>
+            <div id="detailWines"></div>
+          </div>`;
+        const back = byId('btnBack');
+        if(back) back.addEventListener('click', showCards);
+      }
+      return {
+        h: byId('detailHeading'),
+        c: byId('detailCellar'),
+        d: byId('detailDesc'),
+        img: byId('detailPhoto'),
+        fb: byId('detailPhotoFallback'),
+        tags: byId('detailTags'),
+        list: byId('detailWines')
+      };
+    }
 
     function openDetailSafe(idVal){
       try{ openDetail(idVal); }
@@ -447,13 +454,9 @@
       const w = (state.data.winemakers||[]).find(x=>x.id===idVal);
       if(!w) return;
 
-      const h=byId('detailHeading'), c=byId('detailCellar'), d=byId('detailDesc'),
-            img=byId('detailPhoto'), fb=byId('detailPhotoFallback'),
-            tags=byId('detailTags'), list=byId('detailWines');
-
-      if(!h||!c||!d||!img||!fb||!tags||!list) throw new Error('Detailové prvky v DOM neexistujú.');
-
-      state.currentId = w.id;
+      const parts = ensureDetailDom();
+      if(!parts) return;
+      const {h,c,d,img,fb,tags,list} = parts;
 
       h.textContent = w.name || '';
       c.textContent = 'Sklep č. ' + (w.cellar||'?');
@@ -488,7 +491,6 @@
       showDetail();
     }
 
-    /* ===== Admin CRUD ===== */
     function fillForm(w){ byId('wName').value=w?.name||''; byId('wCellar').value=w?.cellar||''; byId('wDesc').value=w?.description||''; byId('wPhoto').value=''; byId('winesEditor').innerHTML=''; (w?.wines||[]).forEach(addWineRow); }
     function addWineRow(data={}){ const row=document.createElement('div'); row.className='wine-row'; const wid=data.id||uid('wine'); row.dataset.id=wid;
       row.innerHTML=`<input type="text" placeholder="Názov vína" value="${escapeAttr(data.name||'')}"><input type="text" placeholder="Odrôda (Rizling…)" value="${escapeAttr(data.variety||'')}"><input type="number" placeholder="Ročník" value="${escapeAttr(data.year||'')}"><input type="text" placeholder="Cena" value="${escapeAttr(data.price||'')}"><button type="button" class="btn btn-soft">🗑️</button>`;
@@ -533,8 +535,6 @@
       catch(err){ console.error(err); st.textContent='Chyba mazania'; alert('Mazanie zlyhalo: '+err.message); }
     }
 
-    /* ===== Handlery UI ===== */
-    // gear -> modal (vždy obnov UI, aby bol „Odhlásiť“ správne povolený)
     byId('btnGear').addEventListener('click', ()=>{
       refreshAuthUI();
       byId('authModal').classList.add('show');
@@ -542,7 +542,6 @@
     });
     byId('btnModalClose').addEventListener('click', ()=> byId('authModal').classList.remove('show'));
 
-    // login iba heslom
     byId('btnLogin').addEventListener('click', ()=>{
       const pw=byId('adminPassword').value;
       if(pw!=='PetrovSedivy492'){ alert('Nesprávne heslo.'); return; }
@@ -553,17 +552,14 @@
       byId('authModal').classList.remove('show');
       byId('settingsPanel').scrollIntoView({behavior:'smooth'});
     });
-
-    // OPRAVA: Odhlásenie – aktivované vždy, zároveň po odhlásení hneď aktualizujeme UI v modale
     byId('btnLogout').addEventListener('click', ()=>{
       state.admin.logged=false;
       sessionStorage.removeItem(SS_ADMIN);
-      setAdminVisibility();      // skryje admin-only sekcie
-      refreshAuthUI();           // nastaví stav v modale (Admin status + tlačidlá)
+      setAdminVisibility();
+      refreshAuthUI();
       alert('Admin odhlásený.');
     });
 
-    // token panel
     byId('btnSaveToken').addEventListener('click', ()=>{
       const val=(byId('patInput').value||'').trim(); const mode=byId('rememberMode').value;
       if(!val){ alert('Zadajte token.'); return; }
@@ -572,7 +568,7 @@
       else if(mode==='session'){ sessionStorage.setItem(SS_PAT,val); localStorage.removeItem(LS_PAT); }
       else{ sessionStorage.removeItem(SS_PAT); localStorage.removeItem(LS_PAT); }
       setAdminVisibility();
-      alert('Token nastavený lokálne. Zmeny publikované adminom budú viditeľné na všetkých zariadeniach bez tokenu.');
+      alert('Token nastavený lokálne.');
     });
     byId('btnClearToken').addEventListener('click', ()=>{
       state.admin.token=null; sessionStorage.removeItem(SS_PAT); localStorage.removeItem(LS_PAT);
@@ -580,11 +576,9 @@
       alert('Token odstránený z tohto zariadenia.');
     });
 
-    // nastavenia
     byId('btnSaveConfig').addEventListener('click', ()=>{ readCfgFromForm(); const s=byId('globalStatus'); if(s) s.textContent='Uložené nastavenia'; });
     byId('btnReloadData').addEventListener('click', fetchData);
 
-    // CRUD handlery
     byId('btnAddWine').addEventListener('click', ()=>addWineRow());
     byId('existingSelect').addEventListener('change', e=>{
       const w=(state.data.winemakers||[]).find(x=>x.id===e.target.value);
@@ -599,9 +593,7 @@
     byId('btnDeleteWinemaker').addEventListener('click', deleteWinemaker);
     byId('btnBack').addEventListener('click', showCards);
 
-    /* ===== INIT ===== */
     async function init(){
-      // admin stav a token z úložísk
       state.admin.logged = sessionStorage.getItem(SS_ADMIN)==='1';
       state.admin.token  = sessionStorage.getItem(SS_PAT) || localStorage.getItem(LS_PAT) || null;
       setAdminVisibility();
