@@ -8,22 +8,25 @@
       "photoUrl": "https://raw.githubusercontent.com/sedivmiroslav-del/Den-Vinaru-2026-Petrov/main/assets/uploads/petrov1-1778047625904.png",
       "wines": [
         {
-          "id": "wine_motu5qase9uxfs",
+          "id": "wine_mou0ig9za1hyxe",
           "variety": "MM",
           "year": "2025",
-          "price": "150"
+          "price": "150",
+          "labelColor": "yellow"
         },
         {
-          "id": "wine_motu5qaslw86ky",
+          "id": "wine_mou0ig9zjvlgfi",
           "variety": "rb",
           "year": "2000",
-          "price": "100"
+          "price": "100",
+          "labelColor": "blue"
         },
         {
-          "id": "wine_motu5qaso3zt8m",
+          "id": "wine_mou0ig9znkffnc",
           "variety": "rr",
           "year": "2005",
-          "price": "200"
+          "price": "200",
+          "labelColor": "green"
         }
       ]
     },
