@@ -15,6 +15,22 @@
           "price": "150"
         }
       ]
+    },
+    {
+      "id": "winemaker_motolmgqp4bbcf",
+      "name": "vinar2",
+      "cellar": "40",
+      "description": "test 2 popis",
+      "photoUrl": "",
+      "wines": [
+        {
+          "id": "wine_motolb9i3mslor",
+          "name": "vino 2",
+          "variety": "bb",
+          "year": "2024",
+          "price": "100"
+        }
+      ]
     }
   ]
 }
