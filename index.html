@@ -1,1166 +1,766 @@
 <!DOCTYPE html>
-<html lang="cs">
+<html lang="sk">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Den Vinařů Petrov — Katalog vinařů a vín</title>
-  <meta name="description" content="Katalog vinařů a vín pro Den Vinařů v Petrově. Přehled vinařů, jejich sklepů a vín." />
+  <title>Dobrih Vin – Katalóg vinárov</title>
+  <meta name="description" content="Katalóg vinárov s režimom admin a používateľ. Admin ukladá dáta do GitHub repozitára, používatelia čítajú bez tokenu. Poznámky k vínam sa ukladajú do prehliadača." />
+
+  <!-- Farby (paleta zo zadania) pre CSS custom properties -->
   <style>
     :root{
-      --green: rgb(0,137,6);
-      --gray: rgb(135,135,135);
-      --light: rgb(206,213,218);
-      --cyan: rgb(29,155,178);
-      --lime: rgb(161,200,97);
-      --white: rgb(255,255,255);
-      --black: rgb(0,0,0);
-      --yellow: rgb(255,255,96);
-
-      --bg: var(--white);
-      --text: var(--black);
-      --muted: var(--gray);
-      --primary: var(--green);
-      --secondary: var(--cyan);
-      --accent: var(--lime);
-      --surface: var(--light);
-      --focus: var(--yellow);
+      --green:#008906;            /* RGB(0,137,6) */
+      --gray:#878787;             /* RGB(135,135,135) */
+      --light:#CED5DA;            /* RGB(206,213,218) */
+      --cyan:#1D9BB2;             /* RGB(29,155,178) */
+      --lime:#A1C861;             /* RGB(161,200,97) */
+      --white:#FFFFFF;            /* RGB(255,255,255) */
+      --black:#000000;            /* RGB(0,0,0) */
+      --lemon:#FFFF60;            /* RGB(255,255,96) */
     }
 
-    * { box-sizing: border-box; }
-    html, body { margin: 0; padding: 0; }
-    body {
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.5;
+    /* Reset a základ */
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:var(--white);color:var(--black);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,'Noto Sans',sans-serif;line-height:1.5}
+    a{color:var(--cyan);text-decoration:none}
+    a:focus,button:focus,input:focus,textarea:focus,select:focus{outline:3px solid var(--lemon);outline-offset:2px}
+    img{max-width:100%;height:auto;vertical-align:middle}
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+    /* Header s hero obrázkom v štýle poskytnutej ukážky (foto viníc, text vpravo hore) */
+    header.hero{
+      position:relative;
+      min-height:38vh;
+      display:flex;
+      align-items:flex-end;
+      background:
+        linear-gradient(180deg, rgba(0,0,0,0.0) 50%, rgba(0,0,0,0.35) 100%),
+        url('assets/img/hero.jpg') center/cover no-repeat,
+        var(--light);
+      border-bottom:6px solid var(--green);
+      color:var(--white);
+    }
+    .hero .brand{
+      position:absolute;
+      top:12px; right:12px;
+      text-align:right;
+      font-weight:800;
+      font-size:clamp(28px,5.8vw,70px);
+      line-height:0.92;
+      letter-spacing:1px;
+      text-transform:uppercase;
+      color:var(--white);
+      filter:drop-shadow(0 2px 3px rgba(0,0,0,.35));
+    }
+    .hero .brand .accent{color:var(--lemon)}
+    .hero .bar{
+      width:100%;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      padding:12px 16px;
+      background:rgba(255,255,255,0.88);
+      color:var(--black);
+      backdrop-filter:saturate(140%) blur(6px);
+    }
+    .brand-mini{
+      font-weight:800;color:var(--green);letter-spacing:.5px
+    }
+    .actions{
+      display:flex; gap:8px; flex-wrap:wrap; align-items:center
+    }
+    .btn{
+      --bg: var(--green);
+      --txt: var(--white);
+      border:none;border-radius:10px;
+      padding:10px 14px;
+      background:var(--bg); color:var(--txt);
+      font-weight:600; cursor:pointer;
+      transition:.2s transform ease,.2s background ease,.2s color ease;
+    }
+    .btn[disabled]{opacity:.55;cursor:not-allowed}
+    .btn.secondary{--bg:var(--cyan)}
+    .btn.ghost{--bg:transparent; --txt:var(--black); border:2px solid var(--black)}
+    .btn.light{--bg:var(--light); --txt:var(--black)}
+    .btn:hover{transform:translateY(-1px)}
+    .pill{
+      padding:.25rem .5rem;border-radius:999px;border:1px solid var(--light);background:var(--white);font-size:.875rem;color:var(--gray)
     }
 
-    .container {
-      width: 100%;
-      max-width: 1100px;
-      padding: 0 16px;
-      margin: 0 auto;
+    /* Layout */
+    main{max-width:1200px;margin:20px auto;padding:0 16px 60px}
+    .grid{
+      display:grid; gap:16px;
+      grid-template-columns:repeat(12,1fr)
     }
-
-    .skip-link {
-      position: absolute;
-      left: -9999px;
-      top: auto;
-      width: 1px; height: 1px;
-      overflow: hidden;
+    .cards{grid-column:1/-1; display:grid; gap:16px; grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+    .card{
+      background:var(--white); border:1px solid var(--light); border-radius:14px; overflow:hidden;
+      display:flex; flex-direction:column; transition:.2s box-shadow ease,.2s transform ease
     }
-    .skip-link:focus {
-      position: static;
-      width: auto; height: auto;
-      padding: 8px 12px;
-      background: var(--focus);
-      color: var(--black);
+    .card:hover{box-shadow:0 8px 24px rgba(0,0,0,.08); transform:translateY(-2px)}
+    .card .cover{aspect-ratio:16/10; background:var(--light); display:flex; align-items:center; justify-content:center; color:var(--gray); font-weight:600}
+    .card .body{padding:12px}
+    .card h3{margin:.25rem 0 .25rem;font-size:1.12rem}
+    .muted{color:var(--gray);font-size:.9rem}
+
+    /* Detail vinára */
+    .detail{display:none}
+    .detail.active{display:block}
+    .detail .header{
+      display:flex; gap:16px; flex-wrap:wrap; align-items:flex-start; margin-bottom:12px
     }
-
-    .site-header {
-      background: var(--surface);
-      border-bottom: 4px solid var(--primary);
+    .detail .photo{
+      width:220px; max-width:100%; border-radius:12px; border:1px solid var(--light); background:var(--light)
     }
-    .header-inner {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      padding: 10px 0;
+    .tags{display:flex; gap:8px; flex-wrap:wrap}
+    .tag{background:var(--lime); color:var(--black); padding:4px 8px; border-radius:999px; font-weight:600; font-size:.85rem}
+
+    .section{
+      border-top:3px solid var(--light);
+      padding-top:12px; margin-top:16px
     }
-    .brand-link {
-      display: flex; align-items: center; gap: 10px;
-      color: var(--text); text-decoration: none; font-weight: 700;
+    .wine{
+      border:1px solid var(--light); border-radius:12px; padding:10px; margin:10px 0; background:#fff
     }
-    .brand-logo { font-size: 28px; }
-    .brand-title { font-size: 18px; }
-
-    .header-actions { margin-left: auto; display: flex; gap: 8px; }
-
-    .hero { padding: 24px 0; }
-    .lead { font-size: 1.1rem; color: var(--muted); }
-
-    .section { margin: 24px 0; }
-    .section-header {
-      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    .wine h4{margin:.25rem 0}
+    .note{
+      width:100%; min-height:90px; resize:vertical; border:1px solid var(--light); border-radius:8px; padding:8px
     }
-    .section-tools { display: flex; gap: 8px; flex-wrap: wrap; }
+    .note-status{font-size:.85rem;color:var(--gray)}
 
-    .grid { display: grid; gap: 16px; }
-    .grid-vinari { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
-    .grid-vina { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
-
-    .card {
-      background: var(--white);
-      border: 1px solid var(--light);
-      border-radius: 10px;
-      overflow: hidden;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    /* Admin panel */
+    .admin-panel{display:none; background:var(--white); border:2px solid var(--green); border-radius:14px; padding:14px; margin:16px 0}
+    .admin-panel.active{display:block}
+    .form-grid{display:grid; gap:12px; grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+    label{font-weight:600}
+    input[type="text"], input[type="number"], input[type="url"], input[type="password"], textarea, select{
+      width:100%; border:1px solid var(--light); border-radius:8px; padding:8px; font-size:1rem; background:var(--white)
     }
-    .card-header { background: var(--surface); padding: 12px 16px; border-bottom: 1px solid var(--light);}
-    .card-body { padding: 16px; }
+    .wines-editor .wine-row{display:grid; grid-template-columns:1.5fr 1fr .8fr .8fr auto; gap:8px; align-items:center; margin-bottom:8px}
+    .wines-editor .wine-row input{width:100%}
+    .danger{background:#b00020; color:#fff}
+    .soft{background:var(--light)}
+    .help{font-size:.9rem;color:var(--gray)}
 
-    .vinar-card, .vino-card { display: flex; flex-direction: column; }
-    .vinar-thumb, .vino-thumb {
-      width: 100%; height: 160px; object-fit: cover; background: var(--light);
-    }
-    .vinar-content, .vino-content { padding: 12px; }
+    /* Footer */
+    footer{border-top:6px solid var(--green); padding:16px; background:#f9fbfc; color:#333}
+    footer .small{font-size:.9rem;color:var(--gray)}
 
-    .vinar-title { margin: 8px 0 4px; font-size: 1.05rem; }
-    .vinar-meta { color: var(--muted); font-size: 0.9rem; }
-
-    .btn {
-      display: inline-flex; align-items: center; justify-content: center;
-      gap: 8px;
-      padding: 8px 12px;
-      border-radius: 8px;
-      border: 2px solid transparent;
-      cursor: pointer;
-      font-weight: 600;
-      text-decoration: none;
-    }
-    .btn-primary { background: var(--primary); color: var(--white); }
-    .btn-secondary { background: var(--secondary); color: var(--white); }
-    .btn-outline { background: transparent; border-color: var(--primary); color: var(--primary); }
-    .btn-link { background: transparent; color: var(--primary); border: none; padding: 0; }
-    .btn:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
-    .btn:hover { filter: brightness(0.95); }
-
-    .social-list { display: flex; gap: 10px; list-style: none; padding: 0; margin: 0; }
-    .social-link {
-      display: inline-flex; align-items: center; justify-content: center;
-      width: 36px; height: 36px; border-radius: 50%;
-      background: var(--white); border: 2px solid var(--primary); color: var(--primary);
-    }
-    .social-link:hover { background: var(--accent); color: var(--black); border-color: var(--primary); }
-    .social-link svg { width: 18px; height: 18px; }
-
-    .error-box {
-      background: #ffe6e6;
-      border: 2px solid #cc0000;
-      color: #660000;
-      padding: 10px 12px; border-radius: 8px; margin-top: 12px;
-      white-space: pre-wrap;
-    }
-    .info-box {
-      background: #eef9ff;
-      border: 2px solid var(--secondary);
-      color: var(--black);
-      padding: 10px 12px; border-radius: 8px; margin-top: 12px;
-      white-space: pre-wrap;
-    }
-    .empty-state {
-      background: var(--surface);
-      border: 1px dashed var(--gray);
-      padding: 12px; border-radius: 8px; color: var(--muted);
-    }
-
-    .table { display: grid; gap: 6px; }
-    .table-row { display: grid; grid-template-columns: 1.2fr 1.4fr 1fr 1.6fr 0.9fr; gap: 6px; align-items: center; }
-    .table-header { font-weight: 700; background: var(--surface); padding: 8px; border-radius: 6px; }
-
-    .table .cell { padding: 8px; background: var(--white); border: 1px solid var(--light); border-radius: 6px; }
-
-    .form-grid { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
-    .form-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-
-    input, select, textarea {
-      width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--gray);
-      background: var(--white); color: var(--text);
-    }
-    input:focus, select:focus, textarea:focus {
-      outline: 3px solid var(--focus); border-color: var(--primary);
-    }
-    label { font-weight: 600; display: grid; gap: 6px; }
-
-    .vinar-detail { display: grid; grid-template-columns: 1fr; gap: 16px; }
-    .vinar-hero { display: grid; grid-template-columns: 1fr; gap: 16px; }
-    .vinar-hero img { width: 100%; height: 280px; object-fit: cover; border-radius: 10px; }
-    .vinar-hero .vinar-info { display: grid; gap: 8px; }
-
-    .badge {
-      display: inline-block; padding: 2px 8px; border-radius: 999px;
-      background: var(--accent); color: var(--black); font-size: 0.85rem;
-      border: 1px solid var(--green);
-    }
-
-    .vino-meta { font-size: 0.9rem; color: var(--muted); }
-    .price { font-weight: 700; color: var(--green); }
-    .available { color: var(--green); font-weight: 700; }
-    .not-available { color: #a00; font-weight: 700; }
-
-    .back-link { margin-bottom: 8px; display: inline-block; }
-
-    .site-footer { border-top: 4px solid var(--primary); background: var(--surface); margin-top: 24px; }
-    .footer-inner { padding: 12px 0; display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
-
-    .admin-grid { display: grid; gap: 16px; }
-
-    @media (min-width: 720px) {
-      .vinar-hero { grid-template-columns: 360px 1fr; }
-    }
-
-    @media (max-width: 600px) {
-      .table-row { grid-template-columns: 1fr 1fr; }
-      .table-header { display: none; }
+    /* Responsívne drobnosti */
+    @media (max-width:640px){
+      .wines-editor .wine-row{grid-template-columns:1fr}
+      .detail .header{flex-direction:column}
+      .hero .bar{flex-direction:column; align-items:flex-start}
     }
   </style>
 </head>
 <body>
-  <a class="skip-link" href="#main">Přeskočit na obsah</a>
+  <a class="sr-only" href="#obsah">Preskočiť na obsah</a>
 
-  <header class="site-header" role="banner">
-    <div class="container header-inner">
-      <div class="brand">
-        <a href="#/" class="brand-link" aria-label="Domů — Den Vinařů Petrov">
-          <span class="brand-logo" aria-hidden="true">🍇</span>
-          <span class="brand-title">Den Vinařů Petrov</span>
-        </a>
-      </div>
-      <nav class="social-nav" aria-label="Sociální odkazy">
-        <ul id="global-social" class="social-list"></ul>
-      </nav>
-      <div class="header-actions">
-        <a class="btn btn-outline" href="#/admin" aria-label="Přejít do admin rozhraní">Admin</a>
+  <header class="hero" role="banner" aria-label="Hero sekcia s fotografiou viníc">
+    <div class="brand" aria-hidden="true">
+      DOBRIH<br><span class="accent">VIN</span>
+    </div>
+
+    <div class="bar" role="navigation" aria-label="Horná lišta">
+      <div class="brand-mini" aria-label="Názov stránky">Dobrih Vin</div>
+      <div class="actions">
+        <button class="btn light" id="btnShowAll" title="Zobraziť karty vinárov"><span aria-hidden="true">🏷️</span> Všetci vinári</button>
+        <button class="btn secondary" id="btnAdmin" title="Prihlásiť sa do admina"><span aria-hidden="true">🔑</span> Admin</button>
+        <button class="btn ghost" id="btnConfig" title="Nastavenia prístupu k repozitáru"><span aria-hidden="true">⚙️</span> Nastavenia</button>
       </div>
     </div>
   </header>
 
-  <main id="main" class="container" role="main">
-    <!-- HOME -->
-    <section id="view-home" class="section" aria-labelledby="uvod-nadpis">
-      <div class="hero-inner">
-        <h1 id="uvod-nadpis">Vítejte na Dni vinařů v Petrově</h1>
-        <p class="lead">Objevte místní vinaře, jejich sklepy a skvělá vína. Klikněte na vinaře a prohlédněte si jeho nabídku.</p>
+  <main id="obsah">
+    <!-- Nastavenia repozitára (uložené v localStorage, aby všetci čitatelia vedeli odkiaľ načítať) -->
+    <section id="configPanel" class="admin-panel" aria-labelledby="configHeading">
+      <h2 id="configHeading">Nastavenia repozitára</h2>
+      <p class="help">Tieto údaje sú verejné pre čítanie (token sa tu NEUKLADÁ). Slúžia na to, aby aplikácia vedela načítať dáta z vášho GitHub repozitára.</p>
+      <div class="form-grid">
+        <div>
+          <label for="cfgOwner">Owner/organizácia</label>
+          <input id="cfgOwner" type="text" placeholder="napr. sediviroslav-del" autocomplete="off" />
+        </div>
+        <div>
+          <label for="cfgRepo">Repozitár</label>
+          <input id="cfgRepo" type="text" placeholder="napr. Den-Vinaru-2026-Petrov" autocomplete="off" />
+        </div>
+        <div>
+          <label for="cfgBranch">Branch</label>
+          <input id="cfgBranch" type="text" placeholder="main" value="main" />
+        </div>
+        <div>
+          <label for="cfgDataPath">Cesta k dátam (JSON)</label>
+          <input id="cfgDataPath" type="text" placeholder="data/winemakers.json" value="data/winemakers.json" />
+        </div>
+        <div>
+          <label for="cfgImagesPath">Priečinok obrázkov</label>
+          <input id="cfgImagesPath" type="text" placeholder="assets/uploads" value="assets/uploads" />
+        </div>
+      </div>
+      <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap">
+        <button class="btn" id="btnSaveConfig">Uložiť nastavenia</button>
+        <button class="btn soft" id="btnLoadNow">Načítať dáta teraz</button>
+        <span class="pill" id="configStatus" role="status" aria-live="polite">Nenačítané</span>
+      </div>
+    </section>
+
+    <!-- Admin prihlasenie + CRUD -->
+    <section id="adminPanel" class="admin-panel" aria-labelledby="adminHeading">
+      <h2 id="adminHeading">Admin (pridávanie a úprava vinárov)</h2>
+      <div class="form-grid" aria-label="Prihlásenie ako admin">
+        <div>
+          <label for="adminPassword">Heslo</label>
+          <input id="adminPassword" type="password" placeholder="Zadajte admin heslo" autocomplete="current-password" aria-describedby="passHelp" />
+          <div id="passHelp" class="help">Heslo: PetrovSedivy492</div>
+        </div>
+        <div>
+          <label for="adminToken">GitHub token (len admin, neukladá sa)</label>
+          <input id="adminToken" type="password" placeholder="ghp_..." autocomplete="off" aria-describedby="tokenHelp" />
+          <div id="tokenHelp" class="help">Použije sa len v tomto prehliadači a relácii na zápis JSON a obrázkov cez GitHub API.</div>
+        </div>
+      </div>
+      <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap">
+        <button class="btn" id="btnLogin">Prihlásiť</button>
+        <button class="btn soft" id="btnLogout" disabled>Odhlásiť</button>
+        <span class="pill" id="adminStatus" role="status" aria-live="polite">Odhlásený</span>
       </div>
 
-      <div class="section-header">
-        <h2 id="seznam-vinaru-nadpis">Seznam vinařů</h2>
-        <div class="section-tools">
-          <button id="refresh-list" class="btn btn-secondary" type="button" aria-label="Obnovit seznam">Obnovit</button>
+      <hr style="margin:16px 0;border:none;border-top:2px dashed var(--light)">
+
+      <h3>Nový / Upraviť vinára</h3>
+      <div class="form-grid">
+        <div>
+          <label for="wName">Názov vinára</label>
+          <input id="wName" type="text" placeholder="Priezvisko a názov" />
+        </div>
+        <div>
+          <label for="wCellar">Číslo sklepa</label>
+          <input id="wCellar" type="text" placeholder="napr. 12" />
+        </div>
+        <div>
+          <label for="wPhoto">Foto (upload)</label>
+          <input id="wPhoto" type="file" accept="image/*" />
+          <div class="help">Obrázok sa pri uložení nahrá do priečinka z nastavení.</div>
+        </div>
+        <div style="grid-column:1/-1">
+          <label for="wDesc">Popis</label>
+          <textarea id="wDesc" rows="3" placeholder="Krátky popis vinára, lokalita, špeciality..."></textarea>
         </div>
       </div>
 
-      <div id="vinari-grid" class="grid grid-vinari" role="list"></div>
-      <div id="empty-state" class="empty-state" hidden>Zatím nejsou k dispozici žádní vinaři.</div>
-      <div id="load-error" class="error-box" hidden role="alert">Nepodařilo se načíst data. Zkuste to prosím znovu.</div>
-      <div class="info-box">Tip: Pro přidání nebo úpravu vinařů a vín použijte tlačítko Admin vpravo nahoře.</div>
-    </section>
-
-    <!-- DETAIL VINARE -->
-    <section id="view-vinar" class="section" aria-labelledby="vinar-nadpis" hidden>
-      <a class="btn btn-link back-link" href="#/" aria-label="Zpět na hlavní stránku">&larr; Zpět</a>
-      <div id="vinar-detail" class="vinar-detail"></div>
-      <div id="vinar-not-found" class="error-box" hidden role="alert">Vinař nebyl nalezen.</div>
-
-      <h2 id="vinar-vina-nadpis">Vína</h2>
-      <div id="vinar-vina-list" class="grid grid-vina" role="list"></div>
-      <div id="vinar-vina-empty" class="empty-state" hidden>Tento vinař zatím nemá uvedená žádná vína.</div>
-    </section>
-
-    <!-- ADMIN -->
-    <section id="view-admin" class="section" aria-labelledby="admin-nadpis" hidden>
-      <div class="section-header">
-        <h1 id="admin-nadpis">Admin rozhraní</h1>
-        <a href="#/" class="btn btn-outline">Hlavní stránka</a>
+      <div class="section">
+        <h4>Ponuka vín</h4>
+        <div id="winesEditor" class="wines-editor"></div>
+        <button class="btn light" id="btnAddWine" type="button">+ Pridať víno</button>
       </div>
 
-      <div id="login-panel" class="card">
-        <div class="card-body">
-          <p>Pro vstup do admin módu klikněte na tlačítko a zadejte heslo.</p>
-          <button id="admin-login-btn" class="btn btn-primary" type="button">Přihlásit se</button>
-          <div id="login-error" class="error-box" hidden role="alert">Nesprávné heslo.</div>
+      <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap">
+        <button class="btn" id="btnSaveWinemaker" disabled>Uložiť vinára</button>
+        <button class="btn soft" id="btnResetForm" type="button">Vyčistiť formulár</button>
+        <button class="btn danger" id="btnDeleteWinemaker" disabled>Vymazať vybraného vinára</button>
+        <span class="pill" id="saveStatus" role="status" aria-live="polite">Pripravené</span>
+      </div>
+
+      <div class="section">
+        <h4>Existujúci vinári</h4>
+        <select id="existingSelect" aria-label="Výber existujúceho vinára na úpravu">
+          <option value="">— vyberte vinára —</option>
+        </select>
+      </div>
+    </section>
+
+    <!-- Karty vinárov pre používateľa -->
+    <section id="cardsView" class="grid" aria-labelledby="cardsHeading">
+      <h2 id="cardsHeading" class="sr-only">Karty vinárov</h2>
+      <div class="cards" id="cardsContainer" role="list"></div>
+    </section>
+
+    <!-- Detail vinára -->
+    <section id="detailView" class="detail" aria-live="polite" aria-labelledby="detailHeading">
+      <div>
+        <button class="btn light" id="btnBackToCards" aria-label="Späť na karty vinárov">← Späť na karty vinárov</button>
+      </div>
+      <div class="header">
+        <img id="detailPhoto" class="photo" alt="Fotografia vinára" src="" onerror="this.src='assets/img/placeholder.png'; this.alt='Náhradný obrázok';">
+        <div>
+          <h2 id="detailHeading"></h2>
+          <div class="muted" id="detailCellar"></div>
+          <div class="tags" id="detailTags"></div>
+          <p id="detailDesc"></p>
         </div>
       </div>
 
-      <div id="admin-panel" class="admin-grid" hidden>
-        <section class="card" aria-labelledby="repo-nastaveni-nadpis">
-          <div class="card-header"><h2 id="repo-nastaveni-nadpis">Nastavení repozitáře</h2></div>
-          <div class="card-body form-grid">
-            <label>Owner
-              <input type="text" id="repo-owner" value="sedivmiroslav-del" />
-            </label>
-            <label>Repo
-              <input type="text" id="repo-name" value="Den-Vinaru-2026-Petrov" />
-            </label>
-            <label>Branch
-              <input type="text" id="repo-branch" value="main" />
-            </label>
-            <form onsubmit="return false" aria-label="GitHub přístup">
-              <label>GitHub Token (PAT)
-                <input type="password" id="repo-token" placeholder="Zadejte PAT s oprávněním repo:contents" autocomplete="new-password" />
-              </label>
-            </form>
-            <div class="form-row">
-              <button id="btn-load-github" class="btn btn-secondary" type="button">Načíst z GitHubu</button>
-              <button id="btn-save-github" class="btn btn-primary" type="button">Uložit na GitHub</button>
-            </div>
-            <div class="form-row">
-              <button id="btn-export" class="btn btn-outline" type="button">Export JSON</button>
-              <label class="file-input">Import JSON
-                <input type="file" id="file-import" accept=".json" />
-              </label>
-            </div>
-            <div id="repo-msg" class="info-box" aria-live="polite"></div>
-          </div>
-        </section>
-
-        <section class="card" aria-labelledby="global-odkazy-nadpis">
-          <div class="card-header"><h2 id="global-odkazy-nadpis">Globální odkazy (IG, FB, Web)</h2></div>
-          <div class="card-body form-grid">
-            <label>Instagram URL
-              <input type="url" id="global-ig" placeholder="https://instagram.com/..." />
-            </label>
-            <label>Facebook URL
-              <input type="url" id="global-fb" placeholder="https://facebook.com/..." />
-            </label>
-            <label>Web URL
-              <input type="url" id="global-web" placeholder="https://..." />
-            </label>
-            <div class="form-row">
-              <button id="btn-global-apply" class="btn btn-secondary" type="button">Použít do náhledu</button>
-            </div>
-          </div>
-        </section>
-
-        <section class="card" aria-labelledby="vinari-nadpis">
-          <div class="card-header"><h2 id="vinari-nadpis">Vinaři</h2></div>
-          <div class="card-body">
-            <div class="form-row">
-              <button id="btn-add-vinar" class="btn btn-primary" type="button">Přidat vinaře</button>
-            </div>
-            <div id="vinari-table" class="table" role="table" aria-label="Seznam vinařů">
-              <div class="table-row table-header" role="row">
-                <div class="cell" role="columnheader">ID</div>
-                <div class="cell" role="columnheader">Název vinaře</div>
-                <div class="cell" role="columnheader">Číslo sklepa</div>
-                <div class="cell" role="columnheader">Foto (cesta)</div>
-                <div class="cell" role="columnheader">Akce</div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section class="card" aria-labelledby="vino-nadpis">
-          <div class="card-header"><h2 id="vino-nadpis">Vína vybraného vinaře</h2></div>
-          <div class="card-body">
-            <div class="form-grid">
-              <label>Vyberte vinaře pro správu vín
-                <select id="select-vinar-vina"></select>
-              </label>
-              <div class="form-row">
-                <button id="btn-add-vino" class="btn btn-primary" type="button">Přidat víno</button>
-              </div>
-            </div>
-            <div id="vina-table" class="table" role="table" aria-label="Seznam vín">
-              <div class="table-row table-header" role="row">
-                <div class="cell" role="columnheader">Název/Odrůda</div>
-                <div class="cell" role="columnheader">Ročník</div>
-                <div class="cell" role="columnheader">Kategorie</div>
-                <div class="cell" role="columnheader">Barva</div>
-                <div class="cell" role="columnheader">Cena</div>
-                <div class="cell" role="columnheader">Dostupnost</div>
-                <div class="cell" role="columnheader">Akce</div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section class="card" aria-labelledby="napoveda-nadpis">
-          <div class="card-header"><h2 id="napoveda-nadpis">Nápověda</h2></div>
-          <div class="card-body">
-            <ul>
-              <li>Fotky nahrávejte ručně do <code>assets/img/vinari/{id}.jpg</code>. Do pole foto vložte odpovídající cestu.</li>
-              <li>ID vinaře je krátké textové označení bez mezer (např. <code>novak</code>) a slouží k propojení vín.</li>
-              <li>Ukládání probíhá přes GitHub Contents API. Pokud soubor neexistuje, vytvoří se automaticky.</li>
-            </ul>
-          </div>
-        </section>
+      <div class="section">
+        <h3>Víno a vaše poznámky</h3>
+        <div id="detailWines"></div>
       </div>
     </section>
   </main>
 
-  <footer class="site-footer" role="contentinfo">
-    <div class="container footer-inner">
-      <p>&copy; <span id="year"></span> Den Vinařů Petrov. Všechna práva vyhrazena.</p>
-      <nav class="social-nav" aria-label="Sociální odkazy patička">
-        <ul id="global-social-footer" class="social-list"></ul>
-      </nav>
-    </div>
+  <footer>
+    <div class="small">Tip: Admin môže ukladať dáta priamo do GitHub repozitára cez API. Používatelia čítajú dáta bez tokenu; ich vlastné poznámky k vínam sa ukladajú len lokálne do ich prehliadača.</div>
   </footer>
 
   <script>
-    // ICONS
-    const Icons = {
-      instagram() {
-        return '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" role="img"><path fill="currentColor" d="M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5m10 2H7a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3m-5 4a5 5 0 1 1 0 10 5 5 0 0 1 0-10m0 2.5A2.5 2.5 0 1 0 12 16a2.5 2.5 0 0 0 0-5.5m5.25-.75a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"/></svg>';
-      },
-      facebook() {
-        return '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" role="img"><path fill="currentColor" d="M13 2.05c-5.06 0-9.16 4.11-9.16 9.17 0 4.58 3.36 8.38 7.76 9.08v-6.42H9.55v-2.66h2.05V8.64c0-2.02 1.21-3.13 3.04-3.13.88 0 1.8.16 1.8.16v1.98h-1.01c-1 0-1.32.62-1.32 1.25v1.5h2.24l-.36 2.66h-1.88v6.42c4.4-.7 7.76-4.5 7.76-9.08 0-5.06-4.1-9.17-9.16-9.17Z"/></svg>';
-      },
-      link() {
-        return '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" role="img"><path fill="currentColor" d="M10.59 13.41a1 1 0 1 0 1.41 1.41l4.24-4.24a3 3 0 1 0-4.24-4.24L9.76 4.67a1 1 0 0 0 1.41 1.41l2.83-2.83a1 1 0 1 1 1.41 1.41l-4.24 4.24a3 3 0 1 1-4.24-4.24l1.41-1.41A1 1 0 0 0 7.93 2L6.52 3.41a5 5 0 1 0 7.07 7.07l4.24-4.24a5 5 0 1 0-7.07-7.07L8.99 1.29a1 1 0 1 0 1.41 1.41l1.41-1.41a3 3 0 1 1 4.24 4.24l-4.24 4.24a1 1 0 0 0 0 1.41Z"/></svg>';
-      }
+    // ===== Pomocné utility =====
+    const $ = (sel,ctx=document)=>ctx.querySelector(sel);
+    const $$ = (sel,ctx=document)=>Array.from(ctx.querySelectorAll(sel));
+    const byId = id => document.getElementById(id);
+    const sleep = ms => new Promise(r=>setTimeout(r,ms));
+
+    function uid(prefix='id'){
+      return prefix + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+    }
+
+    function sanitizeFilename(name){
+      return name.toLowerCase().replace(/[^a-z0-9-_\.]+/g,'-').replace(/-+/g,'-').replace(/^-|-$/g,'');
+    }
+
+    function toBase64FromArrayBuffer(ab){
+      let binary = '';
+      const bytes = new Uint8Array(ab);
+      const len = bytes.byteLength;
+      for (let i=0;i<len;i++){ binary += String.fromCharCode(bytes[i]); }
+      return btoa(binary);
+    }
+
+    // ===== Konfigurácia (čítanie verejného JSON z raw.githubusercontent.com) =====
+    const defaultConfig = {
+      owner: 'YOUR_OWNER',
+      repo: 'YOUR_REPO',
+      branch: 'main',
+      dataPath: 'data/winemakers.json',
+      imagesPath: 'assets/uploads'
     };
 
-    // APP STATE
-    const App = (() => {
-      const state = {
-        global: { ig: "", fb: "", web: "" },
-        vinari: [],
-        vina: [],
-        github: {
-          owner: "sedivmiroslav-del",
-          repo: "Den-Vinaru-2026-Petrov",
-          branch: "main",
-          token: "",
-          shas: {
-            "data/global.json": null,
-            "data/vinari.json": null,
-            "data/vina.json": null
-          }
+    function loadConfig(){
+      try{
+        const saved = JSON.parse(localStorage.getItem('dv_config') || 'null');
+        return {...defaultConfig, ...(saved || {})};
+      }catch{ return {...defaultConfig}; }
+    }
+    function saveConfig(cfg){
+      localStorage.setItem('dv_config', JSON.stringify(cfg));
+    }
+
+    function rawDataUrl(cfg){
+      return `https://raw.githubusercontent.com/${cfg.owner}/${cfg.repo}/${cfg.branch}/${cfg.dataPath}`;
+    }
+    function apiContentUrl(cfg, path){
+      return `https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${encodeURIComponent(path)}`;
+    }
+
+    // ===== Stav aplikácie =====
+    const state = {
+      config: loadConfig(),
+      data: { winemakers: [] },
+      admin: { loggedIn:false, token:null },
+      currentDetailId: null
+    };
+
+    // ===== Načítanie/uloženie dát =====
+    async function fetchData(){
+      const status = byId('configStatus');
+      status.textContent = 'Načítavam...';
+      try{
+        const res = await fetch(rawDataUrl(state.config), {cache:'no-store'});
+        if (res.ok){
+          const json = await res.json();
+          state.data = json && json.winemakers ? json : {winemakers:[]};
+          status.textContent = 'Dáta načítané';
+        }else if(res.status === 404){
+          // súbor ešte neexistuje
+          state.data = {winemakers:[]};
+          status.textContent = 'Súbor neexistuje – vytvorí sa pri prvom uložení';
+        }else{
+          throw new Error('HTTP '+res.status);
         }
-      };
-      const paths = {
-        global: "data/global.json",
-        vinari: "data/vinari.json",
-        vina: "data/vina.json"
-      };
-
-      function init() {
-        document.getElementById('year').textContent = new Date().getFullYear();
-        window.addEventListener('hashchange', router);
-        router();
-        const refresh = document.getElementById('refresh-list');
-        if (refresh) refresh.addEventListener('click', () => loadAllData(true).then(renderHome).catch(showLoadError));
-        const loginBtn = document.getElementById('admin-login-btn');
-        if (loginBtn) loginBtn.addEventListener('click', adminLogin);
-        bindAdminButtons();
-        loadAllData().then(() => {
-          renderGlobalSocial(document.getElementById('global-social'));
-          renderGlobalSocial(document.getElementById('global-social-footer'));
-          if (location.hash === "" || location.hash === "#/" || location.hash.startsWith("#/vinar")) {
-            renderHome();
-          }
-        }).catch(showLoadError);
+      }catch(err){
+        console.error('Chyba načítania', err);
+        state.data = {winemakers:[]};
+        status.textContent = 'Chyba načítania';
       }
+      renderCards();
+      refreshExistingSelect();
+    }
 
-      function router() {
-        const viewHome = document.getElementById('view-home');
-        const viewVinar = document.getElementById('view-vinar');
-        const viewAdmin = document.getElementById('view-admin');
-        const hash = location.hash || "#/";
-
-        viewHome.hidden = true; viewVinar.hidden = true; viewAdmin.hidden = true;
-
-        if (hash.startsWith("#/admin")) {
-          viewAdmin.hidden = false;
-        } else if (hash.startsWith("#/vinar")) {
-          viewVinar.hidden = false;
-          const params = new URLSearchParams(hash.split("?")[1] || "");
-          const id = params.get("id");
-          renderVinarDetail(id, document.getElementById('vinar-detail'));
-        } else {
-          viewHome.hidden = false;
-        }
+    async function getFileSha(cfg, path){
+      const url = apiContentUrl(cfg, path);
+      const res = await fetch(url, {headers:{'Accept': 'application/vnd.github+json'}});
+      if(res.status===200){
+        const data = await res.json();
+        return data.sha;
       }
+      return null;
+    }
 
-      async function loadAllData(forceReload = false) {
-        const bust = forceReload ? (`?t=${Date.now()}`) : "";
-        async function safeFetchJson(path, fallback) {
-          try {
-            const r = await fetch(path + bust, { cache: forceReload ? "reload" : "default" });
-            if (!r.ok) return fallback;
-            return await r.json();
-          } catch { return fallback; }
-        }
-        const [g, vrs, vs] = await Promise.all([
-          safeFetchJson(paths.global, { ig: "", fb: "", web: "" }),
-          safeFetchJson(paths.vinari, []),
-          safeFetchJson(paths.vina, []),
-        ]);
-        state.global = sanitizeGlobal(g);
-        state.vinari = Array.isArray(vrs) ? vrs : [];
-        state.vina = Array.isArray(vs) ? vs : [];
+    async function saveFileToGitHub(path, contentBase64, message){
+      if(!state.admin.loggedIn || !state.admin.token) throw new Error('Nie ste prihlásený ako admin');
+      const cfg = state.config;
+      const url = apiContentUrl(cfg, path);
+      const sha = await getFileSha(cfg, path);
+      const body = { message, content: contentBase64, branch: cfg.branch };
+      if(sha) body.sha = sha;
+
+      const res = await fetch(url, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${state.admin.token}`,
+          'Accept': 'application/vnd.github+json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+      });
+      if(!res.ok){
+        const t = await res.text();
+        throw new Error('GitHub API error: '+res.status+' '+t);
       }
+      return res.json();
+    }
 
-      function sanitizeGlobal(g) {
-        return {
-          ig: (g && g.ig) || "",
-          fb: (g && g.fb) || "",
-          web: (g && g.web) || ""
-        };
+    async function uploadImageGitHub(file){
+      const arrayBuffer = await file.arrayBuffer();
+      const b64 = toBase64FromArrayBuffer(arrayBuffer);
+      const ext = file.name.split('.').pop() || 'jpg';
+      const fileSafeName = sanitizeFilename(file.name.replace('.'+ext,''));
+      const fileName = `${fileSafeName}-${Date.now()}.${ext}`;
+      const path = `${state.config.imagesPath.replace(/\/$/,'')}/${fileName}`;
+      const message = `Add image ${fileName}`;
+      await saveFileToGitHub(path, b64, message);
+      // raw URL na čítanie
+      const rawUrl = `https://raw.githubusercontent.com/${state.config.owner}/${state.config.repo}/${state.config.branch}/${path}`;
+      return {path, rawUrl};
+    }
+
+    async function saveDataJson(){
+      const jsonStr = JSON.stringify(state.data, null, 2);
+      const b64 = btoa(unescape(encodeURIComponent(jsonStr)));
+      const path = state.config.dataPath;
+      const message = 'Update winemakers data';
+      await saveFileToGitHub(path, b64, message);
+    }
+
+    // ===== UI – Render karty a detail =====
+    function renderCards(){
+      const wrap = byId('cardsContainer');
+      wrap.innerHTML = '';
+      const winemakers = state.data.winemakers || [];
+      if(!winemakers.length){
+        const empty = document.createElement('div');
+        empty.className='card';
+        empty.innerHTML = `
+          <div class="cover">Žiadni vinári</div>
+          <div class="body">
+            <h3>Prázdny katalóg</h3>
+            <p class="muted">Admin môže pridať prvé záznamy v sekcii Admin.</p>
+          </div>`;
+        wrap.appendChild(empty);
+        showCardsView();
+        return;
       }
-
-      function renderGlobalSocial(ulEl) {
-        if (!ulEl) return;
-        ulEl.innerHTML = "";
-        const items = [
-          { label: "Instagram", icon: Icons.instagram(), href: state.global.ig },
-          { label: "Facebook", icon: Icons.facebook(), href: state.global.fb },
-          { label: "Web", icon: Icons.link(), href: state.global.web },
-        ];
-        items.forEach(item => {
-          if (item.href && /^https?:\/\//i.test(item.href)) {
-            const li = document.createElement('li');
-            const a = document.createElement('a');
-            a.className = "social-link";
-            a.href = item.href;
-            a.target = "_blank";
-            a.rel = "noopener noreferrer";
-            a.setAttribute('aria-label', item.label);
-            a.innerHTML = item.icon;
-            li.appendChild(a);
-            ulEl.appendChild(li);
-          }
-        });
-        if (!ulEl.children.length) {
-          const li = document.createElement('li');
-          li.style.color = 'var(--muted)';
-          li.textContent = 'Sociální odkazy nejsou nastavené.';
-          ulEl.appendChild(li);
-        }
+      for(const w of winemakers){
+        const card = document.createElement('article');
+        card.className='card';
+        card.setAttribute('role','listitem');
+        card.innerHTML = `
+          <div class="cover">
+            ${w.photoUrl ? `<img src="${w.photoUrl}" alt="Foto vinára ${escapeHtml(w.name)}" onerror="this.src='assets/img/placeholder.png'">` : '<span>Bez obrázka</span>'}
+          </div>
+          <div class="body">
+            <h3>${escapeHtml(w.name)}</h3>
+            <div class="muted">Sklep č. ${escapeHtml(w.cellar || '?')}</div>
+          </div>
+        `;
+        card.addEventListener('click', ()=>openDetail(w.id));
+        wrap.appendChild(card);
       }
+      showCardsView();
+    }
 
-      function renderHome() {
-        const container = document.getElementById('vinari-grid');
-        if (!container) return;
-        container.innerHTML = "";
-        const empty = document.getElementById('empty-state');
-        if (!state.vinari.length) {
-          if (empty) empty.hidden = false;
-          return;
-        } else {
-          if (empty) empty.hidden = true;
-        }
+    function escapeHtml(str=''){
+      return String(str).replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
+    }
 
-        const sorted = [...state.vinari].sort((a,b) => {
-          const na = (a.nazev || "").localeCompare(b.nazev || "", "cs");
-          if (na !== 0) return na;
-          return (a.sklep || "").toString().localeCompare((b.sklep || "").toString(), "cs");
-        });
+    function showCardsView(){
+      byId('cardsView').style.display = 'grid';
+      byId('detailView').classList.remove('active');
+      byId('btnShowAll').disabled = true;
+    }
+    function showDetailView(){
+      byId('cardsView').style.display = 'none';
+      byId('detailView').classList.add('active');
+      byId('btnShowAll').disabled = false;
+    }
 
-        sorted.forEach(v => {
-          const card = document.createElement('article');
-          card.className = "card vinar-card";
-          card.setAttribute('role', 'listitem');
+    function openDetail(id){
+      const w = (state.data.winemakers||[]).find(x=>x.id===id);
+      if(!w) return;
+      state.currentDetailId = id;
+      byId('detailHeading').textContent = w.name || '';
+      byId('detailCellar').textContent = 'Sklep č. ' + (w.cellar || '?');
+      byId('detailDesc').textContent = w.description || '';
+      byId('detailPhoto').src = w.photoUrl || 'assets/img/placeholder.png';
 
-          const img = document.createElement('img');
-          img.className = "vinar-thumb";
-          img.alt = `Foto vinaře ${v.nazev || v.id || ''}`;
-          img.src = v.foto || `assets/img/vinari/${v.id || 'placeholder'}.jpg`;
-          img.onerror = () => { img.src = 'assets/img/vinari/placeholder.jpg'; };
+      const tags = byId('detailTags');
+      tags.innerHTML='';
+      const countTag = document.createElement('span');
+      countTag.className='tag';
+      countTag.textContent = `${(w.wines||[]).length} vín v ponuke`;
+      tags.appendChild(countTag);
 
-          const body = document.createElement('div');
-          body.className = "vinar-content";
-
-          const h3 = document.createElement('h3');
-          h3.className = "vinar-title";
-          h3.textContent = v.nazev || v.id || "(bez názvu)";
-
-          const meta = document.createElement('div');
-          meta.className = "vinar-meta";
-          meta.textContent = v.sklep ? `Sklep č. ${v.sklep}` : 'Číslo sklepa neuvedeno';
-
-          const link = document.createElement('a');
-          link.className = "btn btn-outline";
-          link.href = `#/vinar?id=${encodeURIComponent(v.id)}`;
-          link.setAttribute('aria-label', `Zobrazit detail vinaře ${v.nazev || v.id}`);
-          link.textContent = "Detail vinaře";
-
-          body.appendChild(h3);
-          body.appendChild(meta);
-          body.appendChild(link);
-
-          card.appendChild(img);
-          card.appendChild(body);
-
-          container.appendChild(card);
-        });
-      }
-
-      function renderVinarDetail(id, container) {
-        if (!container) return;
-        container.innerHTML = "";
-        const notFound = document.getElementById('vinar-not-found');
-        const vinaList = document.getElementById('vinar-vina-list');
-        const vinaEmpty = document.getElementById('vinar-vina-empty');
-
-        const v = state.vinari.find(x => x.id === id);
-        if (!v) {
-          if (notFound) notFound.hidden = false;
-          if (vinaList) vinaList.innerHTML = "";
-          if (vinaEmpty) vinaEmpty.hidden = true;
-          return;
-        } else {
-          if (notFound) notFound.hidden = true;
-        }
-
+      const list = byId('detailWines');
+      list.innerHTML='';
+      for(const wine of (w.wines||[])){
         const wrap = document.createElement('div');
-        wrap.className = "vinar-hero";
-
-        const img = document.createElement('img');
-        img.alt = `Foto vinaře ${v.nazev || v.id || ''}`;
-        img.src = v.foto || `assets/img/vinari/${v.id || 'placeholder'}.jpg`;
-        img.onerror = () => { img.src = 'assets/img/vinari/placeholder.jpg'; };
-
-        const info = document.createElement('div');
-        info.className = "vinar-info";
-
-        const h1 = document.createElement('h1');
-        h1.id = "vinar-nadpis";
-        h1.textContent = v.nazev || v.id;
-
-        const sklep = document.createElement('div');
-        sklep.innerHTML = `<span class="badge" aria-label="Číslo sklepa">Sklep č. ${v.sklep || 'neuvedeno'}</span>`;
-
-        const popis = document.createElement('p');
-        popis.textContent = v.popis || "Bez popisu.";
-
-        info.appendChild(h1);
-        info.appendChild(sklep);
-        info.appendChild(popis);
-
-        wrap.appendChild(img);
-        wrap.appendChild(info);
-
-        container.appendChild(wrap);
-
-        const myWines = state.vina.filter(w => w.idVinare === v.id);
-        if (!myWines.length) {
-          if (vinaList) vinaList.innerHTML = "";
-          if (vinaEmpty) vinaEmpty.hidden = false;
-          return;
-        }
-        if (vinaEmpty) vinaEmpty.hidden = true;
-        if (vinaList) {
-          vinaList.innerHTML = "";
-          myWines.forEach(w => {
-            const card = document.createElement('article');
-            card.className = "card vino-card";
-            card.setAttribute('role', 'listitem');
-
-            const placeholder = document.createElement('div');
-            placeholder.className = "vino-thumb";
-            placeholder.setAttribute('aria-hidden', 'true');
-            placeholder.style.background = 'linear-gradient(135deg, var(--light), var(--surface))';
-
-            const content = document.createElement('div');
-            content.className = "vino-content";
-
-            const h3 = document.createElement('h3');
-            h3.textContent = w.nazev || "Neznámé víno";
-
-            const meta = document.createElement('div');
-            meta.className = "vino-meta";
-            const parts = [];
-            if (w.rocnik) parts.push(`Ročník ${w.rocnik}`);
-            if (w.kategorie) parts.push(w.kategorie);
-            if (w.barva) parts.push(w.barva);
-            meta.textContent = parts.join(" • ");
-
-            const price = document.createElement('div');
-            price.className = "price";
-            price.textContent = w.cena ? `${w.cena} Kč` : "Cena na dotaz";
-
-            const avail = document.createElement('div');
-            avail.className = w.dostupnost ? "available" : "not-available";
-            avail.textContent = w.dostupnost ? "Dostupné" : "Nedostupné";
-
-            const desc = document.createElement('p');
-            desc.textContent = w.popis || "";
-
-            content.appendChild(h3);
-            content.appendChild(meta);
-            content.appendChild(price);
-            content.appendChild(avail);
-            if (w.popis) content.appendChild(desc);
-
-            card.appendChild(placeholder);
-            card.appendChild(content);
-            vinaList.appendChild(card);
-          });
-        }
+        wrap.className='wine';
+        const price = wine.price ? ` • ${escapeHtml(wine.price)} Kč` : '';
+        const year = wine.year ? ` (${escapeHtml(wine.year)})` : '';
+        wrap.innerHTML = `
+          <h4>${escapeHtml(wine.name)} – ${escapeHtml(wine.variety||'')}${year}${price}</h4>
+          <label for="note_${w.id}_${wine.id}">Vaša poznámka k vínu</label>
+          <textarea class="note" id="note_${w.id}_${wine.id}" placeholder="Sem si môžete písať dlhú osobnú poznámku – ukladá sa len do tohto prehliadača."></textarea>
+          <div class="note-status" id="status_${w.id}_${wine.id}" aria-live="polite">Neuložené</div>
+        `;
+        const ta = $('textarea', wrap);
+        const key = noteKey(w.id, wine.id);
+        ta.value = localStorage.getItem(key) || '';
+        const status = byId(`status_${w.id}_${wine.id}`);
+        status.textContent = 'Načítané z prehliadača';
+        ta.addEventListener('input', debounce(()=>{
+          localStorage.setItem(key, ta.value);
+          status.textContent = 'Uložené lokálne';
+        }, 400));
+        list.appendChild(wrap);
       }
+      showDetailView();
+      window.scrollTo({top:0, behavior:'smooth'});
+    }
 
-      function showLoadError() {
-        const el = document.getElementById('load-error');
-        if (el) el.hidden = false;
+    function noteKey(wid, wineid){ return `dv_note_${wid}_${wineid}`; }
+    function debounce(fn,ms){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a),ms); }; }
+
+    // ===== Admin: login, CRUD =====
+    function updateAdminUI(){
+      const logged = state.admin.loggedIn;
+      byId('btnLogin').disabled = logged;
+      byId('btnLogout').disabled = !logged;
+      byId('btnSaveWinemaker').disabled = !logged;
+      byId('btnDeleteWinemaker').disabled = !logged || !byId('existingSelect').value;
+      byId('adminStatus').textContent = logged ? 'Prihlásený' : 'Odhlásený';
+      byId('adminPanel').classList.toggle('active', true); // panel je stále viditeľný, iba akcia uloženia je zakázaná
+    }
+
+    byId('btnAdmin').addEventListener('click', ()=>{
+      // len skrolneme na admin panel
+      byId('adminPanel').scrollIntoView({behavior:'smooth'});
+    });
+
+    byId('btnConfig').addEventListener('click', ()=>{
+      byId('configPanel').classList.toggle('active');
+      if(byId('configPanel').classList.contains('active')){
+        populateConfigForm();
+        byId('configPanel').scrollIntoView({behavior:'smooth'});
       }
+    });
 
-      // ADMIN
-      function adminLogin() {
-        const pwd = prompt('Zadejte heslo pro admin mód:');
-        if (pwd === 'PetrovSedivy492') {
-          document.getElementById('login-panel').hidden = true;
-          document.getElementById('admin-panel').hidden = false;
-          renderAdminGlobal();
-          renderAdminVinariTable();
-          renderAdminVinaTable();
-          fillRepoDefaults('sedivmiroslav-del', 'Den-Vinaru-2026-Petrov', 'main');
-        } else {
-          const e = document.getElementById('login-error');
-          if (e) { e.hidden = false; setTimeout(() => e.hidden = true, 3000); }
-        }
-      }
-
-      function bindAdminButtons() {
-        const q = id => document.getElementById(id);
-        const a = q('btn-global-apply');
-        if (a) a.addEventListener('click', () => { saveGlobalFromForm(); renderGlobalSocial(document.getElementById('global-social')); renderGlobalSocial(document.getElementById('global-social-footer')); });
-        const av = q('btn-add-vinar');
-        if (av) av.addEventListener('click', adminAddVinar);
-        const sv = q('select-vinar-vina');
-        if (sv) sv.addEventListener('change', renderAdminVinaTable);
-        const addVino = q('btn-add-vino');
-        if (addVino) addVino.addEventListener('click', adminAddVino);
-        const loadBtn = q('btn-load-github');
-        if (loadBtn) loadBtn.addEventListener('click', async () => {
-          const owner = q('repo-owner').value.trim();
-          const repo = q('repo-name').value.trim();
-          const branch = q('repo-branch').value.trim();
-          const token = q('repo-token').value.trim();
-          q('repo-msg').textContent = 'Načítám data z GitHubu...';
-          try {
-            await githubLoadAll({owner, repo, branch, token});
-            q('repo-msg').textContent = 'Data načtena z GitHubu.';
-            renderAdminGlobal();
-            renderAdminVinariTable();
-            renderAdminVinaTable();
-            renderGlobalSocial(document.getElementById('global-social'));
-            renderGlobalSocial(document.getElementById('global-social-footer'));
-            renderHome();
-          } catch (e) {
-            q('repo-msg').textContent = 'Chyba při načítání: ' + (e && e.message ? e.message : 'neznámá chyba');
-          }
-        });
-        const saveBtn = q('btn-save-github');
-        if (saveBtn) saveBtn.addEventListener('click', async () => {
-          const owner = q('repo-owner').value.trim();
-          const repo = q('repo-name').value.trim();
-          const branch = q('repo-branch').value.trim();
-          const token = q('repo-token').value.trim();
-          q('repo-msg').textContent = 'Kontroluji repo/branch/práva...';
-          try {
-            const check = await githubValidateAccess({owner, repo, branch, token});
-            if (!check.ok) {
-              q('repo-msg').textContent = 'Nelze ukládat: ' + check.msg;
-              return;
-            }
-            q('repo-msg').textContent = 'Ukládám data na GitHub...';
-            const created = await githubSaveAll({owner, repo, branch, token});
-            q('repo-msg').textContent = created
-              ? 'Uloženo na GitHub. Soubory (a složka data/) byly vytvořeny.'
-              : 'Uloženo na GitHub.';
-          } catch (e) {
-            q('repo-msg').textContent = 'Chyba při ukládání: ' + (e && e.message ? e.message : 'neznámá chyba') +
-              '\nZkontrolujte Owner/Repo/Branch a že PAT má Contents: Read & Write. U soukromého repa GitHub vrací 404, pokud token nemá práva.';
-          }
-        });
-        const expBtn = q('btn-export');
-        if (expBtn) expBtn.addEventListener('click', exportAllAsJson);
-        const imp = q('file-import');
-        if (imp) imp.addEventListener('change', (evt) => importAllFromJsonFile(evt.target.files[0]));
-      }
-
-      function fillRepoDefaults(owner, repo, branch) {
-        const o = document.getElementById('repo-owner');
-        const r = document.getElementById('repo-name');
-        const b = document.getElementById('repo-branch');
-        if (o) o.value = owner;
-        if (r) r.value = repo;
-        if (b) b.value = branch || "main";
-      }
-
-      function renderAdminGlobal() {
-        const ig = document.getElementById('global-ig');
-        const fb = document.getElementById('global-fb');
-        const web = document.getElementById('global-web');
-        if (ig) ig.value = state.global.ig || "";
-        if (fb) fb.value = state.global.fb || "";
-        if (web) web.value = state.global.web || "";
-      }
-
-      function saveGlobalFromForm() {
-        const ig = document.getElementById('global-ig')?.value.trim() || "";
-        const fb = document.getElementById('global-fb')?.value.trim() || "";
-        const web = document.getElementById('global-web')?.value.trim() || "";
-        state.global = sanitizeGlobal({ ig, fb, web });
-      }
-
-      function adminAddVinar() {
-        const id = prompt("Zadejte nové ID vinaře (bez mezer, malá písmena, např. novak):");
-        if (!id) return;
-        if (state.vinari.find(v => v.id === id)) {
-          alert("Vinař s tímto ID již existuje.");
-          return;
-        }
-        const novy = { id, nazev: "", popis: "", sklep: "", foto: `assets/img/vinari/${id}.jpg` };
-        state.vinari.push(novy);
-        renderAdminVinariTable();
-        renderAdminVinarSelect();
-        renderHome();
-      }
-
-      function adminDeleteVinar(id) {
-        if (!confirm("Opravdu smazat tohoto vinaře a všechna jeho vína?")) return;
-        state.vinari = state.vinari.filter(v => v.id !== id);
-        state.vina = state.vina.filter(w => w.idVinare !== id);
-        renderAdminVinariTable();
-        renderAdminVinarSelect();
-        renderAdminVinaTable();
-        renderHome();
-      }
-
-      function renderAdminVinariTable() {
-        const table = document.getElementById('vinari-table');
-        if (!table) return;
-        [...table.querySelectorAll('.table-row.data')].forEach(el => el.remove());
-
-        state.vinari.forEach(v => {
-          const row = document.createElement('div');
-          row.className = "table-row data";
-          row.setAttribute('role', 'row');
-
-          const cId = document.createElement('div'); cId.className = "cell"; cId.textContent = v.id;
-          const cNazev = document.createElement('div'); cNazev.className = "cell";
-          const inpNazev = document.createElement('input'); inpNazev.type = "text"; inpNazev.value = v.nazev || ""; inpNazev.ariaLabel = "Název vinaře";
-          inpNazev.addEventListener('input', e => { v.nazev = e.target.value; renderHome(); });
-          cNazev.appendChild(inpNazev);
-
-          const cSklep = document.createElement('div'); cSklep.className = "cell";
-          const inpSklep = document.createElement('input'); inpSklep.type = "text"; inpSklep.value = v.sklep || ""; inpSklep.ariaLabel = "Číslo sklepa";
-          inpSklep.addEventListener('input', e => { v.sklep = e.target.value; renderHome(); });
-          cSklep.appendChild(inpSklep);
-
-          const cFoto = document.createElement('div'); cFoto.className = "cell";
-          const inpFoto = document.createElement('input'); inpFoto.type = "text"; inpFoto.value = v.foto || `assets/img/vinari/${v.id}.jpg`; inpFoto.ariaLabel = "Cesta k fotce";
-          inpFoto.addEventListener('input', e => { v.foto = e.target.value; renderHome(); });
-          cFoto.appendChild(inpFoto);
-
-          const cAkce = document.createElement('div'); cAkce.className = "cell";
-          const btnEdit = document.createElement('button'); btnEdit.className = "btn btn-secondary"; btnEdit.textContent = "Upravit popis";
-          btnEdit.addEventListener('click', () => {
-            const novyPopis = prompt("Popis vinaře:", v.popis || "");
-            if (novyPopis !== null) v.popis = novyPopis;
-          });
-          const btnDel = document.createElement('button'); btnDel.className = "btn btn-outline"; btnDel.textContent = "Smazat";
-          btnDel.addEventListener('click', () => adminDeleteVinar(v.id));
-          cAkce.appendChild(btnEdit);
-          cAkce.appendChild(btnDel);
-
-          row.appendChild(cId);
-          row.appendChild(cNazev);
-          row.appendChild(cSklep);
-          row.appendChild(cFoto);
-          row.appendChild(cAkce);
-
-          table.appendChild(row);
-        });
-
-        renderAdminVinarSelect();
-      }
-
-      function renderAdminVinarSelect() {
-        const sel = document.getElementById('select-vinar-vina');
-        if (!sel) return;
-        const current = sel.value;
-        sel.innerHTML = "";
-        const optDef = document.createElement('option');
-        optDef.value = "";
-        optDef.textContent = "-- vyberte vinaře --";
-        sel.appendChild(optDef);
-        state.vinari.forEach(v => {
-          const opt = document.createElement('option');
-          opt.value = v.id;
-          opt.textContent = v.nazev ? `${v.nazev} (${v.id})` : v.id;
-          sel.appendChild(opt);
-        });
-        if ([...sel.options].some(o => o.value === current)) {
-          sel.value = current;
-        }
-      }
-
-      function adminAddVino() {
-        const sel = document.getElementById('select-vinar-vina');
-        const idVinare = sel?.value;
-        if (!idVinare) {
-          alert("Nejprve vyberte vinaře pro přidání vína.");
-          return;
-        }
-        const vino = {
-          idVinare,
-          nazev: "",
-          rocnik: "",
-          kategorie: "",
-          barva: "",
-          cena: "",
-          popis: "",
-          dostupnost: true
-        };
-        state.vina.push(vino);
-        renderAdminVinaTable();
-      }
-
-      function adminDeleteVino(index) {
-        if (!confirm("Opravdu smazat toto víno?")) return;
-        state.vina.splice(index, 1);
-        renderAdminVinaTable();
-      }
-
-      function renderAdminVinaTable() {
-        const sel = document.getElementById('select-vinar-vina');
-        const table = document.getElementById('vina-table');
-        if (!sel || !table) return;
-        [...table.querySelectorAll('.table-row.data')].forEach(el => el.remove());
-        const idVinare = sel.value;
-        if (!idVinare) return;
-
-        const filtered = state.vina.map((w, idx) => ({...w, __index: idx})).filter(w => w.idVinare === idVinare);
-
-        filtered.forEach(w => {
-          const row = document.createElement('div');
-          row.className = "table-row data";
-          row.setAttribute('role', 'row');
-
-          const cNazev = cellInput(w, 'nazev', 'text', 'Název/Odrůda');
-          const cRocnik = cellInput(w, 'rocnik', 'text', 'Ročník');
-          const cKat = cellSelect(w, 'kategorie', ['','suché','polosuché','polosladké','sladké'], 'Kategorie');
-          const cBarva = cellSelect(w, 'barva', ['','bílé','červené','růžové'], 'Barva');
-          const cCena = cellInput(w, 'cena', 'text', 'Cena (Kč)');
-          const cDost = document.createElement('div'); cDost.className = "cell";
-          const chk = document.createElement('input'); chk.type = 'checkbox'; chk.checked = !!w.dostupnost; chk.ariaLabel = "Dostupnost";
-          chk.addEventListener('change', e => { state.vina[w.__index].dostupnost = e.target.checked; });
-          cDost.appendChild(chk);
-
-          const cAkce = document.createElement('div'); cAkce.className = "cell";
-          const btnPop = document.createElement('button'); btnPop.className = "btn btn-secondary"; btnPop.textContent = "Upravit popis";
-          btnPop.addEventListener('click', () => {
-            const np = prompt("Popis vína:", state.vina[w.__index].popis || "");
-            if (np !== null) state.vina[w.__index].popis = np;
-          });
-          const btnDel = document.createElement('button'); btnDel.className = "btn btn-outline"; btnDel.textContent = "Smazat";
-          btnDel.addEventListener('click', () => adminDeleteVino(w.__index));
-          cAkce.appendChild(btnPop);
-          cAkce.appendChild(btnDel);
-
-          row.appendChild(cNazev);
-          row.appendChild(cRocnik);
-          row.appendChild(cKat);
-          row.appendChild(cBarva);
-          row.appendChild(cCena);
-          row.appendChild(cDost);
-          row.appendChild(cAkce);
-
-          table.appendChild(row);
-        });
-
-        function cellInput(obj, key, type, aria) {
-          const cell = document.createElement('div'); cell.className = "cell";
-          const inp = document.createElement('input'); inp.type = type; inp.value = obj[key] || ""; inp.ariaLabel = aria;
-          inp.addEventListener('input', e => { state.vina[obj.__index][key] = e.target.value; });
-          cell.appendChild(inp);
-          return cell;
-        }
-        function cellSelect(obj, key, options, aria) {
-          const cell = document.createElement('div'); cell.className = "cell";
-          const sel = document.createElement('select'); sel.ariaLabel = aria;
-          options.forEach(o => {
-            const opt = document.createElement('option'); opt.value = o; opt.textContent = o || "--";
-            sel.appendChild(opt);
-          });
-          sel.value = obj[key] || "";
-          sel.addEventListener('change', e => { state.vina[obj.__index][key] = e.target.value; });
-          cell.appendChild(sel);
-          return cell;
-        }
-      }
-
-      function exportAllAsJson() {
-        const bundle = { global: state.global, vinari: state.vinari, vina: state.vina };
-        const blob = new Blob([JSON.stringify(bundle, null, 2)], {type: 'application/json'});
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `den-vinaru-export-${new Date().toISOString().slice(0,10)}.json`;
-        a.click();
-        setTimeout(() => URL.revokeObjectURL(a.href), 2000);
-      }
-
-      function importAllFromJsonFile(file) {
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = () => {
-          try {
-            const obj = JSON.parse(reader.result);
-            state.global = sanitizeGlobal(obj.global || {});
-            state.vinari = Array.isArray(obj.vinari) ? obj.vinari : [];
-            state.vina = Array.isArray(obj.vina) ? obj.vina : [];
-            alert("Data importována do náhledu. Nezapomeňte uložit na GitHub.");
-            renderAdminGlobal();
-            renderAdminVinariTable();
-            renderAdminVinaTable();
-            renderGlobalSocial(document.getElementById('global-social'));
-            renderGlobalSocial(document.getElementById('global-social-footer'));
-            renderHome();
-          } catch (e) {
-            alert("Chybný formát JSON.");
-          }
-        };
-        reader.readAsText(file, 'utf-8');
-      }
-
-      // GITHUB API
-      const GH_BASE = "https://api.github.com";
-      function b64encode(txt) { return btoa(unescape(encodeURIComponent(txt))); }
-
-      function buildGhHeaders(token, scheme) {
-        const h = {
-          Accept: 'application/vnd.github+json',
-          'X-GitHub-Api-Version': '2022-11-28',
-          'User-Agent': 'Den-Vinaru-Petrov-App'
-        };
-        if (token) h.Authorization = `${scheme} ${token}`;
-        return h;
-      }
-
-      async function ghFetch(url, options, token) {
-        const opt1 = Object.assign({}, options, { headers: Object.assign({}, options.headers || {}, buildGhHeaders(token, 'token')) });
-        let res = await fetch(url, opt1);
-        if (token && [401,403,404].includes(res.status)) {
-          const opt2 = Object.assign({}, options, { headers: Object.assign({}, options.headers || {}, buildGhHeaders(token, 'Bearer')) });
-          res = await fetch(url, opt2);
-        }
-        return res;
-      }
-
-      function encodePathSegments(p) {
-        return p.split('/').map(encodeURIComponent).join('/');
-      }
-
-      function encOwnerRepo(owner, repo) {
-        return {
-          o: encodeURIComponent(owner),
-          r: encodeURIComponent(repo)
-        };
-      }
-
-      // Kontrola repo/branch/práv
-      async function githubValidateAccess({owner, repo, branch, token}) {
-        try {
-          const {o, r} = encOwnerRepo(owner, repo);
-          // repo existuje?
-          let res = await ghFetch(`${GH_BASE}/repos/${o}/${r}`, { method: 'GET' }, token);
-          if (res.status === 404) return { ok: false, msg: 'Repozitář neexistuje nebo k němu nemáte přístup (404).' };
-          if (!res.ok) return { ok: false, msg: `Kontrola repo selhala: ${res.status} ${await res.text().catch(()=> '')}` };
-
-          // branch existuje?
-          res = await ghFetch(`${GH_BASE}/repos/${o}/${r}/branches/${encodeURIComponent(branch)}`, { method: 'GET' }, token);
-          if (res.status === 404) return { ok: false, msg: `Větev "${branch}" neexistuje (404).` };
-          if (!res.ok) return { ok: false, msg: `Kontrola větve selhala: ${res.status} ${await res.text().catch(()=> '')}` };
-
-          // oprávnění obsah?
-          // pokus o HEAD na contents (někdy vrací 404), ale hlavní je PUT níže. Tady jen informativně:
-          return { ok: true, msg: 'OK' };
-        } catch (e) {
-          return { ok: false, msg: e && e.message ? e.message : 'neznámá chyba validace' };
-        }
-      }
-
-      async function githubGetFile({owner, repo, path, ref, token}) {
-        const {o, r} = encOwnerRepo(owner, repo);
-        const url = `${GH_BASE}/repos/${o}/${r}/contents/${encodePathSegments(path)}?ref=${encodeURIComponent(ref)}`;
-        const res = await ghFetch(url, { method: 'GET' }, token);
-        if (res.status === 404) return { content: "", sha: null, exists: false };
-        if (!res.ok) {
-          const t = await res.text().catch(() => "");
-          throw new Error(`GET ${path} failed: ${res.status} ${t}`);
-        }
-        const json = await res.json();
-        const decoded = atob(json.content.replace(/\n/g, ""));
-        return { content: decoded, sha: json.sha, exists: true };
-      }
-
-      async function githubPutFile({owner, repo, path, branch, token, content, message, sha}) {
-        const {o, r} = encOwnerRepo(owner, repo);
-        const url = `${GH_BASE}/repos/${o}/${r}/contents/${encodePathSegments(path)}`;
-        const body = { message, content: b64encode(content), branch };
-        if (sha) body.sha = sha;
-        const res = await ghFetch(url, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body)
-        }, token);
-        if (!res.ok) {
-          const t = await res.text().catch(() => "");
-          throw new Error(`PUT ${path} failed: ${res.status} ${t}`);
-        }
-        const json = await res.json();
-        return json;
-      }
-
-      async function githubLoadAll({owner, repo, branch, token}) {
-        for (const p of [paths.global, paths.vinari, paths.vina]) {
-          const {content, sha} = await githubGetFile({owner, repo, path: p, ref: branch, token});
-          state.github.shas[p] = sha || null;
-          try {
-            if (p === paths.global) state.global = sanitizeGlobal(content ? JSON.parse(content) : { ig: "", fb: "", web: "" });
-            if (p === paths.vinari) state.vinari = content ? JSON.parse(content) : [];
-            if (p === paths.vina) state.vina = content ? JSON.parse(content) : [];
-          } catch { /* ignore invalid JSON */ }
-        }
-      }
-
-      async function githubSaveAll({owner, repo, branch, token}) {
-        if (!token) throw new Error("Chybí GitHub token.");
-        const now = new Date().toISOString();
-        const payloads = {
-          [paths.global]: JSON.stringify(state.global, null, 2),
-          [paths.vinari]: JSON.stringify(state.vinari, null, 2),
-          [paths.vina]: JSON.stringify(state.vina, null, 2)
-        };
-        const msgs = {
-          [paths.global]: `chore(data): update global links (${now})`,
-          [paths.vinari]: `chore(data): update vinari (${now})`,
-          [paths.vina]: `chore(data): update vina (${now})`,
-        };
-        let createdAny = false;
-        for (const p of [paths.global, paths.vinari, paths.vina]) {
-          const sha = state.github.shas[p] || null;
-          const res = await githubPutFile({owner, repo, path: p, branch, token, content: payloads[p], message: msgs[p], sha});
-          const newSha = res.content && res.content.sha ? res.content.sha : null;
-          if (!sha && newSha) createdAny = true;
-          state.github.shas[p] = newSha;
-        }
-        return createdAny;
-      }
-
+    function populateConfigForm(){
+      const c = state.config;
+      byId('cfgOwner').value = c.owner;
+      byId('cfgRepo').value = c.repo;
+      byId('cfgBranch').value = c.branch;
+      byId('cfgDataPath').value = c.dataPath;
+      byId('cfgImagesPath').value = c.imagesPath;
+    }
+    function readConfigForm(){
       return {
-        init,
-        renderGlobalSocial,
-        loadAllData,
-        renderHome,
-        renderVinarDetail,
-        // Admin
-        renderAdminGlobal,
-        saveGlobalFromForm,
-        adminAddVinar,
-        adminDeleteVinar,
-        renderAdminVinariTable,
-        renderAdminVinarSelect,
-        adminAddVino,
-        adminDeleteVino,
-        renderAdminVinaTable,
-        // Export/Import
-        exportAllAsJson,
-        importAllFromJsonFile,
-        // GitHub
-        githubLoadAll,
-        githubSaveAll
+        owner: byId('cfgOwner').value.trim() || defaultConfig.owner,
+        repo: byId('cfgRepo').value.trim() || defaultConfig.repo,
+        branch: byId('cfgBranch').value.trim() || 'main',
+        dataPath: byId('cfgDataPath').value.trim() || defaultConfig.dataPath,
+        imagesPath: byId('cfgImagesPath').value.trim() || defaultConfig.imagesPath
       };
-    })();
+    }
+    byId('btnSaveConfig').addEventListener('click', ()=>{
+      state.config = readConfigForm();
+      saveConfig(state.config);
+      byId('configStatus').textContent = 'Uložené. Kliknite Načítať dáta.';
+    });
+    byId('btnLoadNow').addEventListener('click', ()=>fetchData());
 
-    // INIT
-    document.addEventListener('DOMContentLoaded', () => {
-      App.init();
+    byId('btnLogin').addEventListener('click', ()=>{
+      const pw = byId('adminPassword').value;
+      const token = byId('adminToken').value.trim();
+      if(pw !== 'PetrovSedivy492'){ alert('Nesprávne heslo.'); return; }
+      if(!token){ alert('Zadajte GitHub token s právom repo (contents:write).'); return; }
+      state.admin.loggedIn = true;
+      state.admin.token = token;
+      sessionStorage.setItem('dv_admin','1');
+      byId('adminStatus').textContent = 'Prihlásený';
+      updateAdminUI();
+    });
+
+    byId('btnLogout').addEventListener('click', ()=>{
+      state.admin.loggedIn = false;
+      state.admin.token = null;
+      sessionStorage.removeItem('dv_admin');
+      updateAdminUI();
+    });
+
+    // Wines editor dynamika
+    const winesEditor = byId('winesEditor');
+    function addWineRow(data={}){
+      const row = document.createElement('div');
+      row.className='wine-row';
+      const id = data.id || uid('wine');
+      row.dataset.id = id;
+      row.innerHTML = `
+        <input type="text" placeholder="Názov vína" value="${escapeAttr(data.name||'')}">
+        <input type="text" placeholder="Odrôda (Rizling...)" value="${escapeAttr(data.variety||'')}">
+        <input type="number" placeholder="Ročník" value="${escapeAttr(data.year||'')}">
+        <input type="text" placeholder="Cena" value="${escapeAttr(data.price||'')}">
+        <button type="button" class="btn soft" aria-label="Odstrániť víno">🗑️</button>
+      `;
+      $('button',row).addEventListener('click', ()=> row.remove());
+      winesEditor.appendChild(row);
+    }
+    function escapeAttr(s=''){ return String(s).replace(/"/g,'&quot;'); }
+
+    byId('btnAddWine').addEventListener('click', ()=>addWineRow());
+
+    function readForm(){
+      const wines = $$('.wine-row', winesEditor).map(row=>({
+        id: row.dataset.id || uid('wine'),
+        name: $('input:nth-child(1)',row).value.trim(),
+        variety: $('input:nth-child(2)',row).value.trim(),
+        year: $('input:nth-child(3)',row).value.trim(),
+        price: $('input:nth-child(4)',row).value.trim()
+      })).filter(w=>w.name);
+      return {
+        id: byId('existingSelect').value || uid('winemaker'),
+        name: byId('wName').value.trim(),
+        cellar: byId('wCellar').value.trim(),
+        photoFile: byId('wPhoto').files[0] || null,
+        description: byId('wDesc').value.trim(),
+        wines
+      };
+    }
+
+    function fillForm(w){
+      byId('wName').value = w?.name || '';
+      byId('wCellar').value = w?.cellar || '';
+      byId('wDesc').value = w?.description || '';
+      winesEditor.innerHTML='';
+      (w?.wines||[]).forEach(addWineRow);
+      byId('wPhoto').value = '';
+    }
+
+    function refreshExistingSelect(){
+      const sel = byId('existingSelect');
+      const cur = sel.value;
+      sel.innerHTML = '<option value="">— vyberte vinára —</option>';
+      (state.data.winemakers||[]).forEach(w=>{
+        const opt = document.createElement('option');
+        opt.value = w.id;
+        opt.textContent = `${w.name} (sklep ${w.cellar||'?'})`;
+        sel.appendChild(opt);
+      });
+      sel.value = cur || '';
+    }
+
+    byId('existingSelect').addEventListener('change', (e)=>{
+      const id = e.target.value;
+      const w = (state.data.winemakers||[]).find(x=>x.id===id);
+      fillForm(w||null);
+      byId('btnDeleteWinemaker').disabled = !state.admin.loggedIn || !id;
+    });
+
+    byId('btnResetForm').addEventListener('click', ()=>{
+      byId('existingSelect').value = '';
+      fillForm(null);
+      byId('btnDeleteWinemaker').disabled = !state.admin.loggedIn;
+    });
+
+    byId('btnSaveWinemaker').addEventListener('click', async ()=>{
+      try{
+        byId('saveStatus').textContent = 'Ukladám...';
+        const f = readForm();
+        if(!f.name){ alert('Zadajte názov vinára'); return; }
+
+        // Upload obrázka ak je priložený
+        let photoUrl = null;
+        if(f.photoFile){
+          const uploaded = await uploadImageGitHub(f.photoFile);
+          photoUrl = uploaded.rawUrl;
+        }
+
+        // Zloženie objektu
+        let w = (state.data.winemakers||[]).find(x=>x.id===f.id);
+        if(!w){
+          w = { id: f.id, name: f.name, cellar: f.cellar, description: f.description, photoUrl: photoUrl || '', wines: f.wines };
+          state.data.winemakers.push(w);
+        }else{
+          w.name = f.name;
+          w.cellar = f.cellar;
+          w.description = f.description;
+          if(photoUrl) w.photoUrl = photoUrl;
+          w.wines = f.wines;
+        }
+
+        // Uloženie JSON do GitHubu
+        await saveDataJson();
+        await fetchData(); // znovunačítať
+        byId('existingSelect').value = w.id;
+        byId('saveStatus').textContent = 'Uložené';
+        alert('Vinár uložený.');
+      }catch(err){
+        console.error(err);
+        byId('saveStatus').textContent = 'Chyba ukladania';
+        alert('Chyba: ' + err.message);
+      }
+    });
+
+    byId('btnDeleteWinemaker').addEventListener('click', async ()=>{
+      const id = byId('existingSelect').value;
+      if(!id) return;
+      if(!confirm('Naozaj zmazať tohto vinára z JSON? Táto akcia je nevratná (obrázok na GitHube zostane).')) return;
+      try{
+        byId('saveStatus').textContent = 'Mažem...';
+        state.data.winemakers = (state.data.winemakers||[]).filter(x=>x.id!==id);
+        await saveDataJson();
+        await fetchData();
+        byId('existingSelect').value = '';
+        fillForm(null);
+        byId('saveStatus').textContent = 'Zmazané';
+      }catch(err){
+        console.error(err);
+        byId('saveStatus').textContent = 'Chyba mazania';
+        alert('Chyba: '+err.message);
+      }
+    });
+
+    // Horné tlačidlá zobrazenia
+    byId('btnBackToCards').addEventListener('click', showCardsView);
+    byId('btnShowAll').addEventListener('click', showCardsView);
+
+    // ===== Inicializácia =====
+    function applyConfigToFormAndStatus(){
+      populateConfigForm();
+      byId('configStatus').textContent = 'Pripravené';
+    }
+
+    window.addEventListener('DOMContentLoaded', async ()=>{
+      applyConfigToFormAndStatus();
+      if(sessionStorage.getItem('dv_admin')==='1'){
+        state.admin.loggedIn = true;
+        updateAdminUI();
+      }else{
+        updateAdminUI();
+      }
+      await fetchData();
     });
   </script>
 </body>
