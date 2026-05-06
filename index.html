@@ -23,17 +23,12 @@
       --border: var(--light);
       --muted: var(--gray);
       --radius: 12px;
-      --radius-sm: 9px;
       --shadow-1: 0 2px 10px rgba(0,0,0,.06);
       --shadow-2: 0 10px 30px rgba(0,0,0,.12);
 
       /* “Modrý” feeling cez cyan + tmavší odtieň */
       --primary: var(--cyan);
       --primary-strong: rgb(18,110,127);
-
-      /* Hero pozadie – môžete nahradiť vlastným obrázkom v assets/img/hero.jpg */
-      --hero-url: url('assets/img/hero.jpg');
-      --hero-fit: cover;
     }
     *{box-sizing:border-box}
     html,body{margin:0;padding:0;background:var(--bg);color:var(--black);font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;line-height:1.5}
@@ -42,20 +37,12 @@
     button:focus, a:focus, input:focus, textarea:focus, select:focus{outline:3px solid var(--yellow); outline-offset:2px}
     .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 
-    /* Header – “modrý” pruh s jemným overlay pozadím */
+    /* Header */
     header.header{
       position:relative; color:var(--white);
       background: linear-gradient(90deg, var(--primary-strong) 0%, var(--primary) 100%);
       border-bottom:4px solid var(--green);
       overflow:hidden;
-    }
-    header.header::before{
-      content:""; position:absolute; inset:0;
-      background-image: var(--hero-url);
-      background-size: var(--hero-fit);
-      background-position:center;
-      background-repeat:no-repeat;
-      opacity:.15; pointer-events:none;
     }
     .header__inner{ position:relative; z-index:1; max-width:1200px; margin:0 auto; padding:18px 16px 10px }
     .title{ margin:.1rem 0; font-size:clamp(26px, 3.2vw, 42px); font-weight:900; letter-spacing:.4px }
@@ -90,7 +77,10 @@
     .cards{ display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:14px }
     .card{ border:1px solid var(--border); border-radius:12px; background:var(--white); box-shadow:var(--shadow-1); overflow:clip; display:flex; flex-direction:column; transition:.15s transform ease, .15s box-shadow ease }
     .card:hover{ transform:translateY(-2px); box-shadow:var(--shadow-2) }
-    .card .cover{ aspect-ratio:16/10; background:var(--light); display:flex; align-items:center; justify-content:center; color:var(--muted); font-weight:700 }
+    .card .cover{ aspect-ratio:16/10; background:var(--light); display:flex; align-items:center; justify-content:center; color:var(--muted); font-weight:700; position:relative }
+    .card .cover img{ width:100%; height:100%; object-fit:cover; display:block }
+    .fallback-cover{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:var(--muted); font-weight:700 }
+
     .card .body{ padding:12px }
     .card h3{ margin:.2rem 0 .15rem; font-size:1.05rem }
 
@@ -98,7 +88,9 @@
     .detail{ display:none }
     .detail.active{ display:block }
     .detail .head{ display:flex; gap:16px; flex-wrap:wrap; align-items:flex-start; margin-bottom:12px }
-    .detail .photo{ width:220px; max-width:100%; border-radius:12px; border:1px solid var(--border); background:var(--light) }
+    .detail .photo{ width:220px; max-width:100%; border-radius:12px; border:1px solid var(--border); background:var(--light); display:block }
+    .photo-wrap{ position:relative; width:220px; max-width:100% }
+    .photo-fallback{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:var(--muted); font-weight:700; padding:8px; text-align:center }
     .muted{ color:var(--muted) }
     .tag{ background:var(--lime); color:var(--black); padding:4px 8px; border-radius:999px; font-weight:700; font-size:.85rem; display:inline-block; margin-right:6px }
 
@@ -149,7 +141,7 @@
   </header>
 
   <main id="obsah">
-    <!-- Nastavenia (owner/repo/paths) – ukladá sa do localStorage, žiadny token -->
+    <!-- Nastavenia -->
     <section id="settingsPanel" class="panel settings" aria-labelledby="settingsHeading">
       <h2 id="settingsHeading">Nastavenia repozitára</h2>
       <p class="muted">Slúžia na čítanie dát bez tokenu a na cielenie zápisu (len v admin režime s tokenom). Token sa sem neukladá.</p>
@@ -195,7 +187,7 @@
           <label for="adminToken">GitHub token (PAT – Contents:write)</label>
           <input id="adminToken" type="password" placeholder="ghp_…" autocomplete="off" />
           <div class="muted" style="font-size:.9rem">
-            Odporúčané: Fine-grained PAT s Contents: Read & Write pre vybraný repozitár (alebo Classic s rozsahom „repo“). Ak je owner v organizácii so SSO, autorizujte token.
+            Fine‑grained PAT: Repository permissions → Contents (Read & Write) pre vybraný repozitár. Classic PAT: rozsah „repo“. Ak je SSO, token autorizujte.
           </div>
         </div>
       </div>
@@ -262,7 +254,10 @@
         <button id="btnOpenCards" class="btn btn-ghost" type="button">Menu kariet</button>
       </div>
       <div class="head">
-        <img id="detailPhoto" class="photo" alt="Fotografia vinára" src="" onerror="this.src='assets/img/placeholder.png'; this.alt='Náhradný obrázok';">
+        <div class="photo-wrap">
+          <img id="detailPhoto" class="photo" alt="Fotografia vinára" src="">
+          <div id="detailPhotoFallback" class="photo-fallback" aria-hidden="true" hidden>Bez obrázka</div>
+        </div>
         <div>
           <h2 id="detailHeading"></h2>
           <div id="detailCellar" class="muted"></div>
@@ -294,23 +289,12 @@
 
     // ===== Konfigurácia (localStorage – bez tokenu) =====
     const defaultConfig = {
-      owner: '',
-      repo: '',
+      owner: 'sedivmiroslav-del',
+      repo: 'Den-Vinaru-2026-Petrov',
       branch: 'main',
       dataPath: 'data/winemakers.json',
       imagesPath: 'assets/uploads'
     };
-    function inferFromPages(){
-      // pokus o autodetekciu owner/repo pri GH Pages
-      try{
-        if(/\.github\.io$/i.test(location.hostname)){
-          const owner = location.hostname.split('.')[0];
-          const repo = (location.pathname.split('/').filter(Boolean)[0]||'');
-          if(owner && repo) return {owner, repo};
-        }
-      }catch(_){}
-      return null;
-    }
     function loadConfig(){
       try{ return {...defaultConfig, ...(JSON.parse(localStorage.getItem('dv_cfg')||'{}')||{})}; }catch{ return {...defaultConfig}; }
     }
@@ -321,13 +305,6 @@
       admin: { logged:false, token:null },
       currentId: null
     };
-    (function bootstrapCfg(){
-      if(!state.cfg.owner || !state.cfg.repo){
-        const inf = inferFromPages();
-        if(inf){ state.cfg.owner ||= inf.owner; state.cfg.repo ||= inf.repo; saveConfig(state.cfg); }
-      }
-    })();
-
     function applyCfgToForm(){
       id('cfgOwner').value = state.cfg.owner || '';
       id('cfgRepo').value = state.cfg.repo || '';
@@ -336,11 +313,11 @@
       id('cfgImagesPath').value = state.cfg.imagesPath || 'assets/uploads';
     }
     function readCfgFromForm(){
-      state.cfg.owner = id('cfgOwner').value.trim();
-      state.cfg.repo = id('cfgRepo').value.trim();
+      state.cfg.owner = id('cfgOwner').value.trim() || defaultConfig.owner;
+      state.cfg.repo = id('cfgRepo').value.trim() || defaultConfig.repo;
       state.cfg.branch = id('cfgBranch').value.trim() || 'main';
-      state.cfg.dataPath = id('cfgDataPath').value.trim() || 'data/winemakers.json';
-      state.cfg.imagesPath = id('cfgImagesPath').value.trim() || 'assets/uploads';
+      state.cfg.dataPath = id('cfgDataPath').value.trim() || defaultConfig.dataPath;
+      state.cfg.imagesPath = id('cfgImagesPath').value.trim() || defaultConfig.imagesPath;
       saveConfig(state.cfg);
     }
     function rawDataUrl(){
@@ -444,7 +421,7 @@
       const isCards = which==='cards';
       id('btnViewCards').setAttribute('aria-pressed', isCards?'true':'false');
       id('btnViewCards').setAttribute('aria-selected', isCards?'true':'false');
-      id('btnViewAdmin').setAttribute('aria-pressed', (!isCards && which!=='admin')?'false':(which==='admin'?'true':'false'));
+      id('btnViewAdmin').setAttribute('aria-pressed', which==='admin'?'true':'false');
       id('btnViewAdmin').setAttribute('aria-selected', which==='admin'?'true':'false');
 
       id('cardsView').style.display = which==='cards' ? 'block' : (which==='admin' ? 'none' : id('cardsView').style.display);
@@ -459,7 +436,7 @@
         const none = document.createElement('div');
         none.className='card';
         none.innerHTML = `
-          <div class="cover">Žiadni vinári</div>
+          <div class="cover"><div class="fallback-cover">Žiadni vinári</div></div>
           <div class="body">
             <h3>Prázdny katalóg</h3>
             <p class="muted">Admin môže pridať prvé záznamy v sekcii Admin.</p>
@@ -469,19 +446,25 @@
         return;
       }
       for(const w of arr){
-        const el = document.createElement('article');
-        el.className='card';
-        el.setAttribute('role','listitem');
-        el.innerHTML = `
+        const art = document.createElement('article');
+        art.className='card';
+        art.setAttribute('role','listitem');
+        const hasPhoto = Boolean(w.photoUrl && String(w.photoUrl).trim());
+        art.innerHTML = `
           <div class="cover">
-            ${w.photoUrl ? `<img src="${escapeAttr(w.photoUrl)}" alt="Foto vinára ${escapeAttr(w.name)}" onerror="this.src='assets/img/placeholder.png'">` : '<span>Bez obrázka</span>'}
+            ${hasPhoto ? `<img alt="Foto vinára ${escapeAttr(w.name||'')}" src="${escapeAttr(w.photoUrl)}">` : ''}
+            <div class="fallback-cover" ${hasPhoto?'hidden':''}>Bez obrázka</div>
           </div>
           <div class="body">
-            <h3>${escapeHtml(w.name)}</h3>
+            <h3>${escapeHtml(w.name||'')}</h3>
             <div class="muted">Sklep č. ${escapeHtml(w.cellar||'?')}</div>
           </div>`;
-        el.addEventListener('click', ()=> openDetail(w.id));
-        host.appendChild(el);
+        if(hasPhoto){
+          const img = art.querySelector('img');
+          img.onerror = ()=>{ img.remove(); const fb=art.querySelector('.fallback-cover'); if(fb) fb.hidden=false; };
+        }
+        art.addEventListener('click', ()=> openDetail(w.id));
+        host.appendChild(art);
       }
       showCards();
     }
@@ -494,7 +477,19 @@
       id('detailHeading').textContent = w.name || '';
       id('detailCellar').textContent = 'Sklep č. ' + (w.cellar||'?');
       id('detailDesc').textContent = w.description || '';
-      id('detailPhoto').src = w.photoUrl || 'assets/img/placeholder.png';
+
+      const img = id('detailPhoto');
+      const fb = id('detailPhotoFallback');
+      if(w.photoUrl && String(w.photoUrl).trim()){
+        img.src = w.photoUrl;
+        img.hidden = false;
+        fb.hidden = true;
+        img.onerror = ()=>{ img.hidden = true; fb.hidden = false; };
+      }else{
+        img.hidden = true;
+        img.removeAttribute('src');
+        fb.hidden = false;
+      }
 
       const tags = id('detailTags'); tags.innerHTML='';
       const t = document.createElement('span'); t.className='tag'; t.textContent = `${(w.wines||[]).length} vín v ponuke`;
@@ -624,7 +619,6 @@
       }catch(err){
         console.error(err);
         st.textContent = 'Chyba ukladania';
-        // Časté príčiny – pomôcka
         alert('Zápis zlyhal. Skontrolujte:\n- token (Fine-grained Contents: Read&Write alebo Classic „repo“),\n- SSO autorizáciu tokenu pre organizáciu,\n- owner/repo/branch a cesty v Nastaveniach.\n\nDetail: '+err.message);
       }
     }
@@ -700,12 +694,9 @@
 
     // ===== Init =====
     async function init(){
-      // Prepínač default: Karty
       setSwitch('cards');
-      // Obnov admin reláciu
       if(sessionStorage.getItem('dv_admin')==='1'){ state.admin.logged = true; }
       updateAdminUI();
-      // Načítaj dáta
       await fetchData();
     }
     document.addEventListener('DOMContentLoaded', ()=>{
