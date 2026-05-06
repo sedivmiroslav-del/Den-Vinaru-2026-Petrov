@@ -127,7 +127,7 @@
       </div>
 
       <div class="actions">
-        <!-- Ikona exportu PDF v hlavičke (ak ju nechceš, daj vedieť) -->
+        <!-- Ikona exportu PDF v hlavičke -->
         <button id="btnExportAll" class="icon-btn" title="Stiahnuť celý katalóg (PDF)" aria-label="Stiahnuť celý katalóg (PDF)">
           <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
             <path fill="currentColor" d="M12 3a1 1 0 0 1 1 1v9.59l2.3-2.3a1 1 0 1 1 1.4 1.42l-4 4a1 1 0 0 1-1.4 0l-4-4a1 1 0 1 1 1.4-1.42l2.3 2.3V4a1 1 0 0 1 1-1ZM5 19a1 1 0 0 1 1-1h12a1 1 0 1 1 0 2H6a1 1 0 0 1-1-1Z"/>
@@ -135,7 +135,7 @@
         </button>
         <button id="btnGear" class="icon-btn" aria-label="Admin prihlásenie" title="Admin">
           <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
-            <path fill="currentColor" d="M12 8.75a3.25 3.25 0 1 0 0 6.5 3.25 3.25 0 0 0 0-6.5Zm8.94 2.58-.88-.5a7.95 7.95 0 0 0-.2-1.06l.68-.78a1 1 0 0 0-.08-1.4l-1.2-1.2a1 1 0 0 0-1.4-.08l-.78.68c-.35-.12-.71-.22-1.07-.29l-.5-.88a1 1 0 0 0-.88-.5h-1.7a1 1 0 0 0-.9.5l-.49.88c-.37.07-.73.17-1.08.3l-.78-.68a1 1 0  0 0-1.4.08l-1.2 1.2a1 1 0 0 0-.08 1.4l.68.78c-.12.35-.21.71-.28 1.07l-.88.5a1 1 0 0 0-.5.88v1.7a1 1 0 0 0 .5.88l.88.5c.07.36.16.72.28 1.07l-.68.78a1 1 0 0 0 .08 1.4l1.2 1.2a1 1 0 0 0 1.4.08l.78-.68c.35.12.71.21 1.08.28l.49.88a1 1 0 0 0 .9.5h1.7a1 1 0 0 0 .88-.5l.5-.88c.36-.07.72-.17 1.07-.29l.78.68a1 1 0 0 0 1.4-.08l1.2-1.2a1 1 0 0 0 .08-1.4l-.68-.78c.12-.35.21-.71.28-1.07l.88-.5a1 1 0 0 0 .5-.88Z"/>
+            <path fill="currentColor" d="M12 8.75a3.25 3.25 0 1 0 0 6.5 3.25 3.25 0 0 0 0-6.5Zm8.94 2.58-.88-.5a7.95 7.95 0 0 0-.2-1.06l.68-.78a1 1 0 0 0-.08-1.4l-1.2-1.2a1 1 0 0 0-1.4-.08l-.78.68c-.35-.12-.71-.22-1.07-.29l-.5-.88a1 1 0 0 0-.88-.5h-1.7a1 1 0 0 0-.9.5l-.49.88c-.37.07-.73.17-1.08.3l-.78-.68a1 1 0  0 0-1.4.08l-1.2 1.2a1 1 0 0 0-.08 1.4l.68.78c-.12.35-.21.71-.28 1.07l-.88.5a1 1 0 0 0-.5.88v1.7a1 1 0 0 0 .5.88l.88.5c.07.36.16.72.28 1.07l-.68.78a1 1 0  0 0 .08 1.4l1.2 1.2a1 1 0 0 0 1.4.08l.78-.68c.35.12.71.21 1.08.28l.49.88a1 1 0 0 0 .9.5h1.7a1 1 0 0 0 .88-.5l.5-.88c.36-.07.72-.17 1.07-.29l.78.68a1 1 0 0 0 1.4-.08l1.2-1.2a1 1 0 0 0 .08-1.4l-.68-.78c.12-.35.21-.71.28-1.07l.88-.5a1 1 0 0 0 .5-.88Z"/>
           </svg>
         </button>
       </div>
@@ -153,7 +153,7 @@
       <div class="form-grid" style="margin-top:8px">
         <div>
           <label for="adminPassword">Heslo</label>
-          <input id="adminPassword" type="password" placeholder="Heslo" autocomplete="current-password" />
+          <input id="adminPassword" type="password" placeholder="PetrovSedivy492" autocomplete="current-password" />
         </div>
       </div>
       <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:12px">
@@ -165,7 +165,7 @@
   </div>
 
   <main id="obsah">
-    <!-- Admin sekcie – skrátené -->
+    <!-- Admin sekcie -->
 
     <section id="settingsPanel" class="panel admin-only" aria-labelledby="settingsHeading">
       <h2 id="settingsHeading">Nastavenia repozitára</h2>
@@ -214,7 +214,7 @@
         <div>
           <label for="wPhoto">Foto (upload → GitHub)</label>
           <input id="wPhoto" type="file" accept="image/*" />
-          <div class="muted" style="font-size:.9rem">Ak token chýba, upload sa preskočí a uloží sa len JSON.</div>
+          <div class="muted" style="font-size:.9rem">Ak token chýba, upload sa preskočí a ponechá sa aktuálna URL.</div>
         </div>
         <div style="grid-column:1/-1"><label for="wDesc">Popis</label><textarea id="wDesc" rows="3"></textarea></div>
       </div>
@@ -258,7 +258,7 @@
     const escapeAttr = s => String(s||'').replace(/"/g,'&quot;');
     const uid = (p='id') => p + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2,8);
 
-    // Bezpečný text pre PDF: fallback bez diakritiky ak chýba font
+    // PDF bezpečný text – fallback bez diakritiky, ak chýba font
     const asciiFallback = s => String(s||'').normalize('NFD').replace(/\p{Diacritic}+/gu,'');
     const safeTxt = (s, fontLoaded) => fontLoaded ? String(s||'') : asciiFallback(s);
 
@@ -278,12 +278,12 @@
       byId('btnLogout').disabled = !isLogged ? true : false;
       byId('btnLogin').disabled  = false;
       byId('adminStatus').textContent = isLogged ? 'Prihlásený' : 'Odhlásený';
+      byId('btnSaveWinemaker').disabled = !isLogged;
+      byId('btnDeleteWinemaker').disabled = !isLogged || !byId('existingSelect').value;
     }
     function setAdminVisibility(){
       const v = state.admin.logged;
       for(const el of $$('.admin-only')) el.classList.toggle('visible', v);
-      byId('btnSaveWinemaker').disabled = !v || !hasToken();
-      byId('btnDeleteWinemaker').disabled = !v || !hasToken() || !byId('existingSelect').value;
       const tokenStatus = byId('tokenStatus');
       if(tokenStatus) tokenStatus.textContent = 'Token: ' + (hasToken() ? 'uložený' : 'neuložený');
       refreshAuthUI();
@@ -420,7 +420,148 @@
       }
     }
 
-    // UI render – KARTY
+    // ========= CRUD pre Admin ==========
+
+    function clearForm(){
+      byId('wName').value='';
+      byId('wCellar').value='';
+      byId('wDesc').value='';
+      byId('wPhoto').value='';
+      byId('winesEditor').innerHTML='';
+      state.currentId = null;
+      byId('existingSelect').value='';
+      byId('btnDeleteWinemaker').disabled = true;
+      byId('saveStatus').textContent='Pripravené';
+    }
+
+    function addWineRow(data={}){
+      const row=document.createElement('div');
+      row.className='wine-row';
+      const variety = data.variety || '';
+      const year = data.year || '';
+      const price = data.price || '';
+      row.innerHTML = `
+        <input type="text" placeholder="Odrôda" aria-label="Odrôda" value="${escapeAttr(variety)}" />
+        <input type="number" placeholder="Ročník" aria-label="Ročník" value="${escapeAttr(year)}" />
+        <input type="number" placeholder="Cena (Kč)" aria-label="Cena" value="${escapeAttr(price)}" />
+        <button type="button" class="btn btn-ghost" aria-label="Odstrániť víno">✕</button>
+      `;
+      row.querySelector('button').addEventListener('click',()=> row.remove());
+      byId('winesEditor').appendChild(row);
+    }
+
+    function fillForm(w){
+      if(!w){ clearForm(); return; }
+      state.currentId = w.id || null;
+      byId('wName').value = w.name || '';
+      byId('wCellar').value = w.cellar || '';
+      byId('wDesc').value = w.description || '';
+      byId('wPhoto').value = ''; // nový upload len ak chceš zmeniť
+      byId('winesEditor').innerHTML='';
+      (w.wines || []).forEach(v=> addWineRow(v));
+      byId('btnDeleteWinemaker').disabled = !state.admin.logged || !w.id;
+    }
+
+    function readForm(){
+      const name = byId('wName').value.trim();
+      const cellar = byId('wCellar').value.trim();
+      const description = byId('wDesc').value.trim();
+      const wines = $$('.wine-row', byId('winesEditor')).map(r=>{
+        const [vEl,yEl,pEl] = r.querySelectorAll('input');
+        return {
+          id: uid('wine'),
+          variety: vEl.value.trim(),
+          year: yEl.value.trim(),
+          price: pEl.value.trim()
+        };
+      }).filter(v => v.variety || v.year || v.price);
+      const photoFile = byId('wPhoto').files && byId('wPhoto').files[0] ? byId('wPhoto').files[0] : null;
+      return { name, cellar, description, wines, photoFile };
+    }
+
+    async function uploadPhotoIfAny(currentPhotoUrl, file){
+      if(!file) return currentPhotoUrl || null;
+      if(!hasToken()){
+        alert('Chýba token – upload fotky preskočený. Ponechám pôvodnú URL.');
+        return currentPhotoUrl || null;
+      }
+      const filename = file.name.replace(/\s+/g,'_');
+      const path = `${state.cfg.imagesPath.replace(/\/+$/,'')}/${filename}`;
+      const buf = await file.arrayBuffer();
+      const b64 = (function(b){ let bin=''; const by=new Uint8Array(b); for(let i=0;i<by.byteLength;i++) bin+=String.fromCharCode(by[i]); return btoa(bin); })(buf);
+      await putFileBase64(path, b64, `upload image ${filename}`);
+      // Raw URL cez raw.githubusercontent alebo cez assets na statickom hostingu
+      const repoBase = `https://raw.githubusercontent.com/${state.cfg.owner}/${state.cfg.repo}/${state.cfg.branch}/`;
+      return repoBase + path;
+    }
+
+    async function persistDataIfPossible(message){
+      if(!hasToken()){
+        byId('saveStatus').textContent = 'Uložené len lokálne (bez tokenu)';
+        byId('saveStatus').classList.add('notice');
+        alert('Zmeny sú uložené len v tejto relácii, pretože chýba GitHub token.');
+        return;
+      }
+      await putJson(state.cfg.dataPath, state.data, message || 'update winemakers');
+      byId('saveStatus').textContent='Uložené do GitHubu';
+    }
+
+    async function saveWinemaker(){
+      const f = readForm();
+      if(!f.name){ alert('Názov vinára je povinný.'); return; }
+      byId('saveStatus').textContent='Ukladám...';
+
+      // nájdi existujúceho alebo vytvor nového
+      const arr = state.data.winemakers || (state.data.winemakers = []);
+      let w = arr.find(x=>String(x.id)===String(state.currentId));
+      const isNew = !w;
+      if(isNew){
+        w = { id: uid('win'), name:'', cellar:'', description:'', photoUrl:null, wines:[] };
+        arr.push(w);
+      }
+
+      // upload fotky (ak treba)
+      const newPhotoUrl = await uploadPhotoIfAny(w.photoUrl, f.photoFile);
+
+      // pripíš hodnoty
+      w.name = f.name;
+      w.cellar = f.cellar;
+      w.description = f.description;
+      w.photoUrl = newPhotoUrl || w.photoUrl || null;
+      // zachováme ID vín, ak existujú a odrôda/rok/cena sa zhodujú na vstupe? Jednoducho premapujeme nové s novými id
+      w.wines = f.wines.map(v=> ({ id: v.id || uid('wine'), variety:v.variety, year:v.year, price:v.price }));
+
+      // refresh UI
+      state.currentId = w.id;
+      refreshExistingSelect(w.id);
+      renderCards();
+
+      await persistDataIfPossible(isNew ? 'create winemaker' : 'update winemaker');
+    }
+
+    async function deleteWinemaker(){
+      if(!state.currentId){ alert('Nie je vybraný žiaden vinár.'); return; }
+      if(!confirm('Naozaj vymazať vybraného vinára?')) return;
+      const arr = state.data.winemakers || [];
+      const idx = arr.findIndex(x=>String(x.id)===String(state.currentId));
+      if(idx>=0) arr.splice(idx,1);
+      state.currentId = null;
+      refreshExistingSelect();
+      renderCards();
+      clearForm();
+      await persistDataIfPossible('delete winemaker');
+    }
+
+    function refreshExistingSelect(selectId=null){
+      const sel = byId('existingSelect');
+      if(!sel) return;
+      const items = (state.data.winemakers||[]).slice().sort((a,b)=> String(a.name||'').localeCompare(b.name||''));
+      sel.innerHTML = '<option value="">— vyberte vinára —</option>' + items.map(w=>`<option value="${escapeAttr(w.id)}">${escapeHtml(w.name||'')}</option>`).join('');
+      if(selectId){ sel.value = selectId; }
+      byId('btnDeleteWinemaker').disabled = !state.admin.logged || !sel.value;
+    }
+
+    // ========= Karty a Detail =========
     function renderCards(){
       const host = byId('cardsContainer'); host.innerHTML='';
       const items = state.data.winemakers||[];
@@ -450,7 +591,6 @@
       showCards();
     }
 
-    // DETAIL
     function renderDetail(id){
       const w = (state.data.winemakers||[]).find(x=>String(x.id)===String(id));
       const detail = byId('detailView');
@@ -496,7 +636,6 @@
         </div>
       `;
 
-      // Ukladanie poznámok
       for(const ta of $$('.note', detail)){
         ta.addEventListener('input', (e)=>{
           const key = e.currentTarget.dataset.key;
@@ -521,23 +660,32 @@
       window.scrollTo({top:0, behavior:'smooth'});
     }
 
-    // Admin – skrátené stubs
-    function fillForm(w) { /* tu môže ísť pôvodná implementácia */ }
-    function addWineRow(data={}) { /* pôvodná implementácia podľa potreby */ }
-    function readForm(){ return { id:'', name:'', cellar:'', description:'', photoFile:null, wines:[] }; }
-    function refreshExistingSelect(){
-      const sel = byId('existingSelect');
-      if(!sel) return;
-      const items = state.data.winemakers||[];
-      sel.innerHTML = '<option value="">— vyberte vinára —</option>' + items.map(w=>`<option value="${escapeAttr(w.id)}">${escapeHtml(w.name||'')}</option>`).join('');
+    // ========= GitHub write API =========
+    async function getFileSha(path){
+      const url = apiContentUrl(path) + `?ref=${encodeURIComponent(state.cfg.branch||'main')}`;
+      const headers = { 'Accept':'application/vnd.github+json' };
+      const tok = resolveToken(); if(tok) headers['Authorization'] = `Bearer ${tok}`;
+      const r = await fetch(url,{headers}); if(r.status===404) return null;
+      if(!r.ok) throw new Error('GitHub GET sha error '+r.status);
+      const j = await r.json(); return j.sha || null;
     }
-    async function saveWinemaker(){ /* pôvodná implementácia */ }
-    async function deleteWinemaker(){ /* pôvodná implementácia */ }
+    async function putFileBase64(path, contentBase64, message){
+      const tok = resolveToken(); if(!tok) throw new Error('Chýba token (PAT).');
+      const url = apiContentUrl(path); const sha = await getFileSha(path);
+      const body = { message: message||'update via app', content: contentBase64, branch: state.cfg.branch||'main' }; if(sha) body.sha = sha;
+      const res = await fetch(url,{ method:'PUT', headers:{ 'Accept':'application/vnd.github+json','Authorization':`Bearer ${tok}`,'Content-Type':'application/json' }, body: JSON.stringify(body) });
+      if(!res.ok){ const txt=await res.text(); throw new Error(`GitHub PUT ${res.status}: ${txt}`); }
+      return res.json();
+    }
+    async function putJson(path, obj, message){
+      const text = JSON.stringify(obj, null, 2);
+      const b64 = btoa(unescape(encodeURIComponent(text)));
+      return putFileBase64(path, b64, message||'update json');
+    }
 
-    // Handlery UI
+    // ========= Handlery UI =========
     byId('btnExportAll').addEventListener('click', exportWholeCatalogPDF);
 
-    // Delegovaný klik na karty + Enter
     byId('cardsContainer').addEventListener('click', (e)=>{
       const card = e.target.closest('.card');
       if(!card) return;
@@ -575,6 +723,35 @@
     byId('btnSaveConfig').addEventListener('click', ()=>{ readCfgFromForm(); });
     byId('btnReloadData').addEventListener('click', fetchData);
 
+    // Admin – vínne riadky a CRUD
+    byId('btnAddWine').addEventListener('click', ()=> addWineRow({}));
+    byId('btnResetForm').addEventListener('click', clearForm);
+    byId('btnSaveWinemaker').addEventListener('click', saveWinemaker);
+    byId('btnDeleteWinemaker').addEventListener('click', deleteWinemaker);
+    byId('existingSelect').addEventListener('change', (e)=>{
+      const id = e.target.value;
+      const w = (state.data.winemakers||[]).find(x=>String(x.id)===String(id));
+      if(w){ fillForm(w); } else { clearForm(); }
+    });
+
+    // Token panel – jednoduché uloženie tokenu
+    byId('btnSaveToken').addEventListener('click', ()=>{
+      const tokenInput = byId('patInput').value.trim();
+      const mode = byId('rememberMode').value;
+      state.admin.token = tokenInput || null;
+      if(mode==='local'){ localStorage.setItem(LS_PAT, tokenInput); sessionStorage.removeItem(SS_PAT); }
+      else if(mode==='session'){ sessionStorage.setItem(SS_PAT, tokenInput); localStorage.removeItem(LS_PAT); }
+      else { localStorage.removeItem(LS_PAT); sessionStorage.removeItem(SS_PAT); }
+      setAdminVisibility();
+      alert('Token nastavený.');
+    });
+    byId('btnClearToken').addEventListener('click', ()=>{
+      state.admin.token=null;
+      localStorage.removeItem(LS_PAT); sessionStorage.removeItem(SS_PAT);
+      setAdminVisibility();
+      alert('Uložený token zmazaný.');
+    });
+
     // Init – demo fallback, ak JSON ešte nie je dostupný
     async function init(){
       state.admin.logged = sessionStorage.getItem(SS_ADMIN)==='1';
@@ -590,6 +767,8 @@
           { id:'w2', name:'vinar2', cellar:'40', description:'', photoUrl:'assets/img/vinar2.jpg', wines:[]}
         ];
         renderCards();
+        refreshExistingSelect();
+      }else{
         refreshExistingSelect();
       }
       showCards();
