@@ -12,7 +12,7 @@
 
   <style>
     :root{
-      /* Paleta dohodnutá v zadání */
+      /* Původní paleta + dvě schválené rozšířené barvy pro podbarvení názvů vín */
       --vine-green: rgb(0,137,6);
       --mid: rgb(135,135,135);
       --stone: rgb(206,213,218);
@@ -22,6 +22,9 @@
       --black: rgb(0,0,0);
       --lemon: rgb(255,255,96);
 
+      --light-red: rgb(255,120,120);   /* světle červená */
+      --light-pink: rgb(255,192,203);  /* světle růžová */
+
       --bg: linear-gradient(180deg, rgba(206,213,218,.25), rgba(255,255,255,1) 30%);
       --border: var(--stone);
       --muted: var(--mid);
@@ -30,7 +33,7 @@
       --shadow-2: 0 12px 36px rgba(0,0,0,.14);
       --shadow-soft: 0 6px 20px rgba(29,155,178,.18);
 
-      /* Výchozí hodnoty pozadí kartové sekce – budou měněny přes JS */
+      /* Výchozí hodnoty pozadí kartové sekce – mění JS */
       --cards-bg-url: none;
       --cards-bg-opacity: 0.12;
     }
@@ -108,11 +111,11 @@
 
     .muted{ color:var(--muted) }
 
-    /* Tag vína s podbarvením (jen barvy z palety) */
+    /* Tag vína s podbarvením */
     .tag{ padding:5px 10px; border-radius:999px; font-weight:800; font-size:.86rem; display:inline-block; margin-right:6px; border:1px solid var(--border) }
     .hl-yellow{ background: rgba(255,255,96,.6); color: var(--black); }
-    .hl-blue{ background: rgba(29,155,178,.18); color: var(--black); }
-    .hl-green{ background: rgba(161,200,97,.4); color: var(--black); }
+    .hl-red{ background: rgba(255,120,120,.45); color: var(--black); }
+    .hl-pink{ background: rgba(255,192,203,.55); color: var(--black); }
 
     .section{ border-top:3px solid var(--stone); padding-top:12px; margin-top:16px }
     .wine{ border:1px solid var(--border); border-radius:14px; padding:10px; margin:10px 0; background:#fff; box-shadow: var(--shadow-1) }
@@ -132,7 +135,7 @@
     }
     input[type="range"]{ padding: .35rem 0; }
 
-    .wines-editor .wine-row{ display:grid; grid-template-columns:1.1fr .6fr .6fr .9fr auto; gap:8px; align-items:center; margin-bottom:8px }
+    .wines-editor .wine-row{ display:grid; grid-template-columns:1.1fr .6fr .6fr 1.05fr auto; gap:8px; align-items:center; margin-bottom:8px }
     .wines-editor .wine-row input, .wines-editor .wine-row select{ width:100% }
 
     footer{ border-top:6px solid var(--vine-green); background:#f7fafb; color:#333; padding:16px; text-align:center }
@@ -515,8 +518,8 @@
         + '<select aria-label="Podbarvení názvu">'
         + '  <option value="">Bez podbarvení</option>'
         + '  <option value="yellow"'+(labelColor==='yellow'?' selected':'')+'>Světle žlutá</option>'
-        + '  <option value="blue"'+(labelColor==='blue'?' selected':'')+'>Náhrada za světle červenou (světle modrá)</option>'
-        + '  <option value="green"'+(labelColor==='green'?' selected':'')+'>Náhrada za světle růžovou (světle zelená)</option>'
+        + '  <option value="red"'+(labelColor==='red'?' selected':'')+'>Světle červená</option>'
+        + '  <option value="pink"'+(labelColor==='pink'?' selected':'')+'>Světle růžová</option>'
         + '</select>'
         + '<button type="button" class="btn btn-ghost" aria-label="Odstranit víno">✕</button>';
       row.querySelector('button').addEventListener('click',function(){ row.remove(); });
@@ -685,7 +688,11 @@
         const wid = v.id || ('i'+i);
         const noteKey = 'dv_note_'+w.id+'_'+wid;
         const saved = localStorage.getItem(noteKey) || '';
-        const colorClass = v.labelColor ? (' hl-'+v.labelColor) : '';
+        let colorClass = '';
+        if(v.labelColor==='yellow') colorClass = ' hl-yellow';
+        else if(v.labelColor==='red') colorClass = ' hl-red';
+        else if(v.labelColor==='pink') colorClass = ' hl-pink';
+
         return ''
           + '<div class="wine">'
           + '  <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:baseline">'
@@ -806,7 +813,6 @@
     byId('btnReloadData').addEventListener('click', fetchData);
 
     byId('btnApplyBg').addEventListener('click', async function(){
-      // Pokud je vybrán soubor, pokusíme se nahrát
       const file = byId('bgFile').files && byId('bgFile').files[0] ? byId('bgFile').files[0] : null;
       if(file){
         try{
@@ -814,7 +820,6 @@
           if(uploadedUrl){ byId('bgUrl').value = uploadedUrl; }
         }catch(err){ console.error(err); alert('Upload pozadí selhal: '+err.message); }
       }
-      // Uložit do konfigurace a aplikovat
       state.cfg.bgImageUrl = byId('bgUrl').value.trim();
       state.cfg.bgOpacity = Math.max(0, Math.min(1, Number(byId('bgOpacity').value)/100));
       saveCfg(state.cfg);
@@ -874,7 +879,9 @@
       if(!(state.data.winemakers||[]).length){
         state.data.winemakers = [
           { id:'w1', name:'Ukázkový vinař', cellar:'30', description:'Krátký popis vinaře a jeho příběhu. Šetrná práce s vinicí, důraz na terroir.', photoUrl:'assets/img/logo.png',
-            wines:[{id:'a1', variety:'Müller Thurgau', year:'2025', price:'150', labelColor:'yellow'}]},
+            wines:[{id:'a1', variety:'Müller Thurgau', year:'2025', price:'150', labelColor:'yellow'},
+                   {id:'a2', variety:'Zweigeltrebe', year:'2024', price:'190', labelColor:'red'},
+                   {id:'a3', variety:'Rosé Cuvée', year:'2025', price:'170', labelColor:'pink'}]},
           { id:'w2', name:'Vinařství Na Příkladu', cellar:'40', description:'', photoUrl:'assets/img/vinar2.jpg', wines:[]}
         ];
         renderCards();
