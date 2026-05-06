@@ -64,7 +64,6 @@
     .btn-primary:hover{ filter:brightness(.97) }
     .btn-ghost{ background: var(--white); color: var(--black); border-color: var(--border) }
     .btn-soft{ background: var(--stone); color: var(--black) }
-    .btn-green{ background:var(--vine-green); color:#fff }
 
     main{ max-width:1200px; margin: 18px auto 64px; padding: 0 16px }
     .pill{ padding:.25rem .6rem; border-radius:999px; border:1px solid var(--border); background:var(--white); color:var(--muted); font-size:.9rem }
@@ -114,7 +113,6 @@
     .modal-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:8px }
     .close-btn{ appearance:none; border:none; background:transparent; font-size:24px; line-height:1; cursor:pointer }
 
-    /* Helper for notices */
     .notice{ margin-left:.5rem; color:var(--muted); font-size:.9rem }
   </style>
 </head>
@@ -129,6 +127,7 @@
       </div>
 
       <div class="actions">
+        <!-- Ikona exportu PDF v hlavičke (ak ju nechceš, daj vedieť) -->
         <button id="btnExportAll" class="icon-btn" title="Stiahnuť celý katalóg (PDF)" aria-label="Stiahnuť celý katalóg (PDF)">
           <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
             <path fill="currentColor" d="M12 3a1 1 0 0 1 1 1v9.59l2.3-2.3a1 1 0 1 1 1.4 1.42l-4 4a1 1 0 0 1-1.4 0l-4-4a1 1 0 1 1 1.4-1.42l2.3 2.3V4a1 1 0 0 1 1-1ZM5 19a1 1 0 0 1 1-1h12a1 1 0 1 1 0 2H6a1 1 0 0 1-1-1Z"/>
@@ -136,7 +135,7 @@
         </button>
         <button id="btnGear" class="icon-btn" aria-label="Admin prihlásenie" title="Admin">
           <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
-            <path fill="currentColor" d="M12 8.75a3.25 3.25 0 1 0 0 6.5 3.25 3.25 0 0 0 0-6.5Zm8.94 2.58-.88-.5a7.95 7.95 0 0 0-.2-1.06l.68-.78a1 1 0 0 0-.08-1.4l-1.2-1.2a1 1 0 0 0-1.4-.08l-.78.68c-.35-.12-.71-.22-1.07-.29l-.5-.88a1 1 0 0 0-.88-.5h-1.7a1 1 0 0 0-.9.5l-.49.88c-.37.07-.73.17-1.08.3l-.78-.68a1 1 0 0 0-1.4.08l-1.2 1.2a1 1 0 0 0-.08 1.4l.68.78c-.12.35-.21.71-.28 1.07l-.88.5a1 1 0 0 0-.5.88v1.7a1 1 0 0 0 .5.88l.88.5c.07.36.16.72.28 1.07l-.68.78a1 1 0 0 0 .08 1.4l1.2 1.2a1 1 0 0 0 1.4.08l.78-.68c.35.12.71.21 1.08.28l.49.88a1 1 0 0 0 .9.5h1.7a1 1 0 0 0 .88-.5l.5-.88c.36-.07.72-.17 1.07-.29l.78.68a1 1 0 0 0 1.4-.08l1.2-1.2a1 1 0 0 0 .08-1.4l-.68-.78c.12-.35.21-.71.28-1.07l.88-.5a1 1 0 0 0 .5-.88Z"/>
+            <path fill="currentColor" d="M12 8.75a3.25 3.25 0 1 0 0 6.5 3.25 3.25 0 0 0 0-6.5Zm8.94 2.58-.88-.5a7.95 7.95 0 0 0-.2-1.06l.68-.78a1 1 0 0 0-.08-1.4l-1.2-1.2a1 1 0 0 0-1.4-.08l-.78.68c-.35-.12-.71-.22-1.07-.29l-.5-.88a1 1 0 0 0-.88-.5h-1.7a1 1 0 0 0-.9.5l-.49.88c-.37.07-.73.17-1.08.3l-.78-.68a1 1 0  0 0-1.4.08l-1.2 1.2a1 1 0 0 0-.08 1.4l.68.78c-.12.35-.21.71-.28 1.07l-.88.5a1 1 0 0 0-.5.88v1.7a1 1 0 0 0 .5.88l.88.5c.07.36.16.72.28 1.07l-.68.78a1 1 0 0 0 .08 1.4l1.2 1.2a1 1 0 0 0 1.4.08l.78-.68c.35.12.71.21 1.08.28l.49.88a1 1 0 0 0 .9.5h1.7a1 1 0 0 0 .88-.5l.5-.88c.36-.07.72-.17 1.07-.29l.78.68a1 1 0 0 0 1.4-.08l1.2-1.2a1 1 0 0 0 .08-1.4l-.68-.78c.12-.35.21-.71.28-1.07l.88-.5a1 1 0 0 0 .5-.88Z"/>
           </svg>
         </button>
       </div>
@@ -154,7 +153,7 @@
       <div class="form-grid" style="margin-top:8px">
         <div>
           <label for="adminPassword">Heslo</label>
-          <input id="adminPassword" type="password" placeholder="PetrovSedivy492" autocomplete="current-password" />
+          <input id="adminPassword" type="password" placeholder="Heslo" autocomplete="current-password" />
         </div>
       </div>
       <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:12px">
@@ -166,7 +165,7 @@
   </div>
 
   <main id="obsah">
-    <!-- Admin sekcie – skrátené (zostávajú) -->
+    <!-- Admin sekcie – skrátené -->
 
     <section id="settingsPanel" class="panel admin-only" aria-labelledby="settingsHeading">
       <h2 id="settingsHeading">Nastavenia repozitára</h2>
@@ -259,7 +258,7 @@
     const escapeAttr = s => String(s||'').replace(/"/g,'&quot;');
     const uid = (p='id') => p + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2,8);
 
-    // Bezpečný text pre PDF: ak font s diakritikou nie je načítaný, odstránime diakritiku
+    // Bezpečný text pre PDF: fallback bez diakritiky ak chýba font
     const asciiFallback = s => String(s||'').normalize('NFD').replace(/\p{Diacritic}+/gu,'');
     const safeTxt = (s, fontLoaded) => fontLoaded ? String(s||'') : asciiFallback(s);
 
@@ -421,29 +420,6 @@
       }
     }
 
-    // GitHub write API – ponechané
-    async function getFileSha(path){
-      const url = apiContentUrl(path) + `?ref=${encodeURIComponent(state.cfg.branch||'main')}`;
-      const headers = { 'Accept':'application/vnd.github+json' };
-      const tok = resolveToken(); if(tok) headers['Authorization'] = `Bearer ${tok}`;
-      const r = await fetch(url,{headers}); if(r.status===404) return null;
-      if(!r.ok) throw new Error('GitHub GET sha error '+r.status);
-      const j = await r.json(); return j.sha || null;
-    }
-    async function putFileBase64(path, contentBase64, message){
-      const tok = resolveToken(); if(!tok) throw new Error('Chýba token (PAT).');
-      const url = apiContentUrl(path); const sha = await getFileSha(path);
-      const body = { message: message||'update via app', content: contentBase64, branch: state.cfg.branch||'main' }; if(sha) body.sha = sha;
-      const res = await fetch(url,{ method:'PUT', headers:{ 'Accept':'application/vnd.github+json','Authorization':`Bearer ${tok}`,'Content-Type':'application/json' }, body: JSON.stringify(body) });
-      if(!res.ok){ const txt=await res.text(); throw new Error(`GitHub PUT ${res.status}: ${txt}`); }
-      return res.json();
-    }
-    async function putJson(path, obj, message){
-      const text = JSON.stringify(obj, null, 2);
-      const b64 = btoa(unescape(encodeURIComponent(text)));
-      return putFileBase64(path, b64, message||'update json');
-    }
-
     // UI render – KARTY
     function renderCards(){
       const host = byId('cardsContainer'); host.innerHTML='';
@@ -506,9 +482,8 @@
           <div>
             <h2 style="margin:0 0 .25rem 0">${escapeHtml(w.name||'')}</h2>
             <div class="muted">Sklep č. ${escapeHtml(w.cellar||'?')}</div>
-            <div style="margin-top:8px;display:flex;gap:.5rem;flex-wrap:wrap">
+            <div style="margin-top:8px">
               <button id="btnBack" class="btn btn-ghost" type="button" aria-label="Späť na karty">← Späť</button>
-              <button id="btnExportAll2" class="btn btn-primary" type="button">Stiahnuť katalóg (PDF)</button>
             </div>
           </div>
         </div>
@@ -531,7 +506,6 @@
         });
       }
       byId('btnBack').addEventListener('click', showCards);
-      const b2 = byId('btnExportAll2'); if(b2) b2.addEventListener('click', exportWholeCatalogPDF);
     }
 
     function showCards(){
@@ -547,7 +521,7 @@
       window.scrollTo({top:0, behavior:'smooth'});
     }
 
-    // Admin – skrátené stubs (aby sa nepokazilo)
+    // Admin – skrátené stubs
     function fillForm(w) { /* tu môže ísť pôvodná implementácia */ }
     function addWineRow(data={}) { /* pôvodná implementácia podľa potreby */ }
     function readForm(){ return { id:'', name:'', cellar:'', description:'', photoFile:null, wines:[] }; }
@@ -609,7 +583,6 @@
       applyCfgToForm();
       refreshAuthUI();
 
-      // Skús načítať reálne dáta, inak demo
       await fetchData();
       if(!(state.data.winemakers||[]).length){
         state.data.winemakers = [
