@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Dobrih Vin – Katalóg vinárov</title>
-  <meta name="description" content="Katalóg vinárov s admin CRUD (GitHub Contents API) a poznámkami k vínam v localStorage. Verejné čítanie bez tokenu; admin zápis s PAT." />
+  <meta name="description" content="Katalóg vinárov s admin CRUD (GitHub Contents API) a poznámkami k vínam v localStorage. Verejné čítanie bez tokenu; admin zapisuje s PAT, ktorý sa ukladá len lokálne." />
 
   <style>
     :root{
@@ -140,22 +140,18 @@
     </div>
   </header>
 
-  <!-- AUTH MODAL -->
+  <!-- AUTH MODAL (len heslo) -->
   <div id="authModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="authTitle" aria-describedby="authDesc">
     <div class="modal-card">
       <div class="modal-head">
         <h2 id="authTitle" style="margin:0">Admin prihlásenie</h2>
         <button class="close-btn" aria-label="Zavrieť" id="btnModalClose">×</button>
       </div>
-      <p id="authDesc" class="muted">Zadajte administrátorské heslo a GitHub Personal Access Token s oprávnením Contents: write pre repozitár.</p>
+      <p id="authDesc" class="muted">Zadajte administrátorské heslo. GitHub token sa nastavuje až po prihlásení v sekcii „Privátne nastavenie tokenu“. Token sa ukladá len na tomto zariadení.</p>
       <div class="form-grid" style="margin-top:8px">
         <div>
           <label for="adminPassword">Heslo</label>
           <input id="adminPassword" type="password" placeholder="PetrovSedivy492" autocomplete="current-password" />
-        </div>
-        <div>
-          <label for="adminToken">GitHub token (PAT – Contents:write)</label>
-          <input id="adminToken" type="password" placeholder="ghp_…" autocomplete="off" />
         </div>
       </div>
       <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:12px">
@@ -171,7 +167,7 @@
     <!-- Nastavenia – admin-only -->
     <section id="settingsPanel" class="panel admin-only" aria-labelledby="settingsHeading">
       <h2 id="settingsHeading">Nastavenia repozitára</h2>
-      <p class="muted">Slúžia na čítanie dát bez tokenu a na cielenie zápisu (len v admin režime s tokenom). Token sa sem neukladá.</p>
+      <p class="muted">Tieto údaje sú verejné – používajú sa na čítanie JSON zo všetkých zariadení bez tokenu.</p>
       <div class="form-grid">
         <div>
           <label for="cfgOwner">Owner/organizácia</label>
@@ -198,6 +194,34 @@
         <button id="btnSaveConfig" class="btn btn-primary" type="button">Uložiť nastavenia</button>
         <button id="btnReloadData" class="btn btn-ghost" type="button">Načítať dáta teraz</button>
         <span id="globalStatus" class="pill" role="status" aria-live="polite">Pripravené</span>
+      </div>
+    </section>
+
+    <!-- Privátne nastavenie tokenu – admin-only (lokálne) -->
+    <section id="tokenPanel" class="panel admin-only" aria-labelledby="tokenHeading">
+      <h2 id="tokenHeading">Privátne nastavenie tokenu</h2>
+      <p class="muted">
+        GitHub Personal Access Token (PAT) sa uloží iba na tomto zariadení (do localStorage alebo session podľa voľby) a používa sa len na zápis (upload obrázkov, uloženie JSON).
+        Všetci používatelia bez tokenu vždy čítajú aktuálne dáta z raw.githubusercontent.com.
+      </p>
+      <div class="form-grid">
+        <div>
+          <label for="patInput">GitHub token (Contents: write)</label>
+          <input id="patInput" type="password" placeholder="ghp_…" autocomplete="off" />
+        </div>
+        <div>
+          <label for="rememberMode">Uloženie tokenu</label>
+          <select id="rememberMode">
+            <option value="session">Iba do relácie (sessionStorage)</option>
+            <option value="local">Zapamätať v zariadení (localStorage)</option>
+            <option value="none">Neukladať (iba na teraz)</option>
+          </select>
+        </div>
+      </div>
+      <div style="margin-top:10px; display:flex; gap:.5rem; flex-wrap:wrap">
+        <button id="btnSaveToken" class="btn btn-primary" type="button">Uložiť token lokálne</button>
+        <button id="btnClearToken" class="btn btn-ghost" type="button">Vymazať uložený token</button>
+        <span id="tokenStatus" class="pill" role="status" aria-live="polite">Token: neuložený</span>
       </div>
     </section>
 
@@ -279,7 +303,7 @@
   </main>
 
   <footer>
-    <p class="muted" style="margin:0">Na čítanie dát sa používa raw.githubusercontent.com (bez tokenu). Zápis JSON/obrázkov vyžaduje PAT s Contents:write pre zvolený repozitár.</p>
+    <p class="muted" style="margin:0">Všetci používatelia čítajú JSON z raw.githubusercontent.com (bez tokenu). Admin po prihlásení a nastavení tokenu môže zapisovať a tým publikovať dáta pre všetky zariadenia.</p>
   </footer>
 
   <script>
@@ -292,7 +316,13 @@
     const uid = (p='id') => p + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2,8);
     const debounce = (fn,ms)=>{ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a),ms); }; };
 
-    /* ===== Konfigurácia ===== */
+    /* ===== Konštanty úložísk ===== */
+    const LS_CFG = 'dv_cfg';
+    const LS_PAT = 'dv_pat';          // localStorage (voliteľne)
+    const SS_ADMIN = 'dv_admin';      // sessionStorage – príznak prihlásenia
+    const SS_PAT = 'dv_pat_session';  // sessionStorage – PAT pre reláciu
+
+    /* ===== Konfigurácia (verejné) ===== */
     const defaultConfig = {
       owner: 'sedivmiroslav-del',
       repo: 'Den-Vinaru-2026-Petrov',
@@ -300,8 +330,8 @@
       dataPath: 'data/winemakers.json',
       imagesPath: 'assets/uploads'
     };
-    function loadCfg(){ try{ return {...defaultConfig, ...(JSON.parse(localStorage.getItem('dv_cfg')||'{}')||{})}; }catch{ return {...defaultConfig}; } }
-    function saveCfg(cfg){ localStorage.setItem('dv_cfg', JSON.stringify(cfg)); }
+    function loadCfg(){ try{ return {...defaultConfig, ...(JSON.parse(localStorage.getItem(LS_CFG)||'{}')||{})}; }catch{ return {...defaultConfig}; } }
+    function saveCfg(cfg){ localStorage.setItem(LS_CFG, JSON.stringify(cfg)); }
 
     const state = {
       cfg: loadCfg(),
@@ -310,18 +340,31 @@
       currentId: null
     };
 
-    /* ===== UI viditeľnosť podľa admina ===== */
+    /* ===== Admin viditeľnosť ===== */
     function setAdminVisibility(){
-      const v = state.admin.logged && !!state.admin.token;
+      const v = state.admin.logged;
       for(const el of $$('.admin-only')) el.classList.toggle('visible', v);
-      byId('btnSaveWinemaker').disabled = !v;
-      byId('btnDeleteWinemaker').disabled = !v || !byId('existingSelect').value;
+      byId('btnSaveWinemaker').disabled = !v || !hasToken();
+      byId('btnDeleteWinemaker').disabled = !v || !hasToken() || !byId('existingSelect').value;
       byId('adminStatus').textContent = v ? 'Prihlásený' : 'Odhlásený';
       byId('btnLogout').disabled = !v;
-      byId('btnLogin').disabled = v;
+
+      // token indikátor
+      const tokenStatus = byId('tokenStatus');
+      if(tokenStatus) tokenStatus.textContent = 'Token: ' + (hasToken() ? 'uložený' : 'neuložený');
+    }
+    function hasToken(){
+      return Boolean(state.admin.token || sessionStorage.getItem(SS_PAT) || localStorage.getItem(LS_PAT));
+    }
+    function resolveToken(){
+      // prednosť: state → session → local
+      return state.admin.token
+        || sessionStorage.getItem(SS_PAT)
+        || localStorage.getItem(LS_PAT)
+        || null;
     }
 
-    /* ===== Nastavenia panel ===== */
+    /* ===== Nastavenia (verejné parametre) ===== */
     function applyCfgToForm(){
       byId('cfgOwner').value = state.cfg.owner || '';
       byId('cfgRepo').value = state.cfg.repo || '';
@@ -373,7 +416,8 @@
     async function getFileSha(path){
       const url = apiContentUrl(path) + `?ref=${encodeURIComponent(state.cfg.branch||'main')}`;
       const headers = { 'Accept':'application/vnd.github+json' };
-      if(state.admin.token) headers['Authorization'] = `Bearer ${state.admin.token}`;
+      const tok = resolveToken();
+      if(tok) headers['Authorization'] = `Bearer ${tok}`;
       const r = await fetch(url,{headers});
       if(r.status===404) return null;
       if(!r.ok){ throw new Error('GitHub GET sha error '+r.status); }
@@ -386,7 +430,9 @@
       return btoa(bin);
     }
     async function putFileBase64(path, base64, message){
-      if(!state.admin.token) throw new Error('Chýba admin token (PAT).');
+      const tok = resolveToken();
+      if(!tok) throw new Error('Chýba token (PAT). Nastavte ho v sekcii „Privátne nastavenie tokenu“.');
+
       const url = apiContentUrl(path);
       const sha = await getFileSha(path);
       const body = { message: message||'update via app', content: base64, branch: state.cfg.branch||'main' };
@@ -395,7 +441,7 @@
         method:'PUT',
         headers:{
           'Accept':'application/vnd.github+json',
-          'Authorization': `Bearer ${state.admin.token}`,
+          'Authorization': `Bearer ${tok}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(body)
@@ -413,12 +459,8 @@
     }
     async function uploadImage(file){
       if(!file) return null;
-      if(!state.admin.token){
-        // skúška z okna prihlásenia (ak je ešte vyplnený) – nech je UX prívetivejšie
-        const inline = (byId('adminToken')?.value||'').trim();
-        if(inline){ state.admin.token = inline; sessionStorage.setItem('dv_token', inline); setAdminVisibility(); }
-      }
-      if(!state.admin.token){
+      const tok = resolveToken();
+      if(!tok){
         byId('saveStatus').textContent='Bez tokenu – preskakujem upload fotky';
         return null;
       }
@@ -503,32 +545,21 @@
       const tags = byId('detailTags');
       const list = byId('detailWines');
 
-      if(!h || !c || !d || !img || !fb || !tags || !list) throw new Error('Detailové prvky neexistujú v DOM.');
-
       state.currentId = w.id;
 
       h.textContent = w.name || '';
       c.textContent = 'Sklep č. ' + (w.cellar||'?');
       d.textContent = w.description || '';
 
-      // foto
       if(w.photoUrl && String(w.photoUrl).trim()){
-        img.src = w.photoUrl;
-        img.hidden = false;
-        fb.hidden = true;
-        img.onerror = ()=>{ img.hidden = true; fb.hidden = false; };
-      }else{
-        img.hidden = true;
-        img.removeAttribute('src');
-        fb.hidden = false;
-      }
+        img.src = w.photoUrl; img.hidden=false; fb.hidden=true;
+        img.onerror = ()=>{ img.hidden=true; fb.hidden=false; };
+      }else{ img.hidden=true; img.removeAttribute('src'); fb.hidden=false; }
 
-      // tagy
       tags.innerHTML='';
       const t = document.createElement('span'); t.className='tag'; t.textContent = `${(w.wines||[]).length} vín v ponuke`;
       tags.appendChild(t);
 
-      // vína + poznámky
       list.innerHTML='';
       (w.wines||[]).forEach(wine=>{
         const wrap = document.createElement('div'); wrap.className='wine';
@@ -615,7 +646,6 @@
         const f = readForm();
         if(!f.name){ alert('Zadajte názov vinára'); st.textContent='Zadajte názov'; return; }
 
-        // upload fotky (ak token chýba – preskočí sa, nezlyhá)
         let photoUrl = null;
         if(f.photoFile){
           try{
@@ -627,7 +657,6 @@
           }
         }
 
-        // aktualizácia v pamäti
         let w = (state.data.winemakers||[]).find(x=>x.id===f.id);
         if(!w){
           w = { id:f.id, name:f.name, cellar:f.cellar, description:f.description, photoUrl: photoUrl||'', wines:f.wines };
@@ -637,13 +666,6 @@
           if(photoUrl) w.photoUrl = photoUrl;
           w.wines = f.wines;
         }
-
-        // uloženie JSON (vyžaduje token)
-        if(!state.admin.token){
-          const inline = (byId('adminToken')?.value||'').trim();
-          if(inline){ state.admin.token = inline; sessionStorage.setItem('dv_token', inline); setAdminVisibility(); }
-        }
-        if(!state.admin.token){ throw new Error('Chýba token (PAT). Prihláste sa cez ozubené koliesko.'); }
 
         await putJson(state.cfg.dataPath, state.data, 'update winemakers data');
         await fetchData();
@@ -662,11 +684,6 @@
       if(!confirm('Vymazať tohto vinára zo súboru? (obrázky na GitHube zostanú)')) return;
       const st = byId('saveStatus'); st.textContent='Mažem...';
       try{
-        if(!state.admin.token){
-          const inline = (byId('adminToken')?.value||'').trim();
-          if(inline){ state.admin.token = inline; sessionStorage.setItem('dv_token', inline); setAdminVisibility(); }
-        }
-        if(!state.admin.token){ throw new Error('Chýba token (PAT).'); }
         state.data.winemakers = (state.data.winemakers||[]).filter(x=>x.id!==idSel);
         await putJson(state.cfg.dataPath, state.data, 'delete winemaker');
         await fetchData();
@@ -680,35 +697,50 @@
       }
     }
 
-    /* ===== Handlery ===== */
-    // gear -> otvor modal login
+    /* ===== Handlery UI ===== */
+    // gear → login modal
     byId('btnGear').addEventListener('click', ()=>{
       byId('authModal').classList.add('show');
       byId('adminPassword').focus();
     });
     byId('btnModalClose').addEventListener('click', ()=> byId('authModal').classList.remove('show'));
 
+    // login len heslom
     byId('btnLogin').addEventListener('click', ()=>{
       const pw = byId('adminPassword').value;
-      const tok = (byId('adminToken').value||'').trim();
       if(pw !== 'PetrovSedivy492'){ alert('Nesprávne heslo.'); return; }
-      if(!tok){ alert('Zadajte GitHub Personal Access Token (Contents:write).'); return; }
-      state.admin.logged = true; state.admin.token = tok;
-      sessionStorage.setItem('dv_admin','1');
-      sessionStorage.setItem('dv_token', tok);
-      setAdminVisibility();
+      state.admin.logged = true;
+      sessionStorage.setItem(SS_ADMIN,'1');
       byId('authModal').classList.remove('show');
-      // po prihlásení sprístupníme panely a zrolujeme k nastaveniam
+      setAdminVisibility();
       applyCfgToForm();
       byId('settingsPanel').scrollIntoView({behavior:'smooth'});
     });
-
     byId('btnLogout').addEventListener('click', ()=>{
-      state.admin.logged = false; state.admin.token = null;
-      sessionStorage.removeItem('dv_admin');
-      sessionStorage.removeItem('dv_token');
+      state.admin.logged = false;
+      sessionStorage.removeItem(SS_ADMIN);
       setAdminVisibility();
       alert('Admin odhlásený.');
+    });
+
+    // token management (lokálne)
+    byId('btnSaveToken').addEventListener('click', ()=>{
+      const val = (byId('patInput').value||'').trim();
+      const mode = byId('rememberMode').value;
+      if(!val){ alert('Zadajte token.'); return; }
+      state.admin.token = val;
+      if(mode==='local'){ localStorage.setItem(LS_PAT, val); sessionStorage.removeItem(SS_PAT); }
+      else if(mode==='session'){ sessionStorage.setItem(SS_PAT, val); localStorage.removeItem(LS_PAT); }
+      else{ sessionStorage.removeItem(SS_PAT); localStorage.removeItem(LS_PAT); }
+      setAdminVisibility();
+      alert('Token nastavený lokálne. Dáta po uložení budú viditeľné na všetkých zariadeniach bez tokenu.');
+    });
+    byId('btnClearToken').addEventListener('click', ()=>{
+      state.admin.token = null;
+      sessionStorage.removeItem(SS_PAT);
+      localStorage.removeItem(LS_PAT);
+      setAdminVisibility();
+      alert('Token z tohto zariadenia odstránený.');
     });
 
     byId('btnSaveConfig').addEventListener('click', ()=>{ readCfgFromForm(); byId('globalStatus').textContent='Uložené nastavenia'; });
@@ -718,12 +750,12 @@
     byId('existingSelect').addEventListener('change', e=>{
       const w = (state.data.winemakers||[]).find(x=>x.id===e.target.value);
       fillForm(w||null);
-      byId('btnDeleteWinemaker').disabled = !(state.admin.logged && state.admin.token) || !e.target.value;
+      byId('btnDeleteWinemaker').disabled = !state.admin.logged || !hasToken() || !e.target.value;
     });
     byId('btnResetForm').addEventListener('click', ()=>{
       byId('existingSelect').value='';
       fillForm(null);
-      byId('btnDeleteWinemaker').disabled = !(state.admin.logged && state.admin.token);
+      byId('btnDeleteWinemaker').disabled = !state.admin.logged || !hasToken();
     });
     byId('btnSaveWinemaker').addEventListener('click', saveWinemaker);
     byId('btnDeleteWinemaker').addEventListener('click', deleteWinemaker);
@@ -732,10 +764,11 @@
 
     /* ===== INIT ===== */
     async function init(){
-      // Obnova admin stavu z relácie
-      const was = sessionStorage.getItem('dv_admin')==='1';
-      const t = sessionStorage.getItem('dv_token');
-      if(was && t){ state.admin.logged = true; state.admin.token = t; }
+      // prihlásenie len ak bolo v relácii
+      state.admin.logged = sessionStorage.getItem(SS_ADMIN)==='1';
+      // obnov token ak je uložený
+      state.admin.token = sessionStorage.getItem(SS_PAT) || localStorage.getItem(LS_PAT) || null;
+
       setAdminVisibility();
       applyCfgToForm();
       await fetchData();
