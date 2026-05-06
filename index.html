@@ -228,26 +228,8 @@
       <div id="cardsContainer" class="cards" role="list"></div>
     </section>
 
-    <section id="detailView" class="detail" aria-live="polite" aria-labelledby="detailHeading">
-      <div style="margin-bottom:8px; display:flex; gap:.5rem; flex-wrap:wrap">
-        <button id="btnBack" class="btn btn-soft" type="button">← Späť na karty</button>
-      </div>
-      <div class="head">
-        <div class="photo-wrap">
-          <img id="detailPhoto" class="photo" alt="Fotografia vinára" src="">
-          <div id="detailPhotoFallback" class="photo-fallback" aria-hidden="true" hidden>Bez obrázka</div>
-        </div>
-        <div>
-          <h2 id="detailHeading"></h2>
-          <div id="detailCellar" class="muted"></div>
-          <div id="detailTags"></div>
-          <p id="detailDesc"></p>
-        </div>
-      </div>
-      <div class="section">
-        <h3>Víno a vaše poznámky</h3>
-        <div id="detailWines"></div>
-      </div>
+    <section id="detailView" class="detail" aria-live="polite">
+      <!-- skeleton prevádzkuje skript buildDetailSkeleton() -->
     </section>
   </main>
 
@@ -405,44 +387,52 @@
       if(id) openDetailSafe(id);
     });
 
-    // Bezpečne postaví vnútro sekcie detailu, ak by chýbalo
-    function ensureDetailDom(){
+    // Robustný skeleton detailu – bez ID, vracia referencie
+    function buildDetailSkeleton(){
       const dv = byId('detailView');
-      if(!dv) return null;
-      const need = !byId('detailHeading') || !byId('detailCellar') || !byId('detailDesc') || !byId('detailPhoto') || !byId('detailPhotoFallback') || !byId('detailTags') || !byId('detailWines');
-      if(need){
-        dv.innerHTML = `
-          <div style="margin-bottom:8px; display:flex; gap:.5rem; flex-wrap:wrap">
-            <button id="btnBack" class="btn btn-soft" type="button">← Späť na karty</button>
-          </div>
-          <div class="head">
-            <div class="photo-wrap">
-              <img id="detailPhoto" class="photo" alt="Fotografia vinára" src="">
-              <div id="detailPhotoFallback" class="photo-fallback" aria-hidden="true" hidden>Bez obrázka</div>
-            </div>
-            <div>
-              <h2 id="detailHeading"></h2>
-              <div id="detailCellar" class="muted"></div>
-              <div id="detailTags"></div>
-              <p id="detailDesc"></p>
-            </div>
-          </div>
-          <div class="section">
-            <h3>Víno a vaše poznámky</h3>
-            <div id="detailWines"></div>
-          </div>`;
-        const back = byId('btnBack');
-        if(back) back.addEventListener('click', showCards);
-      }
-      return {
-        h: byId('detailHeading'),
-        c: byId('detailCellar'),
-        d: byId('detailDesc'),
-        img: byId('detailPhoto'),
-        fb: byId('detailPhotoFallback'),
-        tags: byId('detailTags'),
-        list: byId('detailWines')
-      };
+      dv.innerHTML = '';
+
+      const topBar = document.createElement('div');
+      topBar.style.cssText = 'margin-bottom:8px; display:flex; gap:.5rem; flex-wrap:wrap';
+      const backBtn = document.createElement('button');
+      backBtn.type = 'button';
+      backBtn.className = 'btn btn-soft';
+      backBtn.textContent = '← Späť na karty';
+      backBtn.addEventListener('click', showCards);
+      topBar.appendChild(backBtn);
+
+      const head = document.createElement('div');
+      head.className = 'head';
+
+      const photoWrap = document.createElement('div');
+      photoWrap.className = 'photo-wrap';
+      const img = document.createElement('img');
+      img.className = 'photo';
+      img.alt = 'Fotografia vinára';
+      const fb = document.createElement('div');
+      fb.className = 'photo-fallback';
+      fb.textContent = 'Bez obrázka';
+      fb.hidden = true;
+      photoWrap.appendChild(img); photoWrap.appendChild(fb);
+
+      const info = document.createElement('div');
+      const h = document.createElement('h2');
+      const c = document.createElement('div'); c.className='muted';
+      const tags = document.createElement('div');
+      const d = document.createElement('p');
+      info.appendChild(h); info.appendChild(c); info.appendChild(tags); info.appendChild(d);
+
+      head.appendChild(photoWrap); head.appendChild(info);
+
+      const section = document.createElement('div');
+      section.className = 'section';
+      const sH = document.createElement('h3'); sH.textContent = 'Víno a vaše poznámky';
+      const list = document.createElement('div');
+      section.appendChild(sH); section.appendChild(list);
+
+      dv.appendChild(topBar); dv.appendChild(head); dv.appendChild(section);
+
+      return { heading:h, cellar:c, desc:d, img, fallback:fb, tags, list };
     }
 
     function openDetailSafe(idVal){
@@ -454,19 +444,19 @@
       const w = (state.data.winemakers||[]).find(x=>x.id===idVal);
       if(!w) return;
 
-      const parts = ensureDetailDom();
-      if(!parts) return;
-      const {h,c,d,img,fb,tags,list} = parts;
+      // vždy vybuduj skeleton a použi vrátené referencie
+      const refs = buildDetailSkeleton();
+      const { heading, cellar, desc, img, fallback, tags, list } = refs;
 
-      h.textContent = w.name || '';
-      c.textContent = 'Sklep č. ' + (w.cellar||'?');
-      d.textContent = w.description || '';
+      heading.textContent = w.name || '';
+      cellar.textContent = 'Sklep č. ' + (w.cellar||'?');
+      desc.textContent = w.description || '';
 
       if(w.photoUrl && String(w.photoUrl).trim()){
-        img.src = w.photoUrl; img.hidden=false; fb.hidden=true;
-        img.onerror = ()=>{ img.hidden=true; fb.hidden=false; };
+        img.src = w.photoUrl; img.hidden=false; fallback.hidden=true;
+        img.onerror = ()=>{ img.hidden=true; fallback.hidden=false; };
       }else{
-        img.hidden=true; img.removeAttribute('src'); fb.hidden=false;
+        img.hidden=true; img.removeAttribute('src'); fallback.hidden=false;
       }
 
       tags.innerHTML='';
@@ -479,10 +469,10 @@
         const price=wine.price?` • ${escapeHtml(wine.price)} Kč`:''; const year=wine.year?` (${escapeHtml(wine.year)})`:'';
         wrap.innerHTML=`
           <h4>${escapeHtml(wine.name)} – ${escapeHtml(wine.variety||'')}${year}${price}</h4>
-          <label for="note_${w.id}_${wine.id}">Vaša poznámka k vínu</label>
-          <textarea id="note_${w.id}_${wine.id}" class="note" placeholder="Jedna dlhá osobná poznámka – ukladá sa len do tohto prehliadača."></textarea>
-          <div id="status_${w.id}_${wine.id}" class="note-status" aria-live="polite">Neuložené</div>`;
-        const ta=$('textarea',wrap); const status=byId(`status_${w.id}_${wine.id}`); const key=`dv_note_${w.id}_${wine.id}`;
+          <label>Vaša poznámka k vínu</label>
+          <textarea class="note" placeholder="Jedna dlhá osobná poznámka – ukladá sa len do tohto prehliadača."></textarea>
+          <div class="note-status" aria-live="polite">Neuložené</div>`;
+        const ta=$('textarea',wrap); const status=$('.note-status',wrap); const key=`dv_note_${w.id}_${wine.id}`;
         ta.value=localStorage.getItem(key)||''; status.textContent='Načítané z prehliadača';
         ta.addEventListener('input', debounce(()=>{ localStorage.setItem(key, ta.value); status.textContent='Uložené lokálne'; }, 400));
         list.appendChild(wrap);
@@ -555,8 +545,7 @@
     byId('btnLogout').addEventListener('click', ()=>{
       state.admin.logged=false;
       sessionStorage.removeItem(SS_ADMIN);
-      setAdminVisibility();
-      refreshAuthUI();
+      setAdminVisibility(); refreshAuthUI();
       alert('Admin odhlásený.');
     });
 
@@ -591,7 +580,6 @@
     });
     byId('btnSaveWinemaker').addEventListener('click', saveWinemaker);
     byId('btnDeleteWinemaker').addEventListener('click', deleteWinemaker);
-    byId('btnBack').addEventListener('click', showCards);
 
     async function init(){
       state.admin.logged = sessionStorage.getItem(SS_ADMIN)==='1';
