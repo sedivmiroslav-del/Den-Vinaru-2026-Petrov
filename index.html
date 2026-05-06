@@ -18,8 +18,8 @@
       --soft-green: rgb(161,200,97);
       --stone: rgb(206,213,218);
       --mid: rgb(135,135,135);
-      --white: #fff;
-      --black: #000;
+      --white: rgb(255,255,255);
+      --black: rgb(0,0,0);
       --lemon: rgb(255,255,96);
 
       --bg: linear-gradient(180deg, rgba(206,213,218,.28), rgba(255,255,255,1) 30%);
@@ -32,11 +32,10 @@
 
     *{box-sizing:border-box}
     html,body{margin:0;padding:0;background:var(--bg);color:var(--black);font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;line-height:1.54}
-    a{color:var(--morava-blue)}
+    a{color:rgb(29,155,178)}
     button:focus, a:focus, input:focus, textarea:focus, select:focus{outline:3px solid var(--lemon); outline-offset:2px}
     .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 
-    /* HEADER – modrý pás */
     header.header{
       position:relative; color:var(--white);
       background: linear-gradient(90deg, var(--morava-blue-strong) 0%, var(--morava-blue) 100%);
@@ -50,7 +49,6 @@
     .title{ margin:0; font-size:clamp(26px, 3.2vw, 42px); font-weight:900; letter-spacing:.4px }
     .subtitle{ margin:0; opacity:.95; font-weight:600; font-size:.95rem }
 
-    /* Ikony vpravo – jedna línia */
     .actions{display:flex; gap:.6rem; align-items:center; flex-wrap:nowrap; white-space:nowrap}
     .icon-btn{
       appearance:none; border:none; background:rgba(255,255,255,.15); color:#fff; border:1px solid rgba(255,255,255,.35);
@@ -71,7 +69,6 @@
     main{ max-width:1200px; margin: 18px auto 64px; padding: 0 16px }
     .pill{ padding:.25rem .6rem; border-radius:999px; border:1px solid var(--border); background:var(--white); color:var(--muted); font-size:.9rem }
 
-    /* Karty – rovnaká výška obrázku všade (200px) */
     .cards{ display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:14px }
     .card{ border:1px solid var(--border); border-radius:12px; background:var(--white); box-shadow:var(--shadow-1); overflow:clip; display:flex; flex-direction:column; transition:.15s transform ease, .15s box-shadow ease; cursor:pointer }
     .card:hover{ transform:translateY(-2px); box-shadow:var(--shadow-2) }
@@ -81,7 +78,6 @@
     .card .body{ padding:12px }
     .card h3{ margin:.2rem 0 .15rem; font-size:1.05rem }
 
-    /* Detail */
     .detail{ display:none }
     .detail.active{ display:block }
     .detail .head{ display:flex; gap:16px; flex-wrap:wrap; align-items:flex-start; margin-bottom:12px }
@@ -97,7 +93,6 @@
     .note{ width:100%; min-height:90px; resize:vertical; border:1px solid var(--border); border-radius:10px; padding:8px }
     .note-status{ font-size:.9rem; color:var(--muted) }
 
-    /* Admin-only (po prihlásení) */
     .admin-only{ display:none }
     .admin-only.visible{ display:block }
 
@@ -108,18 +103,19 @@
     input[type="text"], input[type="number"], input[type="url"], input[type="password"], textarea, select{
       width:100%; border:1px solid var(--border); border-radius:10px; padding:.6rem .7rem; background:#fff; font-size:1rem
     }
-    /* Ponuka vín – bez názvu vína: Odrôda, Ročník, Cena */
     .wines-editor .wine-row{ display:grid; grid-template-columns:1.4fr .8fr .8fr auto; gap:8px; align-items:center; margin-bottom:8px }
     .wines-editor .wine-row input{ width:100% }
 
     footer{ border-top:6px solid var(--vine-green); background:#f7fafb; color:#333; padding:16px; text-align:center }
 
-    /* Modal login */
     .modal{ position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.5); z-index:9998 }
     .modal.show{ display:flex }
     .modal-card{ width:min(560px,92vw); background:#fff; border-radius:14px; box-shadow:var(--shadow-2); padding:16px }
     .modal-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:8px }
     .close-btn{ appearance:none; border:none; background:transparent; font-size:24px; line-height:1; cursor:pointer }
+
+    /* Helper for notices */
+    .notice{ margin-left:.5rem; color:var(--muted); font-size:.9rem }
   </style>
 </head>
 <body>
@@ -133,13 +129,11 @@
       </div>
 
       <div class="actions">
-        <!-- Ikona stiahnutia celého katalógu (PDF) – vedľa gear -->
-        <button id="btnExportAll" class="icon-btn" title="Stiahnuť celý katalóg (PDF)">
+        <button id="btnExportAll" class="icon-btn" title="Stiahnuť celý katalóg (PDF)" aria-label="Stiahnuť celý katalóg (PDF)">
           <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
             <path fill="currentColor" d="M12 3a1 1 0 0 1 1 1v9.59l2.3-2.3a1 1 0 1 1 1.4 1.42l-4 4a1 1 0 0 1-1.4 0l-4-4a1 1 0 1 1 1.4-1.42l2.3 2.3V4a1 1 0 0 1 1-1ZM5 19a1 1 0 0 1 1-1h12a1 1 0 1 1 0 2H6a1 1 0 0 1-1-1Z"/>
           </svg>
         </button>
-        <!-- Admin gear -->
         <button id="btnGear" class="icon-btn" aria-label="Admin prihlásenie" title="Admin">
           <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
             <path fill="currentColor" d="M12 8.75a3.25 3.25 0 1 0 0 6.5 3.25 3.25 0 0 0 0-6.5Zm8.94 2.58-.88-.5a7.95 7.95 0 0 0-.2-1.06l.68-.78a1 1 0 0 0-.08-1.4l-1.2-1.2a1 1 0 0 0-1.4-.08l-.78.68c-.35-.12-.71-.22-1.07-.29l-.5-.88a1 1 0 0 0-.88-.5h-1.7a1 1 0 0 0-.9.5l-.49.88c-.37.07-.73.17-1.08.3l-.78-.68a1 1 0 0 0-1.4.08l-1.2 1.2a1 1 0 0 0-.08 1.4l.68.78c-.12.35-.21.71-.28 1.07l-.88.5a1 1 0 0 0-.5.88v1.7a1 1 0 0 0 .5.88l.88.5c.07.36.16.72.28 1.07l-.68.78a1 1 0 0 0 .08 1.4l1.2 1.2a1 1 0 0 0 1.4.08l.78-.68c.35.12.71.21 1.08.28l.49.88a1 1 0 0 0 .9.5h1.7a1 1 0 0 0 .88-.5l.5-.88c.36-.07.72-.17 1.07-.29l.78.68a1 1 0 0 0 1.4-.08l1.2-1.2a1 1 0 0 0 .08-1.4l-.68-.78c.12-.35.21-.71.28-1.07l.88-.5a1 1 0 0 0 .5-.88Z"/>
@@ -149,7 +143,7 @@
     </div>
   </header>
 
-  <!-- LOGIN MODAL (iba heslo) -->
+  <!-- LOGIN MODAL -->
   <div id="authModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="authTitle" aria-describedby="authDesc">
     <div class="modal-card">
       <div class="modal-head">
@@ -172,7 +166,7 @@
   </div>
 
   <main id="obsah">
-    <!-- Admin sekcie... (nezmenené) -->
+    <!-- Admin sekcie – skrátené (zostávajú) -->
 
     <section id="settingsPanel" class="panel admin-only" aria-labelledby="settingsHeading">
       <h2 id="settingsHeading">Nastavenia repozitára</h2>
@@ -235,7 +229,7 @@
       <div style="margin-top:12px; display:flex; gap:.5rem; flex-wrap:wrap">
         <button id="btnSaveWinemaker" class="btn btn-primary" type="button" disabled>Uložiť vinára</button>
         <button id="btnResetForm" class="btn btn-ghost" type="button">Vyčistiť formulár</button>
-        <button id="btnDeleteWinemaker" class="btn btn-danger" type="button" disabled>Vymazať vybraného vinára</button>
+        <button id="btnDeleteWinemaker" class="btn btn-soft" type="button" disabled>Vymazať vybraného vinára</button>
         <span id="saveStatus" class="pill" role="status" aria-live="polite">Pripravené</span>
       </div>
 
@@ -245,13 +239,11 @@
       </div>
     </section>
 
-    <!-- Karty vinárov – verejné -->
     <section id="cardsView" aria-labelledby="cardsHeading">
       <h2 id="cardsHeading" class="sr-only">Karty vinárov</h2>
       <div id="cardsContainer" class="cards" role="list"></div>
     </section>
 
-    <!-- Detail (renderovaný skriptom) -->
     <section id="detailView" class="detail" aria-live="polite"></section>
   </main>
 
@@ -266,7 +258,10 @@
     const escapeHtml = s => String(s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
     const escapeAttr = s => String(s||'').replace(/"/g,'&quot;');
     const uid = (p='id') => p + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2,8);
-    const debounce = (fn,ms)=>{ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a),ms); }; };
+
+    // Bezpečný text pre PDF: ak font s diakritikou nie je načítaný, odstránime diakritiku
+    const asciiFallback = s => String(s||'').normalize('NFD').replace(/\p{Diacritic}+/gu,'');
+    const safeTxt = (s, fontLoaded) => fontLoaded ? String(s||'') : asciiFallback(s);
 
     const LS_CFG='dv_cfg', LS_PAT='dv_pat', SS_ADMIN='dv_admin', SS_PAT='dv_pat_session';
 
@@ -324,17 +319,15 @@
       refreshExistingSelect();
     }
 
-    /* ====== PDF: načítanie fontu s diakritikou (DejaVu Sans) ====== */
+    // PDF font loading
     function abToB64(buf){
       let bin=''; const bytes=new Uint8Array(buf);
       for(let i=0;i<bytes.byteLength;i++) bin+=String.fromCharCode(bytes[i]);
       return btoa(bin);
     }
     async function loadDejaVuFont(doc){
-      // cesta v projekte: assets/fonts/DejaVuSans.ttf (nahrajte súbor do repo)
       const candidates = [
         'assets/fonts/DejaVuSans.ttf',
-        // prípadná absolútna cesta (ak hostované na GH Pages): /REPO/assets/fonts/DejaVuSans.ttf
         location.pathname.split('/').filter(Boolean)[0] ? `/${location.pathname.split('/').filter(Boolean)[0]}/assets/fonts/DejaVuSans.ttf` : null
       ].filter(Boolean);
       for(const url of candidates){
@@ -349,6 +342,9 @@
           return true;
         }catch(_){}
       }
+      console.warn('DejaVuSans.ttf sa nenačítal. PDF pôjde bez diakritiky (fallback).');
+      const gs = byId('globalStatus');
+      if(gs) gs.textContent = 'Pozn.: PDF font DejaVu nedostupný – export bez diakritiky';
       return false;
     }
 
@@ -357,10 +353,7 @@
       if(!jsPDF) return null;
       const doc = new jsPDF({unit:'pt', format:'a4'});
       const ok = await loadDejaVuFont(doc);
-      if(!ok){
-        // fallback – bez diakritiky
-        doc.setFont('helvetica','normal');
-      }
+      if(!ok){ doc.setFont('helvetica','normal'); }
       return {doc, fontLoaded: ok};
     }
 
@@ -382,27 +375,32 @@
           doc.rect(0,0,595,60,'F');
           doc.setTextColor(255,255,255);
           doc.setFontSize(16);
-          doc.text(`Katalóg vín – ${w.name||''}`, 40, 38);
+          doc.text(safeTxt(`Katalóg vín – ${w.name||''}`, fontLoaded), 40, 38);
           doc.setFontSize(11);
-          doc.text(`Sklep č. ${w.cellar||'?'}`, 555, 38, {align:'right'});
+          doc.text(safeTxt(`Sklep č. ${w.cellar||'?'}`, fontLoaded), 555, 38, {align:'right'});
 
           // Popis
           doc.setTextColor(0,0,0);
           const desc=(w.description||'').trim();
           let y=80;
           if(desc){
-            const lines=doc.splitTextToSize(desc, 515);
+            const lines=doc.splitTextToSize(safeTxt(desc,fontLoaded), 515);
             doc.text(lines,40,y);
             y += lines.length*14 + 20;
           }
 
           // Tabuľka vín s poznámkami
-          const head=[['Odrôda','Ročník','Cena (Kč)','Moja poznámka']];
+          const head=[[
+            safeTxt('Odroda',fontLoaded),
+            safeTxt('Ročník',fontLoaded),
+            safeTxt('Cena (Kč)',fontLoaded),
+            safeTxt('Moja poznámka',fontLoaded)
+          ]];
           const body=(w.wines||[]).map((v,i)=>[
-            String(v.variety||''),
-            String(v.year||''),
-            String(v.price||''),
-            String(localStorage.getItem(`dv_note_${w.id}_${v.id || ('i'+i)}`) || '')
+            safeTxt(String(v.variety||''),fontLoaded),
+            safeTxt(String(v.year||''),fontLoaded),
+            safeTxt(String(v.price||''),fontLoaded),
+            safeTxt(String(localStorage.getItem(`dv_note_${w.id}_${v.id || ('i'+i)}`) || ''),fontLoaded)
           ]);
 
           doc.autoTable({
@@ -423,8 +421,7 @@
       }
     }
 
-    /* ===== GitHub write API (zostáva) ===== */
-    function apiContentUrl(path){ return `https://api.github.com/repos/${state.cfg.owner}/${state.cfg.repo}/contents/${encodeURIComponent(path)}`; }
+    // GitHub write API – ponechané
     async function getFileSha(path){
       const url = apiContentUrl(path) + `?ref=${encodeURIComponent(state.cfg.branch||'main')}`;
       const headers = { 'Accept':'application/vnd.github+json' };
@@ -433,7 +430,6 @@
       if(!r.ok) throw new Error('GitHub GET sha error '+r.status);
       const j = await r.json(); return j.sha || null;
     }
-    function abToB64buf(buf){ let bin=''; const by=new Uint8Array(buf); for(let i=0;i<by.byteLength;i++) bin+=String.fromCharCode(by[i]); return btoa(bin); }
     async function putFileBase64(path, contentBase64, message){
       const tok = resolveToken(); if(!tok) throw new Error('Chýba token (PAT).');
       const url = apiContentUrl(path); const sha = await getFileSha(path);
@@ -448,7 +444,7 @@
       return putFileBase64(path, b64, message||'update json');
     }
 
-    /* ===== Admin CRUD (skrátene – len volania) ===== */
+    // UI render – KARTY
     function renderCards(){
       const host = byId('cardsContainer'); host.innerHTML='';
       const items = state.data.winemakers||[];
@@ -459,6 +455,7 @@
       }
       for(const w of items){
         const art=document.createElement('article'); art.className='card'; art.setAttribute('role','listitem'); art.dataset.id=w.id;
+        art.setAttribute('tabindex','0'); art.setAttribute('aria-label', `Zobraziť detail vinára ${w.name||''}`);
         const cover=document.createElement('div'); cover.className='cover';
         if(w.photoUrl && String(w.photoUrl).trim()){
           const img=new Image(); img.alt='Foto vinára'; img.src=w.photoUrl; img.loading='lazy';
@@ -477,15 +474,108 @@
       showCards();
     }
 
-    function fillForm(w){ /* ... nezmenené, viď predošlá verzia ... */ }
-    function addWineRow(data={}){ /* ... nezmenené, viď predošlá verzia ... */ }
-    function readForm(){ /* ... nezmenené, viď predošlá verzia ... */ return { id:'', name:'', cellar:'', description:'', photoFile:null, wines:[] }; }
-    function refreshExistingSelect(){ /* ... nezmenené ... */ }
-    async function saveWinemaker(){ /* ... nezmenené ... */ }
-    async function deleteWinemaker(){ /* ... nezmenené ... */ }
+    // DETAIL
+    function renderDetail(id){
+      const w = (state.data.winemakers||[]).find(x=>String(x.id)===String(id));
+      const detail = byId('detailView');
+      if(!w){ detail.innerHTML='<p>Vinár sa nenašiel.</p>'; return; }
 
-    /* ===== Handlery UI ===== */
+      const winesHtml = (w.wines||[]).map((v,i)=>{
+        const wid = v.id || ('i'+i);
+        const noteKey = `dv_note_${w.id}_${wid}`;
+        const saved = localStorage.getItem(noteKey) || '';
+        return `
+          <div class="wine">
+            <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:baseline">
+              <span class="tag">${escapeHtml(v.variety||'')}</span>
+              <span class="muted">Ročník: ${escapeHtml(v.year||'')}</span>
+              <span class="muted">Cena: ${escapeHtml(v.price||'')} Kč</span>
+            </div>
+            <label for="note_${escapeAttr(wid)}" class="muted" style="display:block;margin-top:.5rem">Moja poznámka</label>
+            <textarea id="note_${escapeAttr(wid)}" class="note" data-key="${escapeAttr(noteKey)}" placeholder="Moja poznámka k vínu...">${escapeHtml(saved)}</textarea>
+            <div class="note-status" id="ns_${escapeAttr(wid)}" aria-live="polite">Poznámka uložená lokálne</div>
+          </div>
+        `;
+      }).join('');
+
+      detail.innerHTML = `
+        <div class="head">
+          <div class="photo-wrap">
+            ${w.photoUrl?`<img src="${escapeAttr(w.photoUrl)}" alt="Foto vinára" class="photo" />`:`<div class="photo" aria-hidden="true"></div>`}
+          </div>
+          <div>
+            <h2 style="margin:0 0 .25rem 0">${escapeHtml(w.name||'')}</h2>
+            <div class="muted">Sklep č. ${escapeHtml(w.cellar||'?')}</div>
+            <div style="margin-top:8px;display:flex;gap:.5rem;flex-wrap:wrap">
+              <button id="btnBack" class="btn btn-ghost" type="button" aria-label="Späť na karty">← Späť</button>
+              <button id="btnExportAll2" class="btn btn-primary" type="button">Stiahnuť katalóg (PDF)</button>
+            </div>
+          </div>
+        </div>
+
+        ${w.description?`<p>${escapeHtml(w.description)}</p>`:''}
+
+        <div class="section">
+          <h3 style="margin:.2rem 0 .6rem">Ponuka vín</h3>
+          ${winesHtml || '<p class="muted">Žiadne vína.</p>'}
+        </div>
+      `;
+
+      // Ukladanie poznámok
+      for(const ta of $$('.note', detail)){
+        ta.addEventListener('input', (e)=>{
+          const key = e.currentTarget.dataset.key;
+          localStorage.setItem(key, e.currentTarget.value);
+          const ns = byId('ns_'+e.currentTarget.id.replace('note_',''));
+          if(ns) ns.textContent = 'Poznámka uložená lokálne';
+        });
+      }
+      byId('btnBack').addEventListener('click', showCards);
+      const b2 = byId('btnExportAll2'); if(b2) b2.addEventListener('click', exportWholeCatalogPDF);
+    }
+
+    function showCards(){
+      byId('cardsView').style.display='block';
+      byId('detailView').classList.remove('active');
+      byId('detailView').innerHTML='';
+    }
+    function showDetail(id){
+      state.currentId = id;
+      byId('cardsView').style.display='none';
+      byId('detailView').classList.add('active');
+      renderDetail(id);
+      window.scrollTo({top:0, behavior:'smooth'});
+    }
+
+    // Admin – skrátené stubs (aby sa nepokazilo)
+    function fillForm(w) { /* tu môže ísť pôvodná implementácia */ }
+    function addWineRow(data={}) { /* pôvodná implementácia podľa potreby */ }
+    function readForm(){ return { id:'', name:'', cellar:'', description:'', photoFile:null, wines:[] }; }
+    function refreshExistingSelect(){
+      const sel = byId('existingSelect');
+      if(!sel) return;
+      const items = state.data.winemakers||[];
+      sel.innerHTML = '<option value="">— vyberte vinára —</option>' + items.map(w=>`<option value="${escapeAttr(w.id)}">${escapeHtml(w.name||'')}</option>`).join('');
+    }
+    async function saveWinemaker(){ /* pôvodná implementácia */ }
+    async function deleteWinemaker(){ /* pôvodná implementácia */ }
+
+    // Handlery UI
     byId('btnExportAll').addEventListener('click', exportWholeCatalogPDF);
+
+    // Delegovaný klik na karty + Enter
+    byId('cardsContainer').addEventListener('click', (e)=>{
+      const card = e.target.closest('.card');
+      if(!card) return;
+      const id = card.dataset.id;
+      if(id) showDetail(id);
+    });
+    byId('cardsContainer').addEventListener('keydown', (e)=>{
+      if(e.key==='Enter' || e.key===' '){
+        const card = e.target.closest('.card');
+        if(card){ e.preventDefault(); const id = card.dataset.id; if(id) showDetail(id); }
+      }
+    });
 
     byId('btnGear').addEventListener('click', ()=>{
       refreshAuthUI();
@@ -511,14 +601,24 @@
     byId('btnSaveConfig').addEventListener('click', ()=>{ readCfgFromForm(); });
     byId('btnReloadData').addEventListener('click', fetchData);
 
-    /* Init */
+    // Init – demo fallback, ak JSON ešte nie je dostupný
     async function init(){
       state.admin.logged = sessionStorage.getItem(SS_ADMIN)==='1';
       state.admin.token  = sessionStorage.getItem(SS_PAT) || localStorage.getItem(LS_PAT) || null;
       setAdminVisibility();
       applyCfgToForm();
       refreshAuthUI();
+
+      // Skús načítať reálne dáta, inak demo
       await fetchData();
+      if(!(state.data.winemakers||[]).length){
+        state.data.winemakers = [
+          { id:'w1', name:'vinar1', cellar:'30', description:'test popis', photoUrl:'assets/img/logo.png', wines:[{id:'a1', variety:'MM', year:'2025', price:'150'}]},
+          { id:'w2', name:'vinar2', cellar:'40', description:'', photoUrl:'assets/img/vinar2.jpg', wines:[]}
+        ];
+        renderCards();
+        refreshExistingSelect();
+      }
       showCards();
     }
     document.addEventListener('DOMContentLoaded', init);
