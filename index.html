@@ -34,9 +34,9 @@
       --shadow-2: 0 12px 36px rgba(0,0,0,.14);
       --shadow-soft: 0 6px 20px rgba(29,155,178,.18);
 
-      /* Pozadí HORNÍHO banneru – URL doplní JS.
-         Opacitu už neovládame v UI, nastavuje ju priamo kód. */
+      /* Pozadí HORNÍHO banneru – URL doplní JS. Opacitu řídí JS přes CSS proměnnou. */
       --header-bg-url: none;
+      --header-bg-opacity: 1;
     }
 
     *{box-sizing:border-box}
@@ -55,17 +55,17 @@
       overflow:hidden;
       isolation:isolate;
     }
-    /* Vložené pozadie v hornom bannere:
-       - base je šedé (var(--stone))
-       - ak je nastavený obrázok, JS doplní background-image a zníži nepriehľadnosť
-       - ak obrázok nie je, JS nastaví nepriehľadnosť na 1 → šedý banner */
+    /* Vložené pozadí v horním banneru
+       - základ je šedý (var(--stone))
+       - pokud je nastavená URL, JS sníží neprůhlednost podle konstanty
+       - pokud URL není, opacity zůstává 1 → šedý banner */
     header.header::before{
       content:"";
       position:absolute; inset:0; z-index:0; pointer-events:none;
       background-color: var(--stone);
       background-image: var(--header-bg-url);
       background-position:center; background-repeat:no-repeat; background-size:cover;
-      opacity: 1; /* upraví JS podľa toho, či je/nie je URL */
+      opacity: var(--header-bg-opacity, 1); /* KLÍČOVÁ ÚPRAVA */
     }
     .header__inner{
       position:relative; z-index:1; max-width:1200px; margin:0 auto;
@@ -114,6 +114,7 @@
 
     .muted{ color:var(--muted) }
 
+    /* Tag vína s podbarvením */
     .tag{ padding:5px 10px; border-radius:999px; font-weight:800; font-size:.86rem; display:inline-block; margin-right:6px; border:1px solid var(--border) }
     .hl-yellow{ background: rgba(255,255,96,.6); color: var(--black); }
     .hl-red{ background: rgba(255,120,120,.90); color: var(--black); }
@@ -142,7 +143,6 @@
     .modal.show{ display:flex }
     @keyframes modalFade{ from{opacity:0} to{opacity:1} }
     .modal-card{ width:min(560px,92vw); background:#fff; border-radius:16px; box-shadow:var(--shadow-2); padding:16px; transform: scale(.98); animation: popIn .2s ease forwards }
-    @keyframes popIn{ to{ transform: scale(1) } }
     .modal-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:8px }
     .close-btn{ appearance:none; border:none; background:transparent; font-size:26px; line-height:1; cursor:pointer }
 
@@ -303,8 +303,7 @@
   </footer>
 
   <script>
-    // Konštanta: opacitu overlay bannera riadime priamo v kóde.
-    // Pri obrázku sa použije táto hodnota, bez obrázka je banner plne šedý.
+    // Konštanta: nepriehľadnosť obrázkového overlay v bannere
     const BANNER_OVERLAY_OPACITY = 0.80;
 
     const $ = function(sel,ctx){ return (ctx||document).querySelector(sel); };
@@ -325,7 +324,7 @@
       branch:'main',
       dataPath:'data/winemakers.json',
       imagesPath:'assets/uploads',
-      bgImageUrl:'' // iba URL – žiadna priehľadnosť v UI
+      bgImageUrl:''
     };
     function loadCfg(){ try{ return Object.assign({}, defaultConfig, (JSON.parse(localStorage.getItem(LS_CFG)||'{}')||{})); }catch(e){ return Object.assign({}, defaultConfig); } }
     function saveCfg(cfg){ localStorage.setItem(LS_CFG, JSON.stringify(cfg)); }
@@ -376,28 +375,12 @@
       const urlStr = state.cfg.bgImageUrl || (state.data && state.data.bannerBgUrl) || '';
       const url = urlStr ? 'url(\"'+urlStr.replace(/\"/g,'%22')+'\")' : 'none';
       header.style.setProperty('--header-bg-url', url);
-      // Opacitu riadime priamo: ak je URL, použijeme konštantu; ak nie je, banner je šedý (opacity 1)
       const op = urlStr ? BANNER_OVERLAY_OPACITY : 1;
-      header.style.setProperty('--header-bg-opacity', String(op)); // len pre referenciu; reálne používame priamo style.opacity nižšie
-      // nastavenie opacity na ::before
-      const before = getComputedStyle(header, '::before'); // force
-      header.style.setProperty('--unused', Math.random()); // no-op, aby prepočítal pseudo (niekedy netreba)
-      header.querySelector('.header__inner'); // touch
-      // použijeme priamy zápis cez style.sheet nedostupný; preto inline:
-      header.style.setProperty('--header-bg-url', url);
       header.style.setProperty('--header-bg-opacity', String(op));
-      // Aplikácia opacity na pseudo je definovaná v CSS (opacity: 1). Aby sme ju riadili, použijeme inline cez element style:
-      // Riešenie: nastavíme priamo štýl na elemente:
-      header.style.setProperty('--header-bg-opacity', String(op));
-      // fallback: zmeníme aj priamo style attribute na pseudo cez CSS variables -> už sa deje vyššie
-      // (Prehliadače si načítajú opacity z CSS, keď je premená použitá; tu sme ju nahradili *priamo* cez JS nižšie:)
-      header.style.cssText = header.style.cssText; // reflow hint
-      // Navyše, ak nie je obrázok → nech banner pôsobí čisto šedý (už je)
     }
 
     function rawDataUrl(){ return 'https://raw.githubusercontent.com/'+state.cfg.owner+'/'+state.cfg.repo+'/'+state.cfg.branch+'/'+state.cfg.dataPath; }
 
-    // Správne kódovanie segmentov pre GitHub Contents API (fix proti 404/409 spôsobeným zlým kódovaním)
     function apiContentUrl(path){
       const cleaned = String(path||'').replace(/^\/+|\/+$/g,'');
       const segs = cleaned.split('/').map(function(s){ return encodeURIComponent(s); }).join('/');
@@ -507,7 +490,6 @@
       }
     }
 
-    // ========= CRUD pro Admin ==========
     function clearForm(){
       byId('wName').value='';
       byId('wCellar').value='';
@@ -732,7 +714,6 @@
           + '</div>';
       }).join('');
 
-      // OPRAVA: uzatvorená značka (predtým bolo rozbité DOM a padal addEventListener)
       detail.innerHTML = ''
         + '<div class="head">'
         + '  <div class="photo-wrap">'
@@ -751,9 +732,6 @@
         + '  <h3 style="margin:.2rem 0 .6rem">Nabídka vín</h3>'
         + (winesHtml || '<p class="muted">Žádná vína.</p>')
         + '</div>';
-
-      const backBtn = byId('btnBack');
-      if(backBtn){ backBtn.addEventListener('click', showCards); }
     }
 
     function showCards(){
@@ -769,7 +747,6 @@
       window.scrollTo({top:0, behavior:'smooth'});
     }
 
-    // ========= GitHub write API =========
     async function getFileSha(path){
       const url = apiContentUrl(path) + '?ref=' + encodeURIComponent(state.cfg.branch||'main');
       const headers = { 'Accept':'application/vnd.github+json' };
@@ -778,7 +755,6 @@
       if(!r.ok) throw new Error('GitHub GET sha error '+r.status);
       const j = await r.json(); return j.sha || null;
     }
-    // Robustné PUT – pri 409/422 re-try s aktuálnou SHA
     async function putFileBase64(path, contentBase64, message){
       const tok = resolveToken(); if(!tok) throw new Error('Chybí token (PAT).');
       const url = apiContentUrl(path);
@@ -810,7 +786,6 @@
       return putFileBase64(path, b64, message||'update json');
     }
 
-    // ========= Handlery UI =========
     byId('btnExportAll').addEventListener('click', exportWholeCatalogPDF);
 
     byId('cardsContainer').addEventListener('click', function(e){
@@ -858,12 +833,10 @@
           if(uploadedUrl){ byId('bgUrl').value = uploadedUrl; }
         }catch(err){ console.error(err); alert('Upload pozadí selhal: '+err.message); }
       }
-      // Lokálne nastavenie URL
       state.cfg.bgImageUrl = byId('bgUrl').value.trim();
       saveCfg(state.cfg);
       applyHeaderBackground();
 
-      // Zdieľanie URL bannera cez data JSON (bez opacity)
       if(hasToken()){
         state.data.bannerBgUrl = state.cfg.bgImageUrl || '';
         try{
@@ -913,7 +886,6 @@
       alert('Uložený token smazán.');
     });
 
-    // BOOT + obnova po návrate z bfcache (mobil)
     let appBooted = false;
     async function init(){
       if(appBooted) return;
