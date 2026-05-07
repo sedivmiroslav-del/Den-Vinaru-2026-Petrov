@@ -167,7 +167,6 @@
             <path fill="currentColor" d="M12 3a1 1 0 0 1 1 1v9.59l2.3-2.3a1 1 0 1 1 1.4 1.42l-4 4a1 1 0 0 1-1.4 0l-4-4a1 1 0 1 1 1.4-1.42l2.3 2.3V4a1 1 0 0 1 1-1ZM5 19a1 1 0 0 1 1-1h12a1 1 0 1 1 0 2H6a1 1 0 0 1-1-1Z"/>
           </svg>
         </button>
-        <!-- Ikona nastavení (ozubené kolo) pro admin modal -->
         <button id="btnGear" class="icon-btn" aria-label="Admin přihlášení" title="Nastavení / Admin">
           <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
             <path fill="currentColor" d="M19.14,12.94a7.82,7.82,0,0,0,.06-.94,7.82,7.82,0,0,0-.06-.94l2-1.55a.5.5,0,0,0,.12-.65l-1.9-3.29a.5.5,0,0,0-.6-.22l-2.35,1a7.3,7.3,0,0,0-1.63-.94l-.35-2.5A.5.5,0,0,0,13,2H11a.5.5,0,0,0-.5.42l-.35,2.5a7.3,7.3,0,0,0-1.63.94l-2.35-1a.5.5,0,0,0-.6.22L3.67,8.29a.5.5,0,0,0,.12.65l2,1.55a7.82,7.82,0,0,0-.06.94,7.82,7.82,0,0,0,.06.94l-2,1.55a.5.5,0,0,0-.12.65l1.9,3.29a.5.5,0,0,0,.6.22l2.35-1a7.3,7.3,0,0,0,1.63.94l.35,2.5A.5.5,0,0,0,11,22h2a.5.5,0,0,0,.5-.42l.35-2.5a7.3,7.3,0,0,0,1.63-.94l2.35,1a.5.5,0,0,0,.6-.22l1.9-3.29a.5.5,0,0,0,.12-.65Zm-7.14,2.56A3.5,3.5,0,1,1,15.5,12,3.5,3.5,0,0,1,12,15.5Z"/>
@@ -233,7 +232,6 @@
         <div style="margin-top:10px; display:flex; gap:.5rem; flex-wrap:wrap">
           <button id="btnApplyBg" class="btn btn-primary" type="button">Použít pozadí v banneru</button>
           <button id="btnClearBg" class="btn btn-ghost" type="button">Zrušit pozadí banneru</button>
-          <!-- NOVÉ: publikace sdíleného pozadí pro všechna zařízení -->
           <button id="btnPublishBg" class="btn btn-primary" type="button" title="Uložit URL a průsvitnost do veřejného JSONu (vyžaduje PAT)">Publikovat pozadí pro všechna zařízení</button>
           <span class="notice" aria-live="polite">Uloží se do data/winemakers.json → uvidí všechna zařízení</span>
         </div>
@@ -388,7 +386,7 @@
       header.style.setProperty('--header-bg-opacity', String(op));
     }
 
-    // NOVÉ: aplikace pozadí banneru ze sdílených dat (site)
+    // Aplikace pozadí banneru ze sdílených dat (site)
     function applyHeaderBackgroundFromData(){
       const site = (state.data && state.data.site) || {};
       if (site.bgImageUrl) {
@@ -398,7 +396,6 @@
         state.cfg.bgOpacity = site.bgOpacity;
       }
       applyHeaderBackground();
-      // zrcadlit hodnoty do formuláře (pokud je admin viditelný)
       const urlIn = byId('bgUrl'), opIn = byId('bgOpacity');
       if (urlIn) urlIn.value = state.cfg.bgImageUrl || '';
       if (opIn) opIn.value = Math.round((Number(state.cfg.bgOpacity||0.18))*100);
@@ -414,7 +411,6 @@
         else if(!res.ok){ throw new Error('HTTP '+res.status); }
         else { const json = await res.json(); state.data = (json && Array.isArray(json.winemakers)) ? json : {winemakers:[]}; }
       }catch(e){ console.error(e); state.data={winemakers:[]}; }
-      // NOVÉ: po načtení dat aplikuj sdílené pozadí
       applyHeaderBackgroundFromData();
       renderCards();
       refreshExistingSelect();
@@ -610,42 +606,54 @@
     }
 
     async function persistDataIfPossible(message){
-      if(!hasToken()){
-        byId('saveStatus').textContent = 'Uloženo jen lokálně (bez tokenu)';
-        byId('saveStatus').classList.add('notice');
-        alert('Změny jsou uloženy pouze v této relaci, protože chybí GitHub token.');
-        return;
+      const btn = byId('btnSaveWinemaker');
+      if(btn) btn.disabled = true;
+      try{
+        if(!hasToken()){
+          byId('saveStatus').textContent = 'Uloženo jen lokálně (bez tokenu)';
+          byId('saveStatus').classList.add('notice');
+          alert('Změny jsou uloženy pouze v této relaci, protože chybí GitHub token.');
+          return;
+        }
+        await putJson(state.cfg.dataPath, state.data, message || 'update winemakers');
+        byId('saveStatus').textContent='Uloženo do GitHubu';
+      }finally{
+        if(btn) btn.disabled = !state.admin.logged;
       }
-      await putJson(state.cfg.dataPath, state.data, message || 'update winemakers');
-      byId('saveStatus').textContent='Uloženo do GitHubu';
     }
 
     async function saveWinemaker(){
       const f = readForm();
       if(!f.name){ alert('Jméno/název vinaře je povinné.'); return; }
       byId('saveStatus').textContent='Ukládám...';
+      const btn = byId('btnSaveWinemaker');
+      if(btn) btn.disabled = true;
 
-      const arr = state.data.winemakers || (state.data.winemakers = []);
-      let w = arr.find(function(x){ return String(x.id)===String(state.currentId); });
-      const isNew = !w;
-      if(isNew){
-        w = { id: uid('win'), name:'', cellar:'', description:'', photoUrl:null, wines:[] };
-        arr.push(w);
+      try{
+        const arr = state.data.winemakers || (state.data.winemakers = []);
+        let w = arr.find(function(x){ return String(x.id)===String(state.currentId); });
+        const isNew = !w;
+        if(isNew){
+          w = { id: uid('win'), name:'', cellar:'', description:'', photoUrl:null, wines:[] };
+          arr.push(w);
+        }
+
+        const newPhotoUrl = await uploadPhotoIfAny(w.photoUrl, f.photoFile);
+
+        w.name = f.name;
+        w.cellar = f.cellar;
+        w.description = f.description;
+        w.photoUrl = newPhotoUrl || w.photoUrl || null;
+        w.wines = f.wines.map(function(v){ return { id: v.id || uid('wine'), variety:v.variety, year:v.year, price:v.price, labelColor:v.labelColor||'' }; });
+
+        state.currentId = w.id;
+        refreshExistingSelect(w.id);
+        renderCards();
+
+        await persistDataIfPossible(isNew ? 'create winemaker' : 'update winemaker');
+      }finally{
+        if(btn) btn.disabled = !state.admin.logged;
       }
-
-      const newPhotoUrl = await uploadPhotoIfAny(w.photoUrl, f.photoFile);
-
-      w.name = f.name;
-      w.cellar = f.cellar;
-      w.description = f.description;
-      w.photoUrl = newPhotoUrl || w.photoUrl || null;
-      w.wines = f.wines.map(function(v){ return { id: v.id || uid('wine'), variety:v.variety, year:v.year, price:v.price, labelColor:v.labelColor||'' }; });
-
-      state.currentId = w.id;
-      refreshExistingSelect(w.id);
-      renderCards();
-
-      await persistDataIfPossible(isNew ? 'create winemaker' : 'update winemaker');
     }
 
     async function deleteWinemaker(){
@@ -770,23 +778,54 @@
       window.scrollTo({top:0, behavior:'smooth'});
     }
 
-    // ========= GitHub write API =========
+    // ========= GitHub write API (robustné s retry) =========
     async function getFileSha(path){
-      const url = apiContentUrl(path) + '?ref=' + encodeURIComponent(state.cfg.branch||'main');
-      const headers = { 'Accept':'application/vnd.github+json' };
+      const url = apiContentUrl(path) + '?ref=' + encodeURIComponent(state.cfg.branch||'main') + '&_=' + Date.now();
+      const headers = { 'Accept':'application/vnd.github+json', 'Cache-Control':'no-cache' };
       const tok = resolveToken(); if(tok) headers['Authorization'] = 'Bearer ' + tok;
-      const r = await fetch(url,{headers:headers}); if(r.status===404) return null;
+      const r = await fetch(url,{headers:headers});
+      if(r.status===404) return null;
       if(!r.ok) throw new Error('GitHub GET sha error '+r.status);
       const j = await r.json(); return j.sha || null;
     }
+
     async function putFileBase64(path, contentBase64, message){
       const tok = resolveToken(); if(!tok) throw new Error('Chybí token (PAT).');
-      const url = apiContentUrl(path); const sha = await getFileSha(path);
-      const body = { message: message||'update via app', content: contentBase64, branch: state.cfg.branch||'main' }; if(sha) body.sha = sha;
-      const res = await fetch(url,{ method:'PUT', headers:{ 'Accept':'application/vnd.github+json','Authorization':'Bearer '+tok,'Content-Type':'application/json' }, body: JSON.stringify(body) });
-      if(!res.ok){ const txt=await res.text(); throw new Error('GitHub PUT '+res.status+': '+txt); }
-      return res.json();
+      const url = apiContentUrl(path);
+      const branch = state.cfg.branch||'main';
+
+      let attempt = 0;
+      while(attempt < 4){
+        attempt++;
+        let sha = null;
+        try { sha = await getFileSha(path); } catch(_){ sha = null; }
+        const body = { message: message||'update via app', content: contentBase64, branch };
+        if(sha) body.sha = sha;
+
+        const res = await fetch(url,{
+          method:'PUT',
+          headers:{
+            'Accept':'application/vnd.github+json',
+            'Authorization':'Bearer '+tok,
+            'Content-Type':'application/json',
+            'Cache-Control':'no-cache'
+          },
+          body: JSON.stringify(body)
+        });
+
+        if(res.ok) return res.json();
+
+        const txt = await res.text();
+        if(res.status===409 || res.status===404){
+          // počkej a zkus znovu s novým SHA (GitHub je eventual-consistent)
+          await new Promise(r=>setTimeout(r, 400*attempt));
+          continue;
+        }
+        throw new Error('GitHub PUT '+res.status+': '+txt);
+      }
+      throw new Error('GitHub PUT: příliš mnoho konfliktů.');
     }
+
     async function putJson(path, obj, message){
       const text = JSON.stringify(obj, null, 2);
       const b64 = btoa(unescape(encodeURIComponent(text)));
@@ -846,13 +885,13 @@
       saveCfg(state.cfg);
       applyHeaderBackground();
 
-      // Volitelně: automaticky zapiš do sdílených dat (pokud je token)
+      // Volitelně: automatické publikování sdíleného banneru (pokud je token)
       try{
         state.data.site = state.data.site || {};
         state.data.site.bgImageUrl = state.cfg.bgImageUrl;
         state.data.site.bgOpacity = state.cfg.bgOpacity;
         await persistDataIfPossible('update site banner (auto)');
-      }catch(_){ /* bez tokenu pouze lokální změna */ }
+      }catch(_){}
 
       alert('Pozadí horního banneru nastaveno.');
     });
@@ -865,21 +904,17 @@
       alert('Pozadí banneru zrušeno.');
     });
 
-    // NOVÉ: publikovat sdílené pozadí do JSONu (vidí všechna zařízení)
     byId('btnPublishBg').addEventListener('click', async function(){
       const url = byId('bgUrl').value.trim();
       const op = Math.max(0, Math.min(1, Number(byId('bgOpacity').value)/100));
-      // vložit do state.data.site
       state.data.site = state.data.site || {};
       state.data.site.bgImageUrl = url;
       state.data.site.bgOpacity = op;
 
-      // okamžitá aplikace lokálně
       state.cfg.bgImageUrl = url;
       state.cfg.bgOpacity = op;
       applyHeaderBackground();
 
-      // zápis do GitHubu
       try{
         await persistDataIfPossible('update site banner');
         alert('Pozadí bylo publikováno do JSONu – uvidí ho všechna zařízení.');
@@ -938,7 +973,6 @@
                    {id:'a3', variety:'Rosé Cuvée', year:'2025', price:'170', labelColor:'pink'}]},
           { id:'w2', name:'Vinařství Na Příkladu', cellar:'40', description:'', photoUrl:'assets/img/vinar2.jpg', wines:[]}
         ];
-        // pokud jsme vytvořili ukázková data, banner zůstává dle lokální konfigurace
         renderCards();
         refreshExistingSelect();
       }else{
