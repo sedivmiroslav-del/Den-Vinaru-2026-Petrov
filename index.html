@@ -170,7 +170,7 @@
         <!-- Ikona nastavení (ozubené kolo) pro admin modal -->
         <button id="btnGear" class="icon-btn" aria-label="Admin přihlášení" title="Nastavení / Admin">
           <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
-            <path fill="currentColor" d="M19.14,12.94a7.82,7.82,0,0,0,.06-.94,7.82,7.82,0,0,0-.06-.94l2-1.55a.5.5,0,0,0,.12-.65l-1.9-3.29a.5.5,0,0,0-.6-.22l-2.35,1a7.3,7.3,0,0,0-1.63-.94l-.35-2.5A.5.5,0,0,0,13,2H11a.5.5,0,0,0-.5.42l-.35,2.5a7.3,7.3,0,0,0-1.63.94l-2.35-1a.5.5,0,0,0-.6.22L3.67,8.29a.5.5,0,0,0,.12.65l2,1.55a7.82,7.82,0,0,0-.06.94,7.82,7.82,0,0,0,.06.94l-2,1.55a.5.5,0,0,0-.12.65l1.9,3.29a.5.5,0,0,0,.6.22l2.35-1a7.3,7.3,0,0,0,1.63.94l.35,2.5A.5.5,0,0,0,11,22h2a.5.5,0,0,0,.5-.42l.35-2.5a7.3,7.3,0,0,0,1.63-.94l2.35,1a.5.5,0,0,0,.6-.22l1.9-3.29a.5.5,0,0,0-.12-.65Zm-7.14,2.56A3.5,3.5,0,1,1,15.5,12,3.5,3.5,0,0,1,12,15.5Z"/>
+            <path fill="currentColor" d="M19.14,12.94a7.82,7.82,0,0,0,.06-.94,7.82,7.82,0,0,0-.06-.94l2-1.55a.5.5,0,0,0,.12-.65l-1.9-3.29a.5.5,0,0,0-.6-.22l-2.35,1a7.3,7.3,0,0,0-1.63-.94l-.35-2.5A.5.5,0,0,0,13,2H11a.5.5,0,0,0-.5.42l-.35,2.5a7.3,7.3,0,0,0-1.63.94l-2.35-1a.5.5,0,0,0-.6.22L3.67,8.29a.5.5,0,0,0,.12.65l2,1.55a7.82,7.82,0,0,0-.06.94,7.82,7.82,0,0,0,.06.94l-2,1.55a.5.5,0,0,0-.12.65l1.9,3.29a.5.5,0,0,0,.6.22l2.35-1a7.3,7.3,0,0,0,1.63.94l.35,2.5A.5.5,0,0,0,11,22h2a.5.5,0,0,0,.5-.42l.35-2.5a7.3,7.3,0,0,0,1.63-.94l2.35,1a.5.5,0,0,0,.6-.22l1.9-3.29a.5.5,0,0,0,.12-.65Zm-7.14,2.56A3.5,3.5,0,1,1,15.5,12,3.5,3.5,0,0,1,12,15.5Z"/>
           </svg>
         </button>
       </div>
@@ -233,6 +233,9 @@
         <div style="margin-top:10px; display:flex; gap:.5rem; flex-wrap:wrap">
           <button id="btnApplyBg" class="btn btn-primary" type="button">Použít pozadí v banneru</button>
           <button id="btnClearBg" class="btn btn-ghost" type="button">Zrušit pozadí banneru</button>
+          <!-- NOVÉ: publikace sdíleného pozadí pro všechna zařízení -->
+          <button id="btnPublishBg" class="btn btn-primary" type="button" title="Uložit URL a průsvitnost do veřejného JSONu (vyžaduje PAT)">Publikovat pozadí pro všechna zařízení</button>
+          <span class="notice" aria-live="polite">Uloží se do data/winemakers.json → uvidí všechna zařízení</span>
         </div>
       </div>
 
@@ -385,6 +388,22 @@
       header.style.setProperty('--header-bg-opacity', String(op));
     }
 
+    // NOVÉ: aplikace pozadí banneru ze sdílených dat (site)
+    function applyHeaderBackgroundFromData(){
+      const site = (state.data && state.data.site) || {};
+      if (site.bgImageUrl) {
+        state.cfg.bgImageUrl = site.bgImageUrl;
+      }
+      if (typeof site.bgOpacity === 'number') {
+        state.cfg.bgOpacity = site.bgOpacity;
+      }
+      applyHeaderBackground();
+      // zrcadlit hodnoty do formuláře (pokud je admin viditelný)
+      const urlIn = byId('bgUrl'), opIn = byId('bgOpacity');
+      if (urlIn) urlIn.value = state.cfg.bgImageUrl || '';
+      if (opIn) opIn.value = Math.round((Number(state.cfg.bgOpacity||0.18))*100);
+    }
+
     function rawDataUrl(){ return 'https://raw.githubusercontent.com/'+state.cfg.owner+'/'+state.cfg.repo+'/'+state.cfg.branch+'/'+state.cfg.dataPath; }
     function apiContentUrl(path){ return 'https://api.github.com/repos/'+state.cfg.owner+'/'+state.cfg.repo+'/contents/'+encodeURIComponent(path); }
 
@@ -395,6 +414,8 @@
         else if(!res.ok){ throw new Error('HTTP '+res.status); }
         else { const json = await res.json(); state.data = (json && Array.isArray(json.winemakers)) ? json : {winemakers:[]}; }
       }catch(e){ console.error(e); state.data={winemakers:[]}; }
+      // NOVÉ: po načtení dat aplikuj sdílené pozadí
+      applyHeaderBackgroundFromData();
       renderCards();
       refreshExistingSelect();
     }
@@ -462,7 +483,7 @@
             y += lines.length*14 + 20;
           }
 
-          const head=[[ safeTxt('Odrůda',fontLoaded), safeTxt('Ročník',fontLoaded), safeTxt('Cena (Kč)',fontLoaded), safeTxt('Moje poznámka',fontLoaded) ]];
+          const head=[[ safeTxt('Odrůda',fontLoaded), safeTxt('Ročník',fontLoaded), safe Txt('Cena (Kč)',fontLoaded), safeTxt('Moje poznámka',fontLoaded) ]];
           const body=(w.wines||[]).map(function(v,i){
             return [
               safeTxt(String(v.variety||''),fontLoaded),
@@ -824,6 +845,15 @@
       state.cfg.bgOpacity = Math.max(0, Math.min(1, Number(byId('bgOpacity').value)/100));
       saveCfg(state.cfg);
       applyHeaderBackground();
+
+      // Volitelně: automaticky zapiš do sdílených dat (pokud je token)
+      try{
+        state.data.site = state.data.site || {};
+        state.data.site.bgImageUrl = state.cfg.bgImageUrl;
+        state.data.site.bgOpacity = state.cfg.bgOpacity;
+        await persistDataIfPossible('update site banner (auto)');
+      }catch(_){ /* bez tokenu pouze lokální změna */ }
+
       alert('Pozadí horního banneru nastaveno.');
     });
 
@@ -833,6 +863,30 @@
       applyHeaderBackground();
       byId('bgUrl').value = '';
       alert('Pozadí banneru zrušeno.');
+    });
+
+    // NOVÉ: publikovat sdílené pozadí do JSONu (vidí všechna zařízení)
+    byId('btnPublishBg').addEventListener('click', async function(){
+      const url = byId('bgUrl').value.trim();
+      const op = Math.max(0, Math.min(1, Number(byId('bgOpacity').value)/100));
+      // vložit do state.data.site
+      state.data.site = state.data.site || {};
+      state.data.site.bgImageUrl = url;
+      state.data.site.bgOpacity = op;
+
+      // okamžitá aplikace lokálně
+      state.cfg.bgImageUrl = url;
+      state.cfg.bgOpacity = op;
+      applyHeaderBackground();
+
+      // zápis do GitHubu
+      try{
+        await persistDataIfPossible('update site banner');
+        alert('Pozadí bylo publikováno do JSONu – uvidí ho všechna zařízení.');
+      }catch(err){
+        console.error(err);
+        alert('Nepodařilo se zapsat do GitHubu. Zkontrolujte token a práva.');
+      }
     });
 
     byId('bgOpacity').addEventListener('input', function(){
@@ -884,6 +938,7 @@
                    {id:'a3', variety:'Rosé Cuvée', year:'2025', price:'170', labelColor:'pink'}]},
           { id:'w2', name:'Vinařství Na Příkladu', cellar:'40', description:'', photoUrl:'assets/img/vinar2.jpg', wines:[]}
         ];
+        // pokud jsme vytvořili ukázková data, banner zůstává dle lokální konfigurace
         renderCards();
         refreshExistingSelect();
       }else{
