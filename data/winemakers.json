@@ -38,21 +38,21 @@
       "photoUrl": "https://raw.githubusercontent.com/sedivmiroslav-del/Den-Vinaru-2026-Petrov/main/assets/uploads/Snímka_obrazovky_2026-05-07_072323.png",
       "wines": [
         {
-          "id": "wine_mov1xvtzf3k2w1",
+          "id": "wine_mov29r6mq3lbkn",
           "variety": "Johaniter",
           "year": "2025",
           "price": "250",
           "labelColor": "yellow"
         },
         {
-          "id": "wine_mov1xvtzrz4ffo",
+          "id": "wine_mov29r6mwsd76w",
           "variety": "Rosé",
           "year": "2025",
           "price": "200",
           "labelColor": "pink"
         },
         {
-          "id": "wine_mov1xvtzuv7yts",
+          "id": "wine_mov29r6m74gqve",
           "variety": "Frankovka",
           "year": "2022",
           "price": "300",
