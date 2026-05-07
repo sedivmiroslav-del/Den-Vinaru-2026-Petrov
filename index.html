@@ -581,7 +581,8 @@
         alert('Chybí token – upload fotky přeskočen. Ponechám původní URL.');
         return currentPhotoUrl || null;
       }
-      const filename = file.name.replace(/\s+/g,'_');
+      // Jedinečný názov súboru – znižuje konflikty
+      const filename = 'photo_'+Date.now()+'_'+file.name.replace(/\s+/g,'_');
       const path = state.cfg.imagesPath.replace(/\/+$/,'') + '/' + filename;
       const buf = await file.arrayBuffer();
       const bytes=new Uint8Array(buf); var bin=''; for(let i=0;i<bytes.byteLength;i++) bin+=String.fromCharCode(bytes[i]);
@@ -780,10 +781,10 @@
       window.scrollTo({top:0, behavior:'smooth'});
     }
 
-    // ========= GitHub write API (bez Cache-Control hlavičky, s retry) =========
+    // ========= GitHub write API (bez predfetch SHA; najprv create, potom update) =========
     async function getFileSha(path){
       const url = apiContentUrl(path) + '?ref=' + encodeURIComponent(state.cfg.branch||'main') + '&_=' + Date.now();
-      const headers = { 'Accept':'application/vnd.github+json' };
+      const headers = { 'Accept':'application/vnd.github+json', 'X-GitHub-Api-Version':'2022-11-28' };
       const tok = resolveToken(); if(tok) headers['Authorization'] = 'Bearer ' + tok;
       const r = await fetch(url,{headers:headers});
       if(r.status===404) return null;
@@ -797,33 +798,70 @@
       const branch = state.cfg.branch||'main';
 
       let attempt = 0;
+      let lastErr = null;
+
+      // 1) Najprv skúsiť CREATE (bez SHA)
       while(attempt < 4){
         attempt++;
-        let sha = null;
-        try { sha = await getFileSha(path); } catch(_){ sha = null; }
-        const body = { message: message||'update via app', content: contentBase64, branch };
-        if(sha) body.sha = sha;
-
+        const bodyCreate = { message: message||'create via app', content: contentBase64, branch };
         const res = await fetch(url,{
           method:'PUT',
           headers:{
             'Accept':'application/vnd.github+json',
             'Authorization':'Bearer '+tok,
-            'Content-Type':'application/json'
+            'Content-Type':'application/json',
+            'X-GitHub-Api-Version':'2022-11-28'
           },
-          body: JSON.stringify(body)
+          body: JSON.stringify(bodyCreate)
         });
-
         if(res.ok) return res.json();
 
         const txt = await res.text();
-        if(res.status===409 || res.status===404){
+        lastErr = new Error('GitHub PUT(create) '+res.status+': '+txt);
+
+        // 409 = existuje, treba SHA → prejdeme na update vetvu
+        if(res.status===409) break;
+
+        // 404/5xx → backoff a skúsiť znova
+        if(res.status===404 || res.status>=500){
+          await new Promise(r=>setTimeout(r, 350*attempt));
+          continue;
+        }
+        throw lastErr;
+      }
+
+      // 2) UPDATE (s SHA)
+      attempt = 0;
+      while(attempt < 4){
+        attempt++;
+        let sha = null;
+        try { sha = await getFileSha(path); } catch(e){ sha = null; }
+        if(!sha){
+          await new Promise(r=>setTimeout(r, 300*attempt));
+          continue;
+        }
+        const bodyUpdate = { message: message||'update via app', content: contentBase64, branch, sha };
+        const res = await fetch(url,{
+          method:'PUT',
+          headers:{
+            'Accept':'application/vnd.github+json',
+            'Authorization':'Bearer '+tok,
+            'Content-Type':'application/json',
+            'X-GitHub-Api-Version':'2022-11-28'
+          },
+          body: JSON.stringify(bodyUpdate)
+        });
+        if(res.ok) return res.json();
+
+        const txt = await res.text();
+        if(res.status===409 || res.status===404 || res.status>=500){
           await new Promise(r=>setTimeout(r, 400*attempt));
           continue;
         }
-        throw new Error('GitHub PUT '+res.status+': '+txt);
+        throw new Error('GitHub PUT(update) '+res.status+': '+txt);
       }
-      throw new Error('GitHub PUT: příliš mnoho konfliktů.');
+      if(lastErr) throw lastErr;
+      throw new Error('GitHub PUT: nepodarilo sa vykonať create/update po viacerých pokusoch.');
     }
 
     async function putJson(path, obj, message){
