@@ -32,17 +32,31 @@
     },
     {
       "id": "win_mouz7dodcx00tm",
-      "name": "Vinařství Tomanovský",
-      "cellar": "11",
-      "description": "popis Tomanovský",
-      "photoUrl": "https://raw.githubusercontent.com/sedivmiroslav-del/Den-Vinaru-2026-Petrov/main/assets/uploads/Snímka_obrazovky_2026-05-07_061004.png",
+      "name": "Vinařství Hudeček",
+      "cellar": "70",
+      "description": "popis Hudeček",
+      "photoUrl": "https://raw.githubusercontent.com/sedivmiroslav-del/Den-Vinaru-2026-Petrov/main/assets/uploads/Foto_5.jpg",
       "wines": [
         {
-          "id": "wine_mouz7lrgoix7vw",
-          "variety": "Rulandské bílé",
+          "id": "wine_mov1fshdf5xy7d",
+          "variety": "Johaniter",
           "year": "2025",
           "price": "250",
           "labelColor": "yellow"
+        },
+        {
+          "id": "wine_mov1fshdzjs46k",
+          "variety": "Rosé",
+          "year": "2025",
+          "price": "200",
+          "labelColor": "pink"
+        },
+        {
+          "id": "wine_mov1fshd8kmie4",
+          "variety": "Frankovka",
+          "year": "2022",
+          "price": "300",
+          "labelColor": "red"
         }
       ]
     }
