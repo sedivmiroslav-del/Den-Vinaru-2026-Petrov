@@ -12,7 +12,6 @@
 
   <style>
     :root{
-      /* Paleta */
       --vine-green: rgb(0,137,6);
       --mid: rgb(135,135,135);
       --stone: rgb(206,213,218);
@@ -30,7 +29,7 @@
       --shadow-2: 0 12px 36px rgba(0,0,0,.14);
       --shadow-soft: 0 6px 20px rgba(29,155,178,.18);
 
-      /* Pozadí horního banneru – nastavuje JS */
+      /* Banner (mení JS) */
       --header-bg-url: none;
       --header-bg-opacity: 0.18;
     }
@@ -41,7 +40,6 @@
     button:focus, a:focus, input:focus, textarea:focus, select:focus{outline:3px solid var(--lemon); outline-offset:2px}
     .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 
-    /* Header – gradient + volitelné pozadí pouze zde */
     header.header{
       position:relative; color:var(--white);
       background:
@@ -74,74 +72,31 @@
       transition:transform .08s ease, filter .15s ease, background-color .2s ease; backdrop-filter: blur(6px);
       box-shadow: 0 4px 14px rgba(0,0,0,.18);
     }
-    .icon-btn:hover{ filter:brightness(0.98); transform: translateY(-1px) }
-    .icon-btn:active{ transform: translateY(0) }
     .icon{ width:22px; height:22px; display:inline-block }
 
-    .btn{ border:1px solid transparent; border-radius:999px; padding:.7rem 1rem; cursor:pointer; font-weight:800; transition:transform .05s, filter .15s, background-color .15s, box-shadow .15s; display:inline-flex; align-items:center; gap:.5rem; }
+    .btn{ border:1px solid transparent; border-radius:999px; padding:.7rem 1rem; cursor:pointer; font-weight:800; transition:.15s filter, .1s transform }
     .btn:active{ transform: translateY(1px) }
-    .btn-primary{ background:var(--blue); color:var(--white); box-shadow: var(--shadow-soft); }
-    .btn-primary:hover{ filter:brightness(.98) }
-    .btn-ghost{ background: var(--white); color: var(--black); border-color: var(--border) }
+    .btn-primary{ background:var(--blue); color:var(--white); box-shadow:var(--shadow-soft) }
+    .btn-ghost{ background: var(--white); color: var(--black); border:1px solid var(--border) }
     .btn-soft{ background: var(--stone); color: var(--black) }
 
     main{ max-width:1200px; margin: 20px auto 72px; padding: 0 16px }
     .pill{ padding:.28rem .65rem; border-radius:999px; border:1px solid var(--border); background:var(--white); color:var(--muted); font-size:.9rem }
 
-    /* Cards */
     .cards{ display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:16px }
-    .card{ border:1px solid var(--border); border-radius:14px; background:var(--white); box-shadow:var(--shadow-1); overflow:clip; display:flex; flex-direction:column; transition:.2s transform ease, .2s box-shadow ease, .25s filter ease; cursor:pointer; transform: translateY(0); }
-    .card:hover{ transform:translateY(-4px); box-shadow:var(--shadow-2); }
-    .card .cover{ height:200px; background:#e9eef2; display:block; position:relative; overflow:hidden }
-    .card .cover img{ width:100%; height:100%; object-fit:cover; display:block; transform:scale(1.02); transition: transform .35s ease }
+    .card{ border:1px solid var(--border); border-radius:14px; background:var(--white); box-shadow:var(--shadow-1); overflow:hidden; display:flex; flex-direction:column; cursor:pointer; transition:.2s transform, .2s box-shadow }
+    .card:hover{ transform:translateY(-4px); box-shadow:var(--shadow-2) }
+    .card .cover{ height:200px; background:#e9eef2; overflow:hidden }
+    .card .cover img{ width:100%; height:100%; object-fit:cover; transform:scale(1.02); transition: transform .35s ease }
     .card:hover .cover img{ transform: scale(1.06) }
     .card .body{ padding:14px }
-    .card h3{ margin:.25rem 0 .15rem; font-size:1.08rem }
 
     .detail{ display:none; animation: fadeIn .25s ease forwards }
     .detail.active{ display:block }
     @keyframes fadeIn{ from{opacity:0; transform: translateY(4px)} to{opacity:1; transform: translateY(0)} }
-    .detail .head{ display:flex; gap:18px; flex-wrap:wrap; align-items:flex-start; margin-bottom:12px }
-    .detail .photo{ width:300px; max-width:100%; border-radius:14px; border:1px solid var(--border); background:#e9eef2; display:block; height:210px; object-fit:cover; box-shadow:var(--shadow-1) }
-    .photo-wrap{ position:relative; width:300px; max-width:100% }
-
-    .muted{ color:var(--muted) }
-
-    /* Tag vína s podbarvením */
-    .tag{ padding:5px 10px; border-radius:999px; font-weight:800; font-size:.86rem; display:inline-block; margin-right:6px; border:1px solid var(--border) }
-    .hl-yellow{ background: rgba(255,255,96,.6); color: var(--black); }
-    .hl-red{ background: rgba(255,120,120,.90); color: var(--black); }
-    .hl-pink{ background: rgba(255,192,203,.15); color: var(--black); }
 
     .section{ border-top:3px solid var(--stone); padding-top:12px; margin-top:16px }
-    .wine{ border:1px solid var(--border); border-radius:14px; padding:10px; margin:10px 0; background:#fff; box-shadow: var(--shadow-1) }
-
-    .note{ width:100%; min-height:92px; resize:vertical; border:1px solid var(--border); border-radius:12px; padding:10px }
-    .note-status{ font-size:.9rem; color:var(--muted) }
-
-    .admin-only{ display:none }
-    .admin-only.visible{ display:block }
-
-    .panel{ border:2px solid var(--blue); border-radius:16px; padding:14px; background:#fff; box-shadow:var(--shadow-1); margin-bottom:16px }
-    .panel h2{ margin:.2rem 0 .4rem; color:var(--blue) }
-    .form-grid{ display:grid; gap:12px; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)) }
-    label{ font-weight:800 }
-    input[type="text"], input[type="number"], input[type="url"], input[type="password"], textarea, select, input[type="range"]{
-      width:100%; border:1px solid var(--border); border-radius:12px; padding:.65rem .75rem; background:#fff; font-size:1rem
-    }
-    input[type="range"]{ padding: .35rem 0; }
-
-    footer{ border-top:6px solid var(--vine-green); background:#f7fafb; color:#333; padding:16px; text-align:center }
-
-    .modal{ position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.45); z-index:9998; animation: modalFade .2s ease forwards }
-    .modal.show{ display:flex }
-    @keyframes modalFade{ from{opacity:0} to{opacity:1} }
-    .modal-card{ width:min(560px,92vw); background:#fff; border-radius:16px; box-shadow:var(--shadow-2); padding:16px; transform: scale(.98); animation: popIn .2s ease forwards }
-    @keyframes popIn{ to{ transform: scale(1) } }
-    .modal-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:8px }
-    .close-btn{ appearance:none; border:none; background:transparent; font-size:26px; line-height:1; cursor:pointer }
-
-    .notice{ margin-left:.5rem; color:var(--muted); font-size:.9rem }
+    .muted{ color:var(--mid) }
   </style>
 </head>
 <body>
@@ -156,14 +111,10 @@
 
       <div class="actions">
         <button id="btnExportAll" class="icon-btn" title="Stáhnout celý katalog (PDF)" aria-label="Stáhnout celý katalog (PDF)">
-          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
-            <path fill="currentColor" d="M12 3a1 1 0 0 1 1 1v9.59l2.3-2.3a1 1 0 1 1 1.4 1.42l-4 4a1 1 0 0 1-1.4 0l-4-4a1 1 0 1 1 1.4-1.42l2.3 2.3V4a1 1 0 0 1 1-1ZM5 19a1 1 0 0 1 1-1h12a1 1 0 1 1 0 2H6a1 1 0 0 1-1-1Z"/>
-          </svg>
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3a1 1 0 0 1 1 1v9.59l2.3-2.3a1 1 0 1 1 1.4 1.42l-4 4a1 1 0 0 1-1.4 0l-4-4a1 1 0 1 1 1.4-1.42l2.3 2.3V4a1 1 0 0 1 1-1ZM5 19a1 1 0 0 1 1-1h12a1 1 0 1 1 0 2H6a1 1 0 0 1-1-1Z"/></svg>
         </button>
         <button id="btnGear" class="icon-btn" aria-label="Admin přihlášení" title="Nastavení / Admin">
-          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
-            <path fill="currentColor" d="M19.14,12.94a7.82,7.82,0,0,0,.06-.94,7.82,7.82,0,0,0-.06-.94l2-1.55a.5.5,0,0,0,.12-.65l-1.9-3.29a.5.5,0,0,0-.6-.22l-2.35,1a7.3,7.3,0,0,0-1.63-.94l-.35-2.5A.5.5,0,0,0,13,2H11a.5.5,0,0,0-.5.42l-.35,2.5a7.3,7.3,0,0,0-1.63.94l-2.35-1a.5.5,0,0,0-.6.22L3.67,8.29a.5.5,0,0,0,.12.65l2,1.55a7.82,7.82,0,0,0-.06.94,7.82,7.82,0,0,0,.06.94l-2,1.55a.5.5,0,0,0-.12.65l1.9,3.29a.5.5,0,0,0,.6.22l2.35-1a7.3,7.3,0,0,0,1.63.94l.35,2.5A.5.5,0,0,0,11,22h2a.5.5,0,0,0,.5-.42l.35-2.5a7.3,7.3,0,0,0,1.63-.94l2.35,1a.5.5,0,0,0,.6-.22l1.9-3.29a.5.5,0,0,0,.12-.65Zm-7.14,2.56A3.5,3.5,0,1,1,15.5,12,3.5,3.5,0,0,1,12,15.5Z"/>
-          </svg>
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19.14,12.94a7.82,7.82,0,0,0,.06-.94,7.82,7.82,0,0,0-.06-.94l2-1.55a.5.5,0,0,0,.12-.65l-1.9-3.29a.5.5,0,0,0-.6-.22l-2.35,1a7.3,7.3,0,0,0-1.63-.94l-.35-2.5A.5.5,0,0,0,13,2H11a.5.5,0,0,0-.5.42l-.35,2.5a7.3,7.3,0,0,0-1.63.94l-2.35-1a.5.5,0,0,0-.6.22L3.67,8.29a.5.5,0,0,0,.12.65l2,1.55a7.82,7.82,0,0,0-.06.94,7.82,7.82,0,0,0,.06.94l-2,1.55a.5.5,0,0,0-.12.65l1.9,3.29a.5.5,0,0,0,.6.22l2.35-1a7.3,7.3,0,0,0,1.63.94l.35,2.5A.5.5,0,0,0,11,22h2a.5.5,0,0,0,.5-.42l.35-2.5a7.3,7.3,0,0,0,1.63-.94l2.35,1a.5.5,0,0,0,.6-.22l1.9-3.29a.5.5,0,0,0,.12-.65Zm-7.14,2.56A3.5,3.5,0,1,1,15.5,12,3.5,3.5,0,0,1,12,15.5Z"/></svg>
         </button>
       </div>
     </div>
@@ -279,17 +230,10 @@
   </footer>
 
   <script>
-    /* ====== Util ====== */
+    /* ===== Util ===== */
     const $ = (sel,ctx)=> (ctx||document).querySelector(sel);
     const $$ = (sel,ctx)=> Array.from((ctx||document).querySelectorAll(sel));
-    const byId = (id)=> document.getElementById(id);
-
-    const escapeHtml = (s)=> String(s||'').replace(/[&<>"']/g, m=> ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-    const escapeAttr = (s)=> String(s||'').replace(/"/g,'&quot;');
-    const uid = (p='id')=> p + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2,8);
-
-    const asciiFallback = s=> String(s||'').normalize('NFD').replace(/\p{Diacritic}+/gu,'');
-    const safeTxt = (s, fontLoaded)=> fontLoaded ? String(s||'') : asciiFallback(s);
+    const byId = id => document.getElementById(id);
 
     const LS_CFG='dv_cfg', LS_PAT='dv_pat', SS_ADMIN='dv_admin', SS_PAT='dv_pat_session';
 
@@ -302,89 +246,38 @@
       bgImageUrl:'',
       bgOpacity:0.18
     };
+    const state = { cfg: loadCfg(), data:{winemakers:[]}, admin:{logged:false, token:null}, currentId:null };
+
     function loadCfg(){
       try{ return Object.assign({}, defaultConfig, (JSON.parse(localStorage.getItem(LS_CFG)||'{}')||{})); }
       catch(e){ return Object.assign({}, defaultConfig); }
     }
-    function saveCfg(cfg){ localStorage.setItem(LS_CFG, JSON.stringify(cfg)); }
-
-    const state = { cfg: loadCfg(), data: {winemakers:[]}, admin: { logged:false, token:null }, currentId: null };
-
+    function saveCfg(){ localStorage.setItem(LS_CFG, JSON.stringify(state.cfg)); }
     function resolveToken(){ return state.admin.token || sessionStorage.getItem(SS_PAT) || localStorage.getItem(LS_PAT) || null; }
-    function hasToken(){ return Boolean(resolveToken()); }
+    function hasToken(){ return !!resolveToken(); }
 
-    /* ====== Header background (lokálne hneď po štarte) ====== */
-    function applyHeaderBackground(){
-      const header = document.querySelector('header.header');
-      if(!header) return;
-      const url = state.cfg.bgImageUrl ? 'url("'+state.cfg.bgImageUrl.replace(/"/g,'%22')+'")' : 'none';
-      const op = (typeof state.cfg.bgOpacity==='number' ? state.cfg.bgOpacity : 0.18);
-      header.style.setProperty('--header-bg-url', url);
-      header.style.setProperty('--header-bg-opacity', String(op));
-    }
-    function applyCfgToForm(){
-      const set = (id,val)=>{ const el=byId(id); if(el) el.value = val; };
-      set('cfgOwner', state.cfg.owner || '');
-      set('cfgRepo', state.cfg.repo || '');
-      set('cfgBranch', state.cfg.branch || 'main');
-      set('cfgDataPath', state.cfg.dataPath || 'data/winemakers.json');
-      set('cfgImagesPath', state.cfg.imagesPath || 'assets/uploads');
-      set('bgUrl', state.cfg.bgImageUrl || '');
-      set('bgOpacity', Math.round((Number(state.cfg.bgOpacity||0.18))*100));
-      applyHeaderBackground();
-    }
-    function readCfgFromForm(){
-      const get = (id, def)=> (byId(id)?.value || '').trim() || def;
-      state.cfg.owner = get('cfgOwner', defaultConfig.owner);
-      state.cfg.repo = get('cfgRepo', defaultConfig.repo);
-      state.cfg.branch = get('cfgBranch', 'main');
-      state.cfg.dataPath = get('cfgDataPath', defaultConfig.dataPath);
-      state.cfg.imagesPath = get('cfgImagesPath', defaultConfig.imagesPath);
-      state.cfg.bgImageUrl = get('bgUrl', '');
-      const opEl=byId('bgOpacity'); state.cfg.bgOpacity = Math.max(0, Math.min(1, Number(opEl ? opEl.value : 18)/100));
-      saveCfg(state.cfg);
-      applyHeaderBackground();
-    }
-
-    /* ====== UI pomocné (ADMIN) ====== */
+    /* ===== UI helpers ===== */
     function refreshAuthUI(){
       const isLogged = state.admin.logged;
-      const lOut=byId('btnLogout'), lIn=byId('btnLogin'), del=byId('btnDeleteWinemaker'), sel=byId('existingSelect'), adm=byId('adminStatus');
-      if(lOut) lOut.disabled = !isLogged;
-      if(lIn) lIn.disabled  = false;
-      if(adm) adm.textContent = isLogged ? 'Přihlášen' : 'Odhlášen';
+      const adm=byId('adminStatus'); if(adm) adm.textContent = isLogged ? 'Přihlášen' : 'Odhlášen';
       const sw=byId('btnSaveWinemaker'); if(sw) sw.disabled = !isLogged;
+      const del=byId('btnDeleteWinemaker'); const sel=byId('existingSelect');
       if(del) del.disabled = !isLogged || !(sel && sel.value);
     }
     function setAdminVisibility(){
       const v = state.admin.logged;
-      Array.from(document.querySelectorAll('.admin-only')).forEach(el=> el.classList.toggle('visible', v));
-      const tokenStatus = byId('tokenStatus');
-      if(tokenStatus) tokenStatus.textContent = 'Token: ' + (hasToken() ? 'uložen' : 'neuložen');
+      $$('.admin-only').forEach(el=> el.classList.toggle('visible', v));
+      const tk=byId('tokenStatus'); if(tk) tk.textContent = 'Token: ' + (hasToken() ? 'uložen' : 'neuložen');
       refreshAuthUI();
     }
 
-    /* ====== Karty/Select – definované PRED fetchData (aby nebol ReferenceError) ====== */
+    /* ===== Cards/select – definované PRED fetchData ===== */
     function refreshExistingSelect(selectId){
-      const sel = byId('existingSelect');
-      if(!sel) return;
+      const sel = byId('existingSelect'); if(!sel) return;
       const items = (state.data.winemakers||[]).slice().sort((a,b)=> String(a.name||'').localeCompare(b.name||''));
       sel.innerHTML = '<option value="">— vyberte vinaře —</option>' + items.map(w=> '<option value="'+escapeAttr(w.id)+'">'+escapeHtml(w.name||'')+'</option>').join('');
-      if(selectId){ sel.value = selectId; }
+      if(selectId) sel.value = selectId;
       const del=byId('btnDeleteWinemaker'); if(del) del.disabled = !state.admin.logged || !sel.value;
-    }
-    function showCards(){
-      const cv=byId('cardsView'), dv=byId('detailView');
-      if(cv) cv.style.display='block';
-      if(dv){ dv.classList.remove('active'); dv.innerHTML=''; }
-    }
-    function showDetail(id){
-      state.currentId = id;
-      const cv=byId('cardsView'), dv=byId('detailView');
-      if(cv) cv.style.display='none';
-      if(dv) dv.classList.add('active');
-      renderDetail(id);
-      window.scrollTo({top:0, behavior:'smooth'});
     }
     function renderCards(){
       const host = byId('cardsContainer'); if(!host) return; host.innerHTML='';
@@ -395,113 +288,147 @@
         host.appendChild(none); showCards(); return;
       }
       for(const w of items){
-        const art=document.createElement('article'); art.className='card'; art.setAttribute('role','listitem'); art.dataset.id=w.id;
-        art.setAttribute('tabindex','0');
-        art.setAttribute('aria-label', 'Zobrazit detail vinaře ' + (w.name||''));
+        const art=document.createElement('article'); art.className='card'; art.setAttribute('role','listitem'); art.dataset.id=w.id; art.tabIndex=0;
         const cover=document.createElement('div'); cover.className='cover';
-        if(w.photoUrl && String(w.photoUrl).trim()){
-          const img=new Image(); img.alt='Foto vinaře'; img.src=w.photoUrl; img.loading='lazy';
-          img.onerror=function(){ cover.style.background='#e9eef2'; };
-          cover.appendChild(img);
-        }else{
-          cover.style.background='#e9eef2';
-        }
+        if(w.photoUrl && String(w.photoUrl).trim()){ const img=new Image(); img.alt='Foto vinaře'; img.src=w.photoUrl; img.loading='lazy'; img.onerror=()=>{cover.style.background='#e9eef2';}; cover.appendChild(img); }
+        else{ cover.style.background='#e9eef2'; }
         const body=document.createElement('div'); body.className='body';
-        const h=document.createElement('h3'); h.textContent=w.name||'';
-        const m=document.createElement('div'); m.className='muted'; m.textContent='Sklep č. '+(w.cellar||'?');
-        body.appendChild(h); body.appendChild(m);
-        art.appendChild(cover); art.appendChild(body);
-        host.appendChild(art);
+        body.innerHTML='<h3>'+escapeHtml(w.name||'')+'</h3><div class="muted">Sklep č. '+escapeHtml(w.cellar||'?')+'</div>';
+        art.appendChild(cover); art.appendChild(body); host.appendChild(art);
       }
+      host.addEventListener('click', e=>{ const c=e.target.closest('.card'); if(!c) return; const id=c.dataset.id; if(id) showDetail(id); });
+      host.addEventListener('keydown', e=>{ if(e.key!=='Enter' && e.key!==' ') return; const c=e.target.closest('.card'); if(!c) return; e.preventDefault(); const id=c.dataset.id; if(id) showDetail(id); });
       showCards();
+    }
+    function showCards(){ const cv=byId('cardsView'), dv=byId('detailView'); if(cv) cv.style.display='block'; if(dv){ dv.classList.remove('active'); dv.innerHTML=''; } }
+    function showDetail(id){
+      state.currentId = id;
+      const dv=byId('detailView'); const cv=byId('cardsView');
+      if(cv) cv.style.display='none'; if(dv) dv.classList.add('active');
+      renderDetail(id);
+      window.scrollTo({top:0, behavior:'smooth'});
     }
     function renderDetail(id){
       const w = (state.data.winemakers||[]).find(x=> String(x.id)===String(id));
-      const detail = byId('detailView'); if(!detail) return;
-      if(!w){ detail.innerHTML='<p>Vinař nenalezen.</p>'; return; }
-      const winesHtml = (w.wines||[]).map((v,i)=>{
-        const wid = v.id || ('i'+i);
-        const noteKey = 'dv_note_'+w.id+'_'+wid;
-        const saved = localStorage.getItem(noteKey) || '';
-        let colorClass = '';
-        if(v.labelColor==='yellow') colorClass = ' hl-yellow';
-        else if(v.labelColor==='red') colorClass = ' hl-red';
-        else if(v.labelColor==='pink') colorClass = ' hl-pink';
-        return ''
-          + '<div class="wine">'
-          + '  <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:baseline">'
-          + '    <span class="tag'+colorClass+'">'+escapeHtml(v.variety||'')+'</span>'
-          + '    <span class="muted">Ročník: '+escapeHtml(v.year||'')+'</span>'
-          + '    <span class="muted">Cena: '+escapeHtml(v.price||'')+' Kč</span>'
-          + '  </div>'
-          + '  <label for="note_'+escapeAttr(wid)+'" class="muted" style="display:block;margin-top:.5rem">Moje poznámka</label>'
-          + '  <textarea id="note_'+escapeAttr(wid)+'" class="note" data-key="'+escapeAttr(noteKey)+'" placeholder="Moje poznámka k vínu...">'+escapeHtml(saved)+'</textarea>'
-          + '  <div class="note-status" id="ns_'+escapeAttr(wid)+'" aria-live="polite">Poznámka uložena lokálně</div>'
-          + '</div>';
-      }).join('');
-      detail.innerHTML = ''
-        + '<div class="head">'
-        + '  <div class="photo-wrap">'
-        + (w.photoUrl?('<img src="'+escapeAttr(w.photoUrl)+'" alt="Foto vinaře" class="photo" />'):'<div class="photo" aria-hidden="true"></div>')
-        + '  </div>'
-        + '  <div>'
-        + '    <h2 style="margin:0 0 .25rem 0">'+escapeHtml(w.name||'')+'</h2>'
-        + '    <div class="muted">Sklep č. '+escapeHtml(w.cellar||'?')+'</div>'
-        + '    <div style="margin-top:8px">'
-        + '      <button id="btnBack" class="btn btn-ghost" type="button" aria-label="Zpět na karty">← Zpět</button>'
-        + '    </div>'
-        + '  </div>'
-        + '</div>'
-        + (w.description?('<p>'+escapeHtml(w.description)+'</p>'):'')
-        + '<div class="section"><h3 style="margin:.2rem 0 .6rem">Nabídka vín</h3>'+ (winesHtml || '<p class="muted">Žádná vína.</p>') +'</div>';
+      const dv=byId('detailView'); if(!dv) return;
+      if(!w){ dv.innerHTML='<p>Vinař nenalezen.</p>'; return; }
+      dv.innerHTML = `
+        <div class="head" style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start;margin-bottom:12px">
+          <div class="photo-wrap">
+            ${ w.photoUrl ? `<img src="${escapeAttr(w.photoUrl)}" alt="Foto vinaře" class="photo" style="width:300px;max-width:100%;height:210px;object-fit:cover;border-radius:14px;border:1px solid var(--stone);box-shadow:0 2px 10px rgba(0,0,0,.06)"/>` : `<div class="photo" aria-hidden="true" style="width:300px;max-width:100%;height:210px;background:#e9eef2;border-radius:14px;border:1px solid var(--stone)"></div>` }
+          </div>
+          <div>
+            <h2 style="margin:0 0 .25rem 0">${escapeHtml(w.name||'')}</h2>
+            <div class="muted">Sklep č. ${escapeHtml(w.cellar||'?')}</div>
+            <div style="margin-top:8px"><button id="btnBack" class="btn btn-ghost" type="button" aria-label="Zpět na karty">← Zpět</button></div>
+          </div>
+        </div>
+        ${ w.description ? `<p>${escapeHtml(w.description)}</p>` : '' }
+        <div class="section">
+          <h3 style="margin:.2rem 0 .6rem">Nabídka vín</h3>
+          ${ (w.wines||[]).length ? w.wines.map((v,i)=>{
+              const wid = v.id || ('i'+i);
+              const noteKey = 'dv_note_'+w.id+'_'+wid;
+              const saved = localStorage.getItem(noteKey) || '';
+              let colorClass = v.labelColor==='yellow'?'background:rgba(255,255,96,.6)':v.labelColor==='red'?'background:rgba(255,120,120,.9)':v.labelColor==='pink'?'background:rgba(255,192,203,.15)':'background:#fff';
+              return `
+                <div class="wine" style="border:1px solid var(--stone);border-radius:14px;padding:10px;margin:10px 0;background:#fff">
+                  <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:baseline">
+                    <span class="tag" style="${colorClass};border:1px solid var(--stone);border-radius:999px;padding:5px 10px;font-weight:800;font-size:.86rem">${escapeHtml(v.variety||'')}</span>
+                    <span class="muted">Ročník: ${escapeHtml(v.year||'')}</span>
+                    <span class="muted">Cena: ${escapeHtml(v.price||'')} Kč</span>
+                  </div>
+                  <label for="note_${escapeAttr(wid)}" class="muted" style="display:block;margin-top:.5rem">Moje poznámka</label>
+                  <textarea id="note_${escapeAttr(wid)}" class="note" data-key="${escapeAttr(noteKey)}" style="width:100%;min-height:92px;border:1px solid var(--stone);border-radius:12px;padding:10px" placeholder="Moje poznámka k vínu...">${escapeHtml(saved)}</textarea>
+                  <div class="note-status" id="ns_${escapeAttr(wid)}" aria-live="polite" style="font-size:.9rem;color:var(--mid)">Poznámka uložena lokálně</div>
+                </div>`;
+            }).join('') : '<p class="muted">Žádná vína.</p>' }
+        </div>`;
       const btn=byId('btnBack'); if(btn) btn.addEventListener('click', showCards, {once:true});
+      $$('.note', dv).forEach(ta=>{
+        ta.addEventListener('input', e=>{
+          const key = e.currentTarget.dataset.key;
+          localStorage.setItem(key, e.currentTarget.value);
+          const wid = e.currentTarget.id.replace('note_','');
+          const ns = byId('ns_'+wid); if(ns) ns.textContent='Poznámka uložena lokálně';
+        });
+      });
     }
 
-    /* ====== Uploady a zápis do GitHubu ====== */
+    /* ===== Banner – localStorage ihneď, RAW s retry ===== */
+    function applyHeaderBackground(){
+      const header = document.querySelector('header.header'); if(!header) return;
+      const url = state.cfg.bgImageUrl ? 'url("'+state.cfg.bgImageUrl.replace(/"/g,'%22')+'")' : 'none';
+      const op = (typeof state.cfg.bgOpacity==='number' ? state.cfg.bgOpacity : 0.18);
+      header.style.setProperty('--header-bg-url', url);
+      header.style.setProperty('--header-bg-opacity', String(op));
+    }
+    function applyCfgToForm(){
+      const set=(id,val)=>{ const el=byId(id); if(el) el.value=val; };
+      set('cfgOwner', state.cfg.owner); set('cfgRepo', state.cfg.repo); set('cfgBranch', state.cfg.branch);
+      set('cfgDataPath', state.cfg.dataPath); set('cfgImagesPath', state.cfg.imagesPath);
+      set('bgUrl', state.cfg.bgImageUrl||''); set('bgOpacity', Math.round((Number(state.cfg.bgOpacity||0.18))*100));
+      applyHeaderBackground();
+    }
+    function readCfgFromForm(){
+      const get=(id,def)=> (byId(id)?.value || '').trim() || def;
+      state.cfg.owner=get('cfgOwner',defaultConfig.owner);
+      state.cfg.repo=get('cfgRepo',defaultConfig.repo);
+      state.cfg.branch=get('cfgBranch','main');
+      state.cfg.dataPath=get('cfgDataPath',defaultConfig.dataPath);
+      state.cfg.imagesPath=get('cfgImagesPath',defaultConfig.imagesPath);
+      state.cfg.bgImageUrl=get('bgUrl','');
+      const opEl=byId('bgOpacity'); state.cfg.bgOpacity=Math.max(0,Math.min(1,Number(opEl?opEl.value:18)/100));
+      saveCfg(); applyHeaderBackground();
+    }
+    function rawDataUrl(){
+      const base = 'https://raw.githubusercontent.com/'+state.cfg.owner+'/'+state.cfg.repo+'/'+state.cfg.branch+'/'+state.cfg.dataPath;
+      return base + (base.includes('?')?'&':'?') + '_=' + Date.now();
+    }
+    async function fetchData(withRetry=true, tries=0){
+      try{
+        const res = await fetch(rawDataUrl(), {cache:'no-store'});
+        if(res.status===404){ state.data={winemakers:[]}; }
+        else if(!res.ok){ throw new Error('HTTP '+res.status); }
+        else{ state.data = await res.json(); if(!state.data || typeof state.data!=='object') state.data={winemakers:[]}; }
+      }catch(e){ console.error('[Načítání dat] Chyba:', e); state.data={winemakers:[]}; }
+      // ak JSON obsahuje site, prepíš lokálne; inak ponechaj lokálne (banner nezmizne)
+      if(state.data && state.data.site){
+        state.cfg.bgImageUrl = state.data.site.bgImageUrl || state.cfg.bgImageUrl;
+        if(typeof state.data.site.bgOpacity==='number') state.cfg.bgOpacity = state.data.site.bgOpacity;
+        saveCfg(); applyHeaderBackground();
+      }
+      if(withRetry && (!state.data.site || !state.data.site.bgImageUrl) && tries<3){
+        setTimeout(()=> fetchData(true, tries+1), 800*(tries+1));
+      }
+      renderCards(); refreshExistingSelect();
+    }
+
+    /* ===== GitHub write API (publish) ===== */
     function apiContentUrl(path){
       const cleaned = String(path||'').replace(/^\/+/,'').split('/').map(encodeURIComponent).join('/');
       return 'https://api.github.com/repos/'+state.cfg.owner+'/'+state.cfg.repo+'/contents/'+cleaned;
     }
     async function getFileSha(path){
       const url = apiContentUrl(path) + '?ref=' + encodeURIComponent(state.cfg.branch||'main') + '&_=' + Date.now();
-      const headers = { 'Accept':'application/vnd.github+json', 'X-GitHub-Api-Version':'2022-11-28' };
-      const tok = resolveToken(); if(tok) headers['Authorization'] = 'Bearer ' + tok;
-      const r = await fetch(url,{headers});
-      if(r.status===404) return null;
-      if(!r.ok) throw new Error('GitHub GET sha error '+r.status);
+      const headers = { 'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28' };
+      const tok = resolveToken(); if(tok) headers['Authorization']='Bearer '+tok;
+      const r = await fetch(url,{headers}); if(r.status===404) return null; if(!r.ok) throw new Error('GitHub GET sha '+r.status);
       const j = await r.json(); return j.sha || null;
     }
     async function putFileBase64(path, contentBase64, message){
       const tok = resolveToken(); if(!tok) throw new Error('Chybí token (PAT).');
-      const url = apiContentUrl(path);
-      const branch = state.cfg.branch||'main';
-      let attempt = 0; let sha = null;
-      try{ sha = await getFileSha(path); }catch(_){ sha=null; }
-      while(attempt < 5){
+      if(!path){ throw new Error('Cesta k JSONu je prázdná. Zkontrolujte „Cesta k datům“.'); }
+      const url = apiContentUrl(path); const branch=state.cfg.branch||'main';
+      let attempt=0; let sha=null; try{ sha=await getFileSha(path); }catch(_){ sha=null; }
+      while(attempt<5){
         attempt++;
-        const body = { message: message||'update via app', content: contentBase64, branch };
-        if(sha) body.sha = sha;
-        const res = await fetch(url,{
-          method:'PUT',
-          headers:{
-            'Accept':'application/vnd.github+json',
-            'Authorization':'Bearer '+tok,
-            'Content-Type':'application/json',
-            'X-GitHub-Api-Version':'2022-11-28'
-          },
-          body: JSON.stringify(body)
-        });
+        const body={ message:message||'update via app', content:contentBase64, branch }; if(sha) body.sha=sha;
+        const res = await fetch(url,{ method:'PUT', headers:{'Accept':'application/vnd.github+json','Authorization':'Bearer '+tok,'Content-Type':'application/json','X-GitHub-Api-Version':'2022-11-28'}, body:JSON.stringify(body) });
         if(res.ok) return res.json();
-        const txt = await res.text();
-        if(res.status===409 || res.status===422){
-          try{ sha = await getFileSha(path); }catch(_){ sha=null; }
-          await new Promise(r=>setTimeout(r, 350*attempt));
-          continue;
-        }
-        if(res.status>=500 || res.status===404){
-          await new Promise(r=>setTimeout(r, 350*attempt));
-          continue;
-        }
+        const txt=await res.text();
+        if(res.status===409 || res.status===422){ try{ sha=await getFileSha(path); }catch(_){ sha=null; } await new Promise(r=>setTimeout(r,350*attempt)); continue; }
+        if(res.status>=500 || res.status===404){ await new Promise(r=>setTimeout(r,350*attempt)); continue; }
         throw new Error('GitHub PUT '+res.status+': '+txt);
       }
       throw new Error('GitHub PUT: vyčerpané pokusy.');
@@ -511,268 +438,69 @@
       const b64 = btoa(unescape(encodeURIComponent(text)));
       return putFileBase64(path, b64, message||'update json');
     }
-    async function uploadPhotoIfAny(currentPhotoUrl, file){
-      if(!file) return currentPhotoUrl || null;
-      if(!hasToken()){
-        alert('Chybí token – upload fotky přeskočen. Ponechám původní URL.');
-        return currentPhotoUrl || null;
-      }
-      const filename = 'photo_'+Date.now()+'_'+file.name.replace(/\s+/g,'_');
-      const path = state.cfg.imagesPath.replace(/\/+$/,'') + '/' + filename;
-      const buf = await file.arrayBuffer();
-      const bytes=new Uint8Array(buf); let bin=''; for(let i=0;i<bytes.byteLength;i++) bin+=String.fromCharCode(bytes[i]);
-      const b64 = btoa(bin);
-      await putFileBase64(path, b64, 'upload image '+filename);
-      const repoBase = 'https://raw.githubusercontent.com/'+state.cfg.owner+'/'+state.cfg.repo+'/'+state.cfg.branch+'/';
-      return repoBase + path;
-    }
-    async function uploadBgIfAny(file){
-      if(!file) return null;
-      if(!hasToken()){
-        alert('Chybí token – upload pozadí přeskočen. Zadejte URL obrázku ručně.');
-        return null;
-      }
-      const filename = 'bg_'+Date.now()+'_'+file.name.replace(/\s+/g,'_');
-      const path = state.cfg.imagesPath.replace(/\/+$/,'') + '/' + filename;
-      const buf = await file.arrayBuffer();
-      const bytes=new Uint8Array(buf); let bin=''; for(let i=0;i<bytes.byteLength;i++) bin+=String.fromCharCode(bytes[i]);
-      const b64 = btoa(bin);
-      await putFileBase64(path, b64, 'upload background '+filename);
-      const repoBase = 'https://raw.githubusercontent.com/'+state.cfg.owner+'/'+state.cfg.repo+'/'+state.cfg.branch+'/';
-      return repoBase + path;
-    }
 
-    /* ====== Aplikácia pozadia zo JSONu (ak je) ====== */
-    function applyHeaderBackgroundFromData(){
-      const site = (state.data && state.data.site) || {};
-      if (site.bgImageUrl) state.cfg.bgImageUrl = site.bgImageUrl;
-      if (typeof site.bgOpacity === 'number') state.cfg.bgOpacity = site.bgOpacity;
-      applyHeaderBackground();
-      const urlIn = byId('bgUrl'), opIn = byId('bgOpacity');
-      if (urlIn) urlIn.value = state.cfg.bgImageUrl || '';
-      if (opIn) opIn.value = Math.round((Number(state.cfg.bgOpacity||0.18))*100);
-    }
+    /* ===== Helpery na escapovanie ===== */
+    function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+    function escapeAttr(s){ return String(s||'').replace(/"/g,'&quot;'); }
 
-    /* ====== Načítanie JSON s cache‑bustingom ====== */
-    function rawDataUrl(){
-      const base = 'https://raw.githubusercontent.com/'+state.cfg.owner+'/'+state.cfg.repo+'/'+state.cfg.branch+'/'+state.cfg.dataPath;
-      return base + (base.includes('?') ? '&' : '?') + '_=' + Date.now();
-    }
-    async function fetchData(withRetry=true, tries=0){
-      try{
-        const res = await fetch(rawDataUrl(), {cache:'no-store'});
-        if(res.status===404){ state.data={winemakers:[]}; }
-        else if(!res.ok){ throw new Error('HTTP '+res.status); }
-        else { const json = await res.json(); state.data = (json && typeof json==='object') ? json : {winemakers:[]}; }
-      }catch(e){
-        console.error('[Načítání dat] Chyba:', e);
-        state.data={winemakers:[]};
-      }
-      applyHeaderBackgroundFromData();
-      if(withRetry && (!state.data.site || !state.data.site.bgImageUrl) && tries < 3){
-        setTimeout(()=> fetchData(true, tries+1), 800*(tries+1));
-      }
-      renderCards();
-      refreshExistingSelect();
-    }
-
-    /* ====== PDF export (voliteľné) ====== */
-    async function getPdfDocWithFont(){
-      const J = window.jspdf ? window.jspdf.jsPDF : (window.jsPDF || null);
-      if(!J) return null;
-      const doc = new J({unit:'pt', format:'a4'});
-      const ok = await (async ()=>{
-        const candidates = ['assets/fonts/DejaVuSans.ttf'];
-        for(const url of candidates){
-          try{
-            const res = await fetch(url, {cache:'no-store'}); if(!res.ok) continue;
-            const buf = await res.arrayBuffer();
-            const bytes=new Uint8Array(buf); let bin=''; for(let i=0;i<bytes.byteLength;i++) bin+=String.fromCharCode(bytes[i]);
-            const b64 = btoa(bin);
-            doc.addFileToVFS('DejaVuSans.ttf', b64);
-            doc.addFont('DejaVuSans.ttf', 'DejaVuSans', 'normal');
-            doc.setFont('DejaVuSans', 'normal'); return true;
-          }catch(_){}
-        }
-        return false;
-      })();
-      if(!ok){ doc.setFont('helvetica','normal'); }
-      return {doc, fontLoaded: ok};
-    }
-    async function exportWholeCatalogPDF(){
-      try{
-        const wrap = await getPdfDocWithFont();
-        if(!wrap){ alert('Knihovna jsPDF se nenačetla.'); return; }
-        const doc = wrap.doc;
-        const fontLoaded = wrap.fontLoaded;
-        const winemakers = state.data.winemakers || [];
-        if(!winemakers.length){ alert('Katalog je prázdný.'); return; }
-        for(let widx=0; widx<winemakers.length; widx++){
-          const w = winemakers[widx];
-          if(widx>0) doc.addPage();
-          doc.setFillColor(29,155,178);
-          doc.rect(0,0,595,60,'F');
-          doc.setTextColor(255,255,255);
-          doc.setFontSize(16);
-          doc.text(safeTxt('Katalog vín – '+(w.name||''), fontLoaded), 40, 38);
-          doc.setFontSize(11);
-          doc.text(safeTxt('Sklep č. '+(w.cellar||'?'), fontLoaded), 555, 38, {align:'right'});
-          doc.setTextColor(0,0,0);
-          const desc=(w.description||'').trim();
-          let y=80;
-          if(desc){
-            const lines=doc.splitTextToSize(safeTxt(desc,fontLoaded), 515);
-            doc.text(lines,40,y);
-            y += lines.length*14 + 20;
-          }
-          const head=[[ 'Odrůda','Ročník','Cena (Kč)','Moje poznámka' ]];
-          const body=(w.wines||[]).map((v,i)=>[
-            String(v.variety||''),
-            String(v.year||''),
-            String(v.price||''),
-            String(localStorage.getItem('dv_note_'+w.id+'_'+(v.id || ('i'+i))) || '')
-          ]);
-          doc.autoTable({
-            startY:y,
-            head:head, body:body,
-            styles:{ font: fontLoaded ? 'DejaVuSans' : 'helvetica', fontSize:10, cellPadding:6, overflow:'linebreak' },
-            headStyles:{ fillColor:[29,155,178], textColor:[255,255,255] },
-            alternateRowStyles:{ fillColor:[245,245,245] },
-            theme:'grid',
-            margin:{ left:40, right:40 }
-          });
-        }
-        doc.save('katalog_vinaru_den_vinaru_2026.pdf');
-      }catch(err){
-        console.error(err);
-        alert('Export PDF selhal.');
-      }
-    }
-
-    /* ====== Init + listenery ====== */
+    /* ===== Init a listenery ===== */
     async function init(){
-      // auth + local cfg
+      // auth + lokál
       state.admin.logged = sessionStorage.getItem(SS_ADMIN)==='1';
       state.admin.token  = sessionStorage.getItem(SS_PAT) || localStorage.getItem(LS_PAT) || null;
       setAdminVisibility();
       applyCfgToForm();
-      refreshAuthUI();
 
-      // listenery (až teraz, aby boli elementy v DOM)
-      const on = (id, evt, handler)=>{ const el = byId(id); if(el) el.addEventListener(evt, handler); };
-
-      on('btnExportAll','click', exportWholeCatalogPDF);
-      on('btnGear','click', ()=>{
-        refreshAuthUI();
-        const m=byId('authModal'); if(m) m.classList.add('show');
-        const p=byId('adminPassword'); if(p) p.focus();
-      });
-      on('btnModalClose','click', ()=> { const m=byId('authModal'); if(m) m.classList.remove('show'); });
-      on('btnLogin','click', ()=>{
-        const pw=byId('adminPassword')?.value;
-        if(pw!=='PetrovSedivy492'){ alert('Nesprávné heslo.'); return; }
-        state.admin.logged=true; sessionStorage.setItem(SS_ADMIN,'1');
-        refreshAuthUI(); setAdminVisibility(); applyCfgToForm();
-        byId('authModal')?.classList.remove('show');
-        byId('settingsPanel')?.scrollIntoView({behavior:'smooth'});
-      });
-      on('btnLogout','click', ()=>{
-        state.admin.logged=false; sessionStorage.removeItem(SS_ADMIN);
-        setAdminVisibility(); refreshAuthUI();
-        alert('Admin odhlášen.');
-      });
+      // listenery
+      const on = (id,evt,fn)=>{ const el=byId(id); if(el) el.addEventListener(evt, fn); };
       on('btnSaveConfig','click', readCfgFromForm);
       on('btnReloadData','click', ()=> fetchData());
       on('btnApplyBg','click', async ()=>{
-        const file = byId('bgFile')?.files?.[0] || null;
-        if(file){
-          try{
-            const uploadedUrl = await uploadBgIfAny(file);
-            if(uploadedUrl){ const bu=byId('bgUrl'); if(bu) bu.value = uploadedUrl; }
-          }catch(err){ console.error(err); alert('Upload pozadí selhal: '+err.message); }
-        }
-        const bu=byId('bgUrl'); state.cfg.bgImageUrl = bu ? bu.value.trim() : '';
-        const opEl=byId('bgOpacity'); state.cfg.bgOpacity = Math.max(0, Math.min(1, Number(opEl ? opEl.value : 18)/100));
-        saveCfg(state.cfg);
-        applyHeaderBackground();
+        // ulož aj lokálne, aby banner ostal po refreshi
+        const url = (byId('bgUrl')?.value||'').trim();
+        const op  = Math.max(0,Math.min(1,Number(byId('bgOpacity')?.value||18)/100));
+        state.cfg.bgImageUrl=url; state.cfg.bgOpacity=op; saveCfg(); applyHeaderBackground();
+        // a priprav aj JSON (ak chcete publikovať neskôr)
+        state.data.site = state.data.site || {};
+        state.data.site.bgImageUrl=url; state.data.site.bgOpacity=op;
+        alert('Pozadí horního banneru nastaveno (lokálně).');
+      });
+      on('btnClearBg','click', ()=>{ state.cfg.bgImageUrl=''; saveCfg(); applyHeaderBackground(); const bu=byId('bgUrl'); if(bu) bu.value=''; alert('Pozadí banneru zrušeno.'); });
+      on('btnPublishBg','click', async ()=>{
+        const url=(byId('bgUrl')?.value||'').trim();
+        const op = Math.max(0,Math.min(1,Number(byId('bgOpacity')?.value||18)/100));
+        if(!state.cfg.dataPath){ alert('Chybí „Cesta k datům (JSON)“.'); return; }
+        // lokálne hneď
+        state.cfg.bgImageUrl=url; state.cfg.bgOpacity=op; saveCfg(); applyHeaderBackground();
+        // a do JSONu
         try{
           state.data.site = state.data.site || {};
-          state.data.site.bgImageUrl = state.cfg.bgImageUrl;
-          state.data.site.bgOpacity = state.cfg.bgOpacity;
-          await putJson(state.cfg.dataPath, state.data, 'update site banner (auto)');
-        }catch(_){}
-        alert('Pozadí horního banneru nastaveno.');
-      });
-      on('btnClearBg','click', ()=>{
-        state.cfg.bgImageUrl = '';
-        saveCfg(state.cfg);
-        applyHeaderBackground();
-        const bu=byId('bgUrl'); if(bu) bu.value = '';
-        alert('Pozadí banneru zrušeno.');
-      });
-      on('btnPublishBg','click', async ()=>{
-        const url = (byId('bgUrl')?.value || '').trim();
-        const opEl=byId('bgOpacity'); const op = Math.max(0, Math.min(1, Number(opEl ? opEl.value : 18)/100));
-        state.data.site = state.data.site || {};
-        state.data.site.bgImageUrl = url;
-        state.data.site.bgOpacity = op;
-        state.cfg.bgImageUrl = url; state.cfg.bgOpacity = op;
-        saveCfg(state.cfg);
-        applyHeaderBackground();
-        try{
+          state.data.site.bgImageUrl=url; state.data.site.bgOpacity=op;
           await putJson(state.cfg.dataPath, state.data, 'update site banner');
           alert('Pozadí bylo publikováno do JSONu – uvidí ho všechna zařízení.');
-        }catch(err){
-          console.error(err);
-          alert('Nepodařilo se zapsat do GitHubu. Zkontrolujte token a práva.');
-        }
+        }catch(err){ console.error(err); alert('Nepodařilo se zapsat do GitHubu. Token/Content write?'); }
       });
-      on('bgOpacity','input', function(){
-        const v = Math.max(0, Math.min(1, Number(this.value)/100));
-        state.cfg.bgOpacity = v;
-        applyHeaderBackground();
-      });
-      on('existingSelect','change', (e)=>{
-        const id = e.target.value;
-        const w = (state.data.winemakers||[]).find(x=> String(x.id)===String(id));
-        if(w){ fillForm(w); } else { clearForm(); }
-      });
+      on('bgOpacity','input', function(){ state.cfg.bgOpacity=Math.max(0,Math.min(1,Number(this.value)/100)); applyHeaderBackground(); });
 
-      // kliky na karty
-      const cardsContainer = byId('cardsContainer');
-      if(cardsContainer){
-        cardsContainer.addEventListener('click', (e)=>{
-          const card = e.target.closest('.card');
-          if(!card) return;
-          const id = card.dataset.id;
-          if(id) showDetail(id);
-        });
-        cardsContainer.addEventListener('keydown', (e)=>{
-          if(e.key==='Enter' || e.key===' '){
-            const card = e.target.closest('.card');
-            if(card){ e.preventDefault(); const id = card.dataset.id; if(id) showDetail(id); }
-          }
-        });
-      }
+      on('btnGear','click', ()=>{ byId('authModal')?.classList.add('show'); byId('adminPassword')?.focus(); });
+      on('btnModalClose','click', ()=> byId('authModal')?.classList.remove('show'));
+      on('btnLogin','click', ()=>{
+        const pw=byId('adminPassword')?.value||'';
+        if(pw!=='PetrovSedivy492'){ alert('Nesprávné heslo.'); return; }
+        state.admin.logged=true; sessionStorage.setItem(SS_ADMIN,'1'); setAdminVisibility(); applyCfgToForm(); byId('authModal')?.classList.remove('show'); byId('settingsPanel')?.scrollIntoView({behavior:'smooth'});
+      });
+      on('btnLogout','click', ()=>{ state.admin.logged=false; sessionStorage.removeItem(SS_ADMIN); setAdminVisibility(); alert('Admin odhlášen.'); });
 
-      // Načítanie JSON s cache-bustingom
+      // Načítaj (RAW) s cache-bustingom a retry – ale lokálne pozadie je už aplikované, takže po refreshi nezmizne
       await fetchData();
 
-      // Demo dáta, ak chýbajú
+      // demo dáta, ak žiadne
       if(!(state.data.winemakers||[]).length){
         state.data.winemakers = [
-          { id:'w1', name:'Ukázkový vinař', cellar:'30', description:'Krátký popis vinaře a jeho příběhu. Šetrná práce s vinicí, důraz na terroir.', photoUrl:'assets/img/logo.png',
-            wines:[{id:'a1', variety:'Müller Thurgau', year:'2025', price:'150', labelColor:'yellow'},
-                   {id:'a2', variety:'Zweigeltrebe', year:'2024', price:'190', labelColor:'red'},
-                   {id:'a3', variety:'Rosé Cuvée', year:'2025', price:'170', labelColor:'pink'}]},
-          { id:'w2', name:'Vinařství Na Příkladu', cellar:'40', description:'', photoUrl:'assets/img/vinar2.jpg', wines:[]}
+          { id:'w1', name:'Ukázkový vinař', cellar:'30', description:'Krátký popis vinaře a jeho příběhu.', photoUrl:'assets/img/logo.png', wines:[] }
         ];
-        renderCards();
-        refreshExistingSelect();
-      }else{
-        refreshExistingSelect();
       }
-      showCards();
+      renderCards(); refreshExistingSelect(); showCards();
     }
 
     document.addEventListener('DOMContentLoaded', init);
