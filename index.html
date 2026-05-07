@@ -481,7 +481,7 @@
             y += lines.length*14 + 20;
           }
 
-          const head=[[ safeTxt('Odrůda',fontLoaded), safeTxt('Ročník',fontLoaded), safeTxt('Cena (Kč)',fontLoaded), safeTxt('Moje poznámka',fontLoaded) ]];
+          const head=[[ safeTxt('Odrůda',fontLoaded), safeTxt('Ročník',fontLoaded), safe Txt('Cena (Kč)',fontLoaded), safeTxt('Moje poznámka',fontLoaded) ]];
           const body=(w.wines||[]).map(function(v,i){
             return [
               safeTxt(String(v.variety||''),fontLoaded),
@@ -581,7 +581,7 @@
         alert('Chybí token – upload fotky přeskočen. Ponechám původní URL.');
         return currentPhotoUrl || null;
       }
-      // Jedinečný názov súboru – znižuje konflikty
+      // Jedinečný název souboru, sníží kolize
       const filename = 'photo_'+Date.now()+'_'+file.name.replace(/\s+/g,'_');
       const path = state.cfg.imagesPath.replace(/\/+$/,'') + '/' + filename;
       const buf = await file.arrayBuffer();
@@ -781,7 +781,7 @@
       window.scrollTo({top:0, behavior:'smooth'});
     }
 
-    // ========= GitHub write API (bez predfetch SHA; najprv create, potom update) =========
+    // ========= GitHub write API (CREATE → ak 409/422, potom UPDATE so SHA; s retry) =========
     async function getFileSha(path){
       const url = apiContentUrl(path) + '?ref=' + encodeURIComponent(state.cfg.branch||'main') + '&_=' + Date.now();
       const headers = { 'Accept':'application/vnd.github+json', 'X-GitHub-Api-Version':'2022-11-28' };
@@ -800,8 +800,8 @@
       let attempt = 0;
       let lastErr = null;
 
-      // 1) Najprv skúsiť CREATE (bez SHA)
-      while(attempt < 4){
+      // 1) CREATE bez SHA
+      while(attempt < 3){
         attempt++;
         const bodyCreate = { message: message||'create via app', content: contentBase64, branch };
         const res = await fetch(url,{
@@ -819,10 +819,10 @@
         const txt = await res.text();
         lastErr = new Error('GitHub PUT(create) '+res.status+': '+txt);
 
-        // 409 = existuje, treba SHA → prejdeme na update vetvu
-        if(res.status===409) break;
+        // 409 Conflict alebo 422 Unprocessable = súbor existuje → UPDATE so SHA
+        if(res.status===409 || res.status===422) break;
 
-        // 404/5xx → backoff a skúsiť znova
+        // 404/5xx → backoff a skúsiť create znova
         if(res.status===404 || res.status>=500){
           await new Promise(r=>setTimeout(r, 350*attempt));
           continue;
@@ -830,7 +830,7 @@
         throw lastErr;
       }
 
-      // 2) UPDATE (s SHA)
+      // 2) UPDATE so SHA
       attempt = 0;
       while(attempt < 4){
         attempt++;
@@ -923,6 +923,7 @@
       saveCfg(state.cfg);
       applyHeaderBackground();
 
+      // automatické publikování (pokud je token)
       try{
         state.data.site = state.data.site || {};
         state.data.site.bgImageUrl = state.cfg.bgImageUrl;
