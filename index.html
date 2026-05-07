@@ -379,15 +379,19 @@
 
     function applyHeaderBackground(){
       const header = document.querySelector('header.header');
-      const url = state.cfg.bgImageUrl ? 'url(\"'+state.cfg.bgImageUrl.replace(/\"/g,'%22')+'\")' : 'none';
-      const op = (typeof state.cfg.bgOpacity==='number' ? state.cfg.bgOpacity : 0.18);
+      // Ak lokálna hodnota nie je, použijeme zdieľanú z data JSON
+      const sharedUrl = (state.data && state.data.bannerBgUrl) ? String(state.data.bannerBgUrl) : '';
+      const sharedOp  = (state.data && typeof state.data.bannerBgOpacity==='number') ? state.data.bannerBgOpacity : null;
+      const urlStr = state.cfg.bgImageUrl || sharedUrl || '';
+      const opVal  = (typeof state.cfg.bgOpacity==='number' ? state.cfg.bgOpacity : (sharedOp!=null ? sharedOp : 0.18));
+      const url = urlStr ? 'url(\"'+urlStr.replace(/\"/g,'%22')+'\")' : 'none';
       header.style.setProperty('--header-bg-url', url);
-      header.style.setProperty('--header-bg-opacity', String(op));
+      header.style.setProperty('--header-bg-opacity', String(opVal));
     }
 
     function rawDataUrl(){ return 'https://raw.githubusercontent.com/'+state.cfg.owner+'/'+state.cfg.repo+'/'+state.cfg.branch+'/'+state.cfg.dataPath; }
 
-    /* FIX 1: správne kódovanie ciest pre GitHub Contents API – encodujú sa len segmenty, nie celé path */
+    // FIX: správne kódovanie ciest – encodujú sa len segmenty
     function apiContentUrl(path){
       const cleaned = String(path||'').replace(/^\/+|\/+$/g,'');
       const segs = cleaned.split('/').map(function(s){ return encodeURIComponent(s); }).join('/');
@@ -401,6 +405,8 @@
         else if(!res.ok){ throw new Error('HTTP '+res.status); }
         else { const json = await res.json(); state.data = (json && Array.isArray(json.winemakers)) ? json : {winemakers:[]}; }
       }catch(e){ console.error(e); state.data={winemakers:[]}; }
+      // Po načítaní dát aplikuj prípadný zdieľaný banner (ak lokálny nie je nastavený)
+      applyHeaderBackground();
       renderCards();
       refreshExistingSelect();
     }
@@ -765,7 +771,6 @@
       const j = await r.json(); return j.sha || null;
     }
 
-    /* FIX 2: robustnejší PUT – pri 409/422 znova načíta SHA a skúsi to ešte raz */
     async function putFileBase64(path, contentBase64, message){
       const tok = resolveToken(); if(!tok) throw new Error('Chybí token (PAT).');
       const url = apiContentUrl(path);
@@ -846,11 +851,27 @@
           if(uploadedUrl){ byId('bgUrl').value = uploadedUrl; }
         }catch(err){ console.error(err); alert('Upload pozadí selhal: '+err.message); }
       }
+      // Lokálne nastavenie (pôvodné správanie)
       state.cfg.bgImageUrl = byId('bgUrl').value.trim();
       state.cfg.bgOpacity = Math.max(0, Math.min(1, Number(byId('bgOpacity').value)/100));
       saveCfg(state.cfg);
       applyHeaderBackground();
-      alert('Pozadí horního banneru nastaveno.');
+
+      // NOVÉ: ak máme token, zapíšeme banner aj do data JSON, aby sa zdieľal na iných zariadeniach
+      if(hasToken()){
+        state.data.bannerBgUrl = state.cfg.bgImageUrl || '';
+        state.data.bannerBgOpacity = state.cfg.bgOpacity;
+        try{
+          await persistDataIfPossible('update banner');
+          alert('Pozadí banneru uloženo a sdíleno přes data/winemakers.json.');
+        }catch(e){
+          console.error(e);
+          alert('Sdílené uložení banneru selhalo: '+e.message);
+        }
+      }else{
+        // Bez tokenu ostáva lokálne
+        alert('Pozadí horního banneru nastaveno lokálně. Pro sdílení na ostatní zařízení uložte s GitHub tokenem.');
+      }
     });
 
     byId('btnClearBg').addEventListener('click', function(){
@@ -858,7 +879,7 @@
       saveCfg(state.cfg);
       applyHeaderBackground();
       byId('bgUrl').value = '';
-      alert('Pozadí banneru zrušeno.');
+      alert('Pozadí banneru zrušeno (lokálně).');
     });
 
     byId('bgOpacity').addEventListener('input', function(){
