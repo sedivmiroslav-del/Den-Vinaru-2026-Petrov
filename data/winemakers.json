@@ -1,18 +1,39 @@
 {
   "winemakers": [
     {
-      "id": "winemaker_motolmgqp4bbcf",
-      "name": "vinar2",
-      "cellar": "40",
-      "description": "test 2 popis",
-      "photoUrl": "https://raw.githubusercontent.com/sedivmiroslav-del/Den-Vinaru-2026-Petrov/main/assets/uploads/img-oobci-min-1778050448447.jpg",
+      "id": "win_mouz28625uiayr",
+      "name": "Vinařství Klásek",
+      "cellar": "30",
+      "description": "Popis Klasek",
+      "photoUrl": "https://raw.githubusercontent.com/sedivmiroslav-del/Den-Vinaru-2026-Petrov/main/assets/uploads/Snímka_obrazovky_2026-05-07_061059.png",
       "wines": [
         {
-          "id": "wine_motolb9i3mslor",
-          "name": "vino 2",
-          "variety": "bb",
-          "year": "2024",
-          "price": "100"
+          "id": "wine_mouz2861fg56fj",
+          "variety": "Frašták",
+          "year": "2025",
+          "price": "250",
+          "labelColor": "yellow"
+        },
+        {
+          "id": "wine_mouz2861gy878f",
+          "variety": "Rulandské bíle",
+          "year": "2025",
+          "price": "250",
+          "labelColor": "yellow"
+        },
+        {
+          "id": "wine_mouz28619ha203",
+          "variety": "Cabernet Moravia",
+          "year": "2023",
+          "price": "350",
+          "labelColor": "red"
+        },
+        {
+          "id": "wine_mouz28618hh0mm",
+          "variety": "Rosé",
+          "year": "2025",
+          "price": "250",
+          "labelColor": "pink"
         }
       ]
     }
