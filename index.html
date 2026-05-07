@@ -481,7 +481,12 @@
             y += lines.length*14 + 20;
           }
 
-          const head=[[ safeTxt('Odrůda',fontLoaded), safeTxt('Ročník',fontLoaded), safe Txt('Cena (Kč)',fontLoaded), safeTxt('Moje poznámka',fontLoaded) ]];
+          const head=[[ 
+            safeTxt('Odrůda',fontLoaded), 
+            safeTxt('Ročník',fontLoaded), 
+            safeTxt('Cena (Kč)',fontLoaded), 
+            safeTxt('Moje poznámka',fontLoaded) 
+          ]];
           const body=(w.wines||[]).map(function(v,i){
             return [
               safeTxt(String(v.variety||''),fontLoaded),
@@ -581,7 +586,7 @@
         alert('Chybí token – upload fotky přeskočen. Ponechám původní URL.');
         return currentPhotoUrl || null;
       }
-      // Jedinečný název souboru, sníží kolize
+      // Jedinečný název souboru – omezuje kolize
       const filename = 'photo_'+Date.now()+'_'+file.name.replace(/\s+/g,'_');
       const path = state.cfg.imagesPath.replace(/\/+$/,'') + '/' + filename;
       const buf = await file.arrayBuffer();
