@@ -115,5 +115,7 @@
   "site": {
     "bgImageUrl": "https://raw.githubusercontent.com/sedivmiroslav-del/Den-Vinaru-2026-Petrov/main/assets/uploads/bg_1778139601171_img-oobci-min.jpg",
     "bgOpacity": 0.88
-  }
+  },
+  "bannerBgUrl": "https://raw.githubusercontent.com/sedivmiroslav-del/Den-Vinaru-2026-Petrov/main/assets/uploads/bg_1778144112379_img-oobci-min.jpg",
+  "bannerBgOpacity": 0.88
 }
