@@ -8,42 +8,42 @@
       "photoUrl": "https://raw.githubusercontent.com/sedivmiroslav-del/Den-Vinaru-2026-Petrov/main/assets/uploads/Snímka_obrazovky_2026-05-07_072342.png",
       "wines": [
         {
-          "id": "wine_mov7sz8f7xq2rw",
+          "id": "wine_mov7uf31uvamab",
           "variety": "Frašták",
           "year": "2025",
           "price": "250",
           "labelColor": "yellow"
         },
         {
-          "id": "wine_mov7sz8feapfvp",
+          "id": "wine_mov7uf31g5lbu3",
           "variety": "Frankovka",
           "year": "2023",
           "price": "350",
           "labelColor": "red"
         },
         {
-          "id": "wine_mov7sz8foaxp0n",
+          "id": "wine_mov7uf31c8n5g8",
           "variety": "Rosé",
           "year": "2025",
           "price": "200",
           "labelColor": "pink"
         },
         {
-          "id": "wine_mov7sz8ftlmgiv",
+          "id": "wine_mov7uf32ld9gbx",
           "variety": "Pálava",
           "year": "2025",
           "price": "250",
           "labelColor": "yellow"
         },
         {
-          "id": "wine_mov7sz8fnoj2vy",
+          "id": "wine_mov7uf32b4hk07",
           "variety": "Muškát žluty",
           "year": "2024",
           "price": "200",
           "labelColor": "yellow"
         },
         {
-          "id": "wine_mov7sz8fvpmsq1",
+          "id": "wine_mov7uf32494d55",
           "variety": "Cabernet Moravia",
           "year": "2023",
           "price": "300",
