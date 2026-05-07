@@ -329,7 +329,9 @@
       dataPath:'data/winemakers.json',
       imagesPath:'assets/uploads',
       bgImageUrl:'',
-      bgOpacity:0.18
+      // KLÍČOVÁ ZMĚNA: lokální průsvitnost není předvyplněná číslem – necháme null,
+      // aby zdieľaná hodnota mohla mať prioritu na zariadeniach bez lokálnej úpravy.
+      bgOpacity:null
     };
     function loadCfg(){ try{ return Object.assign({}, defaultConfig, (JSON.parse(localStorage.getItem(LS_CFG)||'{}')||{})); }catch(e){ return Object.assign({}, defaultConfig); } }
     function saveCfg(cfg){ localStorage.setItem(LS_CFG, JSON.stringify(cfg)); }
@@ -361,8 +363,16 @@
       byId('cfgBranch').value = state.cfg.branch || 'main';
       byId('cfgDataPath').value = state.cfg.dataPath || 'data/winemakers.json';
       byId('cfgImagesPath').value = state.cfg.imagesPath || 'assets/uploads';
+
+      // Predvyplnenie URL zostáva lokálne
       byId('bgUrl').value = state.cfg.bgImageUrl || '';
-      byId('bgOpacity').value = Math.round((Number(state.cfg.bgOpacity||0.18))*100);
+
+      // Predvyplnenie priehľadnosti: lokálne číslo -> použijeme; inak zdieľané; inak 18
+      const sharedOp = (state.data && typeof state.data.bannerBgOpacity==='number') ? state.data.bannerBgOpacity : null;
+      const localOp  = (typeof state.cfg.bgOpacity==='number') ? state.cfg.bgOpacity : null;
+      const sliderVal = Math.round(100 * (localOp!=null ? localOp : (sharedOp!=null ? sharedOp : 0.18)));
+      byId('bgOpacity').value = String(sliderVal);
+
       applyHeaderBackground();
     }
     function readCfgFromForm(){
@@ -372,6 +382,7 @@
       state.cfg.dataPath = byId('cfgDataPath').value.trim() || defaultConfig.dataPath;
       state.cfg.imagesPath = byId('cfgImagesPath').value.trim() || defaultConfig.imagesPath;
       state.cfg.bgImageUrl = byId('bgUrl').value.trim() || '';
+      // uložíme lokálnu priehľadnosť len ak používateľ ukladá nastavenie
       state.cfg.bgOpacity = Math.max(0, Math.min(1, Number(byId('bgOpacity').value)/100));
       saveCfg(state.cfg);
       applyHeaderBackground();
@@ -379,18 +390,25 @@
 
     function applyHeaderBackground(){
       const header = document.querySelector('header.header');
+
+      // 1) lokálne URL má prioritu; 2) inak zdieľané; 3) inak none
       const sharedUrl = (state.data && state.data.bannerBgUrl) ? String(state.data.bannerBgUrl) : '';
-      const sharedOp  = (state.data && typeof state.data.bannerBgOpacity==='number') ? state.data.bannerBgOpacity : null;
       const urlStr = state.cfg.bgImageUrl || sharedUrl || '';
-      const opVal  = (typeof state.cfg.bgOpacity==='number' ? state.cfg.bgOpacity : (sharedOp!=null ? sharedOp : 0.18));
       const url = urlStr ? 'url(\"'+urlStr.replace(/\"/g,'%22')+'\")' : 'none';
+
+      // Priesvitnosť: použijeme lokálnu len ak je naozaj číslo (nie null),
+      // inak zdieľanú; ak nie je ani tá, padáme na 0.18 (dané v CSS)
+      const sharedOp = (state.data && typeof state.data.bannerBgOpacity==='number') ? state.data.bannerBgOpacity : null;
+      const localOp  = (typeof state.cfg.bgOpacity==='number') ? state.cfg.bgOpacity : null;
+      const opVal = (localOp!=null) ? localOp : ((sharedOp!=null) ? sharedOp : 0.18);
+
       header.style.setProperty('--header-bg-url', url);
       header.style.setProperty('--header-bg-opacity', String(opVal));
     }
 
     function rawDataUrl(){ return 'https://raw.githubusercontent.com/'+state.cfg.owner+'/'+state.cfg.repo+'/'+state.cfg.branch+'/'+state.cfg.dataPath; }
 
-    // Správne kódovanie segmentov pre Contents API
+    // správne kódovanie segmentů pro Contents API
     function apiContentUrl(path){
       const cleaned = String(path||'').replace(/^\/+|\/+$/g,'');
       const segs = cleaned.split('/').map(function(s){ return encodeURIComponent(s); }).join('/');
@@ -404,6 +422,7 @@
         else if(!res.ok){ throw new Error('HTTP '+res.status); }
         else { const json = await res.json(); state.data = (json && Array.isArray(json.winemakers)) ? json : {winemakers:[]}; }
       }catch(e){ console.error(e); state.data={winemakers:[]}; }
+      // Po načtení dat hned aplikujeme zdieľaný banner (ak lokálne nie je nastavené)
       applyHeaderBackground();
       renderCards();
       refreshExistingSelect();
@@ -674,7 +693,7 @@
         const cover=document.createElement('div'); cover.className='cover';
         if(w.photoUrl && String(w.photoUrl).trim()){
           const img=new Image(); img.alt='Foto vinaře'; img.src=w.photoUrl; img.loading='lazy';
-          // Retry pri chybe (napr. po návrate z pozadia)
+          // jemný retry pri chybě
           img.onerror=function(){
             if(!img.dataset._retried){
               img.dataset._retried='1';
@@ -734,7 +753,7 @@
         + '  <div>'
         + '    <h2 style="margin:0 0 .25rem 0">'+escapeHtml(w.name||'')+'</h2>'
         + '    <div class="muted">Sklep č. '+escapeHtml(w.cellar||'?')+'</div>'
-        + '    <div style="margin-top:8px">'
+        + '    <div style="margin-top:8px)'
         + '      <button id="btnBack" class="btn btn-ghost" type="button" aria-label="Zpět na karty">← Zpět</button>'
         + '    </div>'
         + '  </div>'
@@ -749,7 +768,7 @@
         ta.addEventListener('input', function(e){
           const key = e.currentTarget.dataset.key;
           localStorage.setItem(key, e.currentTarget.value);
-          const ns = byId('ns_'+e.currentTarget.id.replace('note_',''));
+          const ns = document.getElementById('ns_'+e.currentTarget.id.replace('note_',''));
           if(ns) ns.textContent = 'Poznámka uložena lokálně';
         });
       });
@@ -778,7 +797,6 @@
       if(!r.ok) throw new Error('GitHub GET sha error '+r.status);
       const j = await r.json(); return j.sha || null;
     }
-
     async function putFileBase64(path, contentBase64, message){
       const tok = resolveToken(); if(!tok) throw new Error('Chybí token (PAT).');
       const url = apiContentUrl(path);
@@ -804,7 +822,6 @@
       }
       return res.json();
     }
-
     async function putJson(path, obj, message){
       const text = JSON.stringify(obj, null, 2);
       const b64 = btoa(unescape(encodeURIComponent(text)));
@@ -859,11 +876,14 @@
           if(uploadedUrl){ byId('bgUrl').value = uploadedUrl; }
         }catch(err){ console.error(err); alert('Upload pozadí selhal: '+err.message); }
       }
+
+      // Lokálne nastavenie
       state.cfg.bgImageUrl = byId('bgUrl').value.trim();
       state.cfg.bgOpacity = Math.max(0, Math.min(1, Number(byId('bgOpacity').value)/100));
       saveCfg(state.cfg);
       applyHeaderBackground();
 
+      // Zdieľanie cez data JSON, ak je token
       if(hasToken()){
         state.data.bannerBgUrl = state.cfg.bgImageUrl || '';
         state.data.bannerBgOpacity = state.cfg.bgOpacity;
@@ -881,6 +901,7 @@
 
     byId('btnClearBg').addEventListener('click', function(){
       state.cfg.bgImageUrl = '';
+      // Necháme priehľadnosť bez zmeny; alebo by sa dalo aj nullovať, ale nemením fungujúce chovanie
       saveCfg(state.cfg);
       applyHeaderBackground();
       byId('bgUrl').value = '';
@@ -889,7 +910,7 @@
 
     byId('bgOpacity').addEventListener('input', function(){
       const v = Math.max(0, Math.min(1, Number(this.value)/100));
-      state.cfg.bgOpacity = v;
+      state.cfg.bgOpacity = v; // do local state (neserializujeme hneď, až pri Uložit nastavení)
       applyHeaderBackground();
     });
 
@@ -920,10 +941,10 @@
       alert('Uložený token smazán.');
     });
 
-    // --- BOOT + OPRAVA PRE MOBILY: obnova po návrate z bfcache ---
+    // BOOT + obnova po návrate z bfcache
     let appBooted = false;
     async function init(){
-      if(appBooted) return; // ochrana proti duplicitnému bindu
+      if(appBooted) return;
       appBooted = true;
 
       state.admin.logged = sessionStorage.getItem(SS_ADMIN)==='1';
@@ -950,15 +971,11 @@
     }
     document.addEventListener('DOMContentLoaded', init);
 
-    // Dôležité: pri návrate z pozadia/bfcache
-    window.addEventListener('pageshow', function(e){
-      // e.persisted = true pri bfcache; na niektorých Androidoch môže byť false, napriek obnoveniu z cache
+    window.addEventListener('pageshow', function(){
       applyHeaderBackground();
-      // ak by bol obsah prázdny, rýchly re-render + revalidácia
       if(!byId('cardsContainer').children.length){
         renderCards();
       }
-      // jemná revalidácia dát (načítanie obrázkov/JSON po prebdení procesu)
       setTimeout(function(){ fetchData(); }, 80);
     });
   </script>
