@@ -1,36 +1,6 @@
 {
   "winemakers": [
     {
-      "id": "winemaker_motnncmajxzp13",
-      "name": "vinar1",
-      "cellar": "30",
-      "description": "test popis",
-      "photoUrl": "https://raw.githubusercontent.com/sedivmiroslav-del/Den-Vinaru-2026-Petrov/main/assets/uploads/petrov1-1778047625904.png",
-      "wines": [
-        {
-          "id": "wine_mou0tgvm2xi2u5",
-          "variety": "MM",
-          "year": "2025",
-          "price": "150",
-          "labelColor": "yellow"
-        },
-        {
-          "id": "wine_mou0tgvm65jlm8",
-          "variety": "rb",
-          "year": "2000",
-          "price": "100",
-          "labelColor": "red"
-        },
-        {
-          "id": "wine_mou0tgvmu7igwc",
-          "variety": "rr",
-          "year": "2005",
-          "price": "200",
-          "labelColor": "pink"
-        }
-      ]
-    },
-    {
       "id": "winemaker_motolmgqp4bbcf",
       "name": "vinar2",
       "cellar": "40",
