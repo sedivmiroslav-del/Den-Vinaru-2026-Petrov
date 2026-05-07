@@ -483,7 +483,7 @@
             y += lines.length*14 + 20;
           }
 
-          const head=[[ safeTxt('Odrůda',fontLoaded), safeTxt('Ročník',fontLoaded), safe Txt('Cena (Kč)',fontLoaded), safeTxt('Moje poznámka',fontLoaded) ]];
+          const head=[[ safeTxt('Odrůda',fontLoaded), safeTxt('Ročník',fontLoaded), safeTxt('Cena (Kč)',fontLoaded), safeTxt('Moje poznámka',fontLoaded) ]];
           const body=(w.wines||[]).map(function(v,i){
             return [
               safeTxt(String(v.variety||''),fontLoaded),
