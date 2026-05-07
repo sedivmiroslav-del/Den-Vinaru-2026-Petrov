@@ -167,7 +167,6 @@
             <path fill="currentColor" d="M12 3a1 1 0 0 1 1 1v9.59l2.3-2.3a1 1 0 1 1 1.4 1.42l-4 4a1 1 0 0 1-1.4 0l-4-4a1 1 0 1 1 1.4-1.42l2.3 2.3V4a1 1 0 0 1 1-1ZM5 19a1 1 0 0 1 1-1h12a1 1 0 1 1 0 2H6a1 1 0 0 1-1-1Z"/>
           </svg>
         </button>
-        <!-- Ikona nastavení (ozubené kolo) pro admin modal -->
         <button id="btnGear" class="icon-btn" aria-label="Admin přihlášení" title="Nastavení / Admin">
           <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
             <path fill="currentColor" d="M19.14,12.94a7.82,7.82,0,0,0,.06-.94,7.82,7.82,0,0,0-.06-.94l2-1.55a.5.5,0,0,0,.12-.65l-1.9-3.29a.5.5,0,0,0-.6-.22l-2.35,1a7.3,7.3,0,0,0-1.63-.94l-.35-2.5A.5.5,0,0,0,13,2H11a.5.5,0,0,0-.5.42l-.35,2.5a7.3,7.3,0,0,0-1.63.94l-2.35-1a.5.5,0,0,0-.6.22L3.67,8.29a.5.5,0,0,0,.12.65l2,1.55a7.82,7.82,0,0,0-.06.94,7.82,7.82,0,0,0,.06.94l-2,1.55a.5.5,0,0,0-.12.65l1.9,3.29a.5.5,0,0,0,.6.22l2.35-1a7.3,7.3,0,0,0,1.63.94l.35,2.5A.5.5,0,0,0,11,22h2a.5.5,0,0,0,.5-.42l.35-2.5a7.3,7.3,0,0,0,1.63-.94l2.35,1a.5.5,0,0,0,.6-.22l1.9-3.29a.5.5,0,0,0-.12-.65Zm-7.14,2.56A3.5,3.5,0,1,1,15.5,12,3.5,3.5,0,0,1,12,15.5Z"/>
@@ -200,8 +199,6 @@
   </div>
 
   <main id="obsah">
-    <!-- Admin sekce -->
-
     <section id="settingsPanel" class="panel admin-only" aria-labelledby="settingsHeading">
       <h2 id="settingsHeading">Nastavení repozitáře</h2>
       <p class="muted">Hodnoty slouží ke čtení JSON pro všechna zařízení bez tokenu. Admin je může upravit.</p>
@@ -210,6 +207,7 @@
         <div><label for="cfgRepo">Repozitář</label><input id="cfgRepo" type="text" /></div>
         <div><label for="cfgBranch">Branch</label><input id="cfgBranch" type="text" value="main" /></div>
         <div><label for="cfgDataPath">Cesta k datům (JSON)</label><input id="cfgDataPath" type="text" value="data/winemakers.json" /></div>
+        <div><label for="cfgSitePath">Cesta k site (JSON)</label><input id="cfgSitePath" type="text" value="data/site.json" /></div>
         <div><label for="cfgImagesPath">Složka obrázků</label><input id="cfgImagesPath" type="text" value="assets/uploads" /></div>
       </div>
 
@@ -232,6 +230,8 @@
         </div>
         <div style="margin-top:10px; display:flex; gap:.5rem; flex-wrap:wrap">
           <button id="btnApplyBg" class="btn btn-primary" type="button">Použít pozadí v banneru</button>
+          <button id="btnSaveSharedBg" class="btn btn-soft" type="button">Uložit sdílený banner (GitHub)</button>
+          <button id="btnLoadSharedBg" class="btn btn-ghost" type="button">Načíst sdílený banner</button>
           <button id="btnClearBg" class="btn btn-ghost" type="button">Zrušit pozadí banneru</button>
         </div>
       </div>
@@ -327,6 +327,7 @@
       repo:'Den-Vinaru-2026-Petrov',
       branch:'main',
       dataPath:'data/winemakers.json',
+      sitePath:'data/site.json',
       imagesPath:'assets/uploads',
       bgImageUrl:'',
       bgOpacity:0.18
@@ -334,7 +335,13 @@
     function loadCfg(){ try{ return Object.assign({}, defaultConfig, (JSON.parse(localStorage.getItem(LS_CFG)||'{}')||{})); }catch(e){ return Object.assign({}, defaultConfig); } }
     function saveCfg(cfg){ localStorage.setItem(LS_CFG, JSON.stringify(cfg)); }
 
-    const state = { cfg: loadCfg(), data: {winemakers:[]}, admin: { logged:false, token:null }, currentId: null };
+    const state = {
+      cfg: loadCfg(),
+      data: {winemakers:[]},
+      site: { bgImageUrl:'', bgOpacity:0.18 },
+      admin: { logged:false, token:null },
+      currentId: null
+    };
 
     function hasToken(){ return Boolean(resolveToken()); }
     function resolveToken(){ return state.admin.token || sessionStorage.getItem(SS_PAT) || localStorage.getItem(LS_PAT) || null; }
@@ -346,6 +353,7 @@
       byId('adminStatus').textContent = isLogged ? 'Přihlášen' : 'Odhlášen';
       byId('btnSaveWinemaker').disabled = !isLogged;
       byId('btnDeleteWinemaker').disabled = !isLogged || !byId('existingSelect').value;
+      byId('btnSaveSharedBg').disabled = !isLogged;
     }
     function setAdminVisibility(){
       const v = state.admin.logged;
@@ -360,9 +368,10 @@
       byId('cfgRepo').value = state.cfg.repo || '';
       byId('cfgBranch').value = state.cfg.branch || 'main';
       byId('cfgDataPath').value = state.cfg.dataPath || 'data/winemakers.json';
+      byId('cfgSitePath').value = state.cfg.sitePath || 'data/site.json';
       byId('cfgImagesPath').value = state.cfg.imagesPath || 'assets/uploads';
-      byId('bgUrl').value = state.cfg.bgImageUrl || '';
-      byId('bgOpacity').value = Math.round((Number(state.cfg.bgOpacity||0.18))*100);
+      byId('bgUrl').value = state.cfg.bgImageUrl || state.site.bgImageUrl || '';
+      byId('bgOpacity').value = Math.round(100 * (Number(state.cfg.bgOpacity ?? state.site.bgOpacity ?? 0.18)));
       applyHeaderBackground();
     }
     function readCfgFromForm(){
@@ -370,6 +379,7 @@
       state.cfg.repo = byId('cfgRepo').value.trim() || defaultConfig.repo;
       state.cfg.branch = byId('cfgBranch').value.trim() || 'main';
       state.cfg.dataPath = byId('cfgDataPath').value.trim() || defaultConfig.dataPath;
+      state.cfg.sitePath = byId('cfgSitePath').value.trim() || defaultConfig.sitePath;
       state.cfg.imagesPath = byId('cfgImagesPath').value.trim() || defaultConfig.imagesPath;
       state.cfg.bgImageUrl = byId('bgUrl').value.trim() || '';
       state.cfg.bgOpacity = Math.max(0, Math.min(1, Number(byId('bgOpacity').value)/100));
@@ -379,15 +389,20 @@
 
     function applyHeaderBackground(){
       const header = document.querySelector('header.header');
-      const url = state.cfg.bgImageUrl ? 'url(\"'+state.cfg.bgImageUrl.replace(/\"/g,'%22')+'\")' : 'none';
-      const op = (typeof state.cfg.bgOpacity==='number' ? state.cfg.bgOpacity : 0.18);
+      // precedence: local cfg if set, else shared site
+      const chosenUrl = (state.cfg.bgImageUrl && state.cfg.bgImageUrl.trim()) ? state.cfg.bgImageUrl : (state.site.bgImageUrl || '');
+      const chosenOp = (typeof state.cfg.bgOpacity === 'number' ? state.cfg.bgOpacity : (typeof state.site.bgOpacity === 'number' ? state.site.bgOpacity : 0.18));
+      const url = chosenUrl ? 'url(\"'+chosenUrl.replace(/\"/g,'%22')+'\")' : 'none';
       header.style.setProperty('--header-bg-url', url);
-      header.style.setProperty('--header-bg-opacity', String(op));
+      header.style.setProperty('--header-bg-opacity', String(chosenOp));
     }
 
-    function rawDataUrl(){ return 'https://raw.githubusercontent.com/'+state.cfg.owner+'/'+state.cfg.repo+'/'+state.cfg.branch+'/'+state.cfg.dataPath; }
+    function rawUrl(path){ return 'https://raw.githubusercontent.com/'+state.cfg.owner+'/'+state.cfg.repo+'/'+state.cfg.branch+'/'+path.replace(/^\/+/,''); }
 
-    // FIX: správne kódovanie ciest pre GitHub Contents API (encodujú sa len segmenty, nie lomítka)
+    function rawDataUrl(){ return rawUrl(state.cfg.dataPath); }
+    function rawSiteUrl(){ return rawUrl(state.cfg.sitePath); }
+
+    // FIX: správne kódovanie ciest pre GitHub Contents API (encodujú sa len segmenty)
     function apiContentUrl(path){
       const cleaned = String(path||'').replace(/^\/+|\/+$/g,'');
       const segs = cleaned.split('/').map(function(s){ return encodeURIComponent(s); }).join('/');
@@ -403,6 +418,35 @@
       }catch(e){ console.error(e); state.data={winemakers:[]}; }
       renderCards();
       refreshExistingSelect();
+    }
+
+    async function fetchSite(){
+      try{
+        const res = await fetch(rawSiteUrl(), {cache:'no-store'});
+        if(res.status===404){
+          state.site = { bgImageUrl:'', bgOpacity:0.18 };
+        }else if(!res.ok){
+          throw new Error('HTTP '+res.status);
+        }else{
+          const j = await res.json();
+          state.site = {
+            bgImageUrl: typeof j.bgImageUrl==='string' ? j.bgImageUrl : '',
+            bgOpacity: typeof j.bgOpacity==='number' ? Math.max(0,Math.min(1,j.bgOpacity)) : 0.18
+          };
+        }
+      }catch(e){
+        console.error('fetchSite fail', e);
+        state.site = { bgImageUrl:'', bgOpacity:0.18 };
+      }
+      // ak lokálne nie je nič, použijeme shared
+      if(!state.cfg.bgImageUrl){
+        applyHeaderBackground();
+      }
+      // doplniť do formulára (neprepíše lokálne URL, iba vyplní ak je prázdne)
+      if(!byId('bgUrl').value.trim()) byId('bgUrl').value = state.site.bgImageUrl || '';
+      if(!state.cfg.bgImageUrl){
+        byId('bgOpacity').value = Math.round(100*(typeof state.site.bgOpacity==='number'? state.site.bgOpacity : 0.18));
+      }
     }
 
     function abToB64(buf){ var bin=''; var bytes=new Uint8Array(buf); for(var i=0;i<bytes.byteLength;i++) bin+=String.fromCharCode(bytes[i]); return btoa(bin); }
@@ -468,7 +512,7 @@
             y += lines.length*14 + 20;
           }
 
-          const head=[[ safeTxt('Odrůda',fontLoaded), safeTxt('Ročník',fontLoaded), safeTxt('Cena (Kč)',fontLoaded), safeTxt('Moje poznámka',fontLoaded) ]];
+          const head=[[ safeTxt('Odrůda',fontLoaded), safeTxt('Ročník',fontLoaded), safe Txt('Cena (Kč)',fontLoaded), safeTxt('Moje poznámka',fontLoaded) ]];
           const body=(w.wines||[]).map(function(v,i){
             return [
               safeTxt(String(v.variety||''),fontLoaded),
@@ -574,8 +618,8 @@
       const bytes=new Uint8Array(buf); var bin=''; for(let i=0;i<bytes.byteLength;i++) bin+=String.fromCharCode(bytes[i]);
       const b64 = btoa(bin);
       await putFileBase64(path, b64, 'upload image '+filename);
-      const repoBase = 'https://raw.githubusercontent.com/'+state.cfg.owner+'/'+state.cfg.repo+'/'+state.cfg.branch+'/';
-      return repoBase + path;
+      const repoBase = rawUrl('');
+      return repoBase + path.replace(/^\/+/,'');
     }
 
     async function uploadBgIfAny(file){
@@ -590,8 +634,8 @@
       const bytes=new Uint8Array(buf); var bin=''; for(let i=0;i<bytes.byteLength;i++) bin+=String.fromCharCode(bytes[i]);
       const b64 = btoa(bin);
       await putFileBase64(path, b64, 'upload background '+filename);
-      const repoBase = 'https://raw.githubusercontent.com/'+state.cfg.owner+'/'+state.cfg.repo+'/'+state.cfg.branch+'/';
-      return repoBase + path;
+      const repoBase = rawUrl('');
+      return repoBase + path.replace(/^\/+/,'');
     }
 
     async function persistDataIfPossible(message){
@@ -766,7 +810,7 @@
       const j = await r.json(); return j.sha || null;
     }
 
-    // FIX: robustný PUT – ak nastane 409/422, znova načíta SHA a skúsí to ešte raz s SHA
+    // robustný PUT – ak nastane 409/422, znova načíta SHA a skúsí to ešte raz
     async function putFileBase64(path, contentBase64, message){
       const tok = resolveToken(); if(!tok) throw new Error('Chybí token (PAT).');
       const url = apiContentUrl(path);
@@ -784,7 +828,6 @@
 
       let res = await doPut(bodyObj);
       if(res.status===409 || res.status===422){
-        // re-fetch latest sha and retry once
         sha = await getFileSha(path);
         const retryBody = Object.assign({}, bodyObj, { sha: sha || undefined });
         res = await doPut(retryBody);
@@ -800,6 +843,35 @@
       const text = JSON.stringify(obj, null, 2);
       const b64 = btoa(unescape(encodeURIComponent(text)));
       return putFileBase64(path, b64, message||'update json');
+    }
+
+    // ========= Sdílený banner (site.json) =========
+    async function saveSharedBanner(){
+      if(!hasToken()){ alert('Chybí token – nelze uložit sdílený banner do GitHubu.'); return; }
+      const payload = {
+        bgImageUrl: byId('bgUrl').value.trim(),
+        bgOpacity: Math.max(0, Math.min(1, Number(byId('bgOpacity').value)/100))
+      };
+      await putJson(state.cfg.sitePath, payload, 'update shared banner');
+      state.site = payload;
+      // Pokud lokální cfg nemá přebití, hneď sa prejaví
+      if(!state.cfg.bgImageUrl){
+        applyHeaderBackground();
+      }
+      alert('Sdílený banner uložen do '+state.cfg.sitePath+'. Ostatní zařízení si jej načtou z raw.githubusercontent.com.');
+    }
+
+    async function loadSharedBanner(){
+      await fetchSite();
+      // prevezmeme hodnoty zo shared aj do formulára
+      byId('bgUrl').value = state.site.bgImageUrl || '';
+      byId('bgOpacity').value = Math.round(100*(typeof state.site.bgOpacity==='number'? state.site.bgOpacity : 0.18));
+      // a ak lokálne neprebíjame, prejaví sa hneď
+      if(!state.cfg.bgImageUrl){
+        applyHeaderBackground();
+      }else{
+        alert('Sdílený banner načten. Pro jeho použití na tomto zařízení smažte lokální URL (tlačítko Zrušit pozadí) nebo Uložit nastavení prázdné.');
+      }
     }
 
     // ========= Handlery UI =========
@@ -854,15 +926,18 @@
       state.cfg.bgOpacity = Math.max(0, Math.min(1, Number(byId('bgOpacity').value)/100));
       saveCfg(state.cfg);
       applyHeaderBackground();
-      alert('Pozadí horního banneru nastaveno.');
+      alert('Pozadí horního banneru nastaveno lokálně.');
     });
+
+    byId('btnSaveSharedBg').addEventListener('click', saveSharedBanner);
+    byId('btnLoadSharedBg').addEventListener('click', loadSharedBanner);
 
     byId('btnClearBg').addEventListener('click', function(){
       state.cfg.bgImageUrl = '';
       saveCfg(state.cfg);
       applyHeaderBackground();
-      byId('bgUrl').value = '';
-      alert('Pozadí banneru zrušeno.');
+      byId('bgUrl').value = state.site.bgImageUrl || '';
+      alert('Lokální pozadí banneru zrušeno. Pokud existuje sdílený banner, ten se teď použije.');
     });
 
     byId('bgOpacity').addEventListener('input', function(){
@@ -902,6 +977,8 @@
       state.admin.logged = sessionStorage.getItem(SS_ADMIN)==='1';
       state.admin.token  = sessionStorage.getItem(SS_PAT) || localStorage.getItem(LS_PAT) || null;
       setAdminVisibility();
+      // Načti shared site nastavenia vopred
+      await fetchSite();
       applyCfgToForm();
       refreshAuthUI();
 
