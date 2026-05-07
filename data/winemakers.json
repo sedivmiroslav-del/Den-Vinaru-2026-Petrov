@@ -59,6 +59,36 @@
           "labelColor": "red"
         }
       ]
+    },
+    {
+      "id": "win_mov1hlw5ww8211",
+      "name": "Vinařství Tomanovský",
+      "cellar": "11",
+      "description": "popis Tomanovský",
+      "photoUrl": "https://raw.githubusercontent.com/sedivmiroslav-del/Den-Vinaru-2026-Petrov/main/assets/uploads/Foto_1.jpg",
+      "wines": [
+        {
+          "id": "wine_mov1hlw4qoyrki",
+          "variety": "Hibernal",
+          "year": "2025",
+          "price": "200",
+          "labelColor": "yellow"
+        },
+        {
+          "id": "wine_mov1hlw4n8uwj4",
+          "variety": "Frankovka",
+          "year": "2023",
+          "price": "350",
+          "labelColor": "red"
+        },
+        {
+          "id": "wine_mov1hlw5hfa4uh",
+          "variety": "Rosé",
+          "year": "2025",
+          "price": "250",
+          "labelColor": "pink"
+        }
+      ]
     }
   ],
   "site": {
