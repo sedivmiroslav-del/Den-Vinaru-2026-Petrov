@@ -89,28 +89,28 @@
       "photoUrl": "https://raw.githubusercontent.com/sedivmiroslav-del/Den-Vinaru-2026-Petrov/main/assets/uploads/Snímka_obrazovky_2026-05-07_072400.png",
       "wines": [
         {
-          "id": "wine_mov9l4je7db79z",
+          "id": "wine_mov9whfy9hx7b5",
           "variety": "Hibernal",
           "year": "2025",
           "price": "200",
           "labelColor": "yellow"
         },
         {
-          "id": "wine_mov9l4jelztr7o",
+          "id": "wine_mov9whfyrjmusc",
           "variety": "Frankovka",
           "year": "2023",
           "price": "350",
           "labelColor": "red"
         },
         {
-          "id": "wine_mov9l4jedsjrl4",
+          "id": "wine_mov9whfyldxb52",
           "variety": "Rosé",
           "year": "2025",
           "price": "250",
           "labelColor": "pink"
         },
         {
-          "id": "wine_mov9l4je5gejrh",
+          "id": "wine_mov9whfyu8ksft",
           "variety": "Veltlín zelený",
           "year": "2023",
           "price": "350",
@@ -123,6 +123,6 @@
     "bgImageUrl": "https://raw.githubusercontent.com/sedivmiroslav-del/Den-Vinaru-2026-Petrov/main/assets/uploads/bg_1778139601171_img-oobci-min.jpg",
     "bgOpacity": 0.88
   },
-  "bannerBgUrl": "https://raw.githubusercontent.com/sedivmiroslav-del/Den-Vinaru-2026-Petrov/main/assets/uploads/bg_1778145390724_Snímka_obrazovky_2026-05-07_110059.png",
-  "bannerBgOpacity": 0.93
+  "bannerBgUrl": "https://raw.githubusercontent.com/sedivmiroslav-del/Den-Vinaru-2026-Petrov/main/assets/uploads/bg_1778144489590_Snímka_obrazovky_2026-05-07_110059.png",
+  "bannerBgOpacity": 1
 }
