@@ -5,24 +5,24 @@
       "name": "Vinařství Klásek",
       "cellar": "30",
       "description": "Popis Klásek",
-      "photoUrl": "https://raw.githubusercontent.com/sedivmiroslav-del/Den-Vinaru-2026-Petrov/main/assets/uploads/Snímka_obrazovky_2026-05-07_061031.png",
+      "photoUrl": "https://raw.githubusercontent.com/sedivmiroslav-del/Den-Vinaru-2026-Petrov/main/assets/uploads/Foto_17.jpg",
       "wines": [
         {
-          "id": "wine_mouz645dvz77pp",
+          "id": "wine_mov1d5lhv4nw0f",
           "variety": "Frašták",
           "year": "2025",
           "price": "250",
           "labelColor": "yellow"
         },
         {
-          "id": "wine_mouz645dwtq30a",
+          "id": "wine_mov1d5lhlv79rd",
           "variety": "Frankovka",
           "year": "2023",
           "price": "350",
           "labelColor": "red"
         },
         {
-          "id": "wine_mouz645djxale7",
+          "id": "wine_mov1d5lhjlc9o5",
           "variety": "Rosé",
           "year": "2025",
           "price": "200",
