@@ -379,7 +379,6 @@
 
     function applyHeaderBackground(){
       const header = document.querySelector('header.header');
-      // Ak lokálna hodnota nie je, použijeme zdieľanú z data JSON
       const sharedUrl = (state.data && state.data.bannerBgUrl) ? String(state.data.bannerBgUrl) : '';
       const sharedOp  = (state.data && typeof state.data.bannerBgOpacity==='number') ? state.data.bannerBgOpacity : null;
       const urlStr = state.cfg.bgImageUrl || sharedUrl || '';
@@ -391,7 +390,7 @@
 
     function rawDataUrl(){ return 'https://raw.githubusercontent.com/'+state.cfg.owner+'/'+state.cfg.repo+'/'+state.cfg.branch+'/'+state.cfg.dataPath; }
 
-    // FIX: správne kódovanie ciest – encodujú sa len segmenty
+    // Správne kódovanie segmentov pre Contents API
     function apiContentUrl(path){
       const cleaned = String(path||'').replace(/^\/+|\/+$/g,'');
       const segs = cleaned.split('/').map(function(s){ return encodeURIComponent(s); }).join('/');
@@ -405,7 +404,6 @@
         else if(!res.ok){ throw new Error('HTTP '+res.status); }
         else { const json = await res.json(); state.data = (json && Array.isArray(json.winemakers)) ? json : {winemakers:[]}; }
       }catch(e){ console.error(e); state.data={winemakers:[]}; }
-      // Po načítaní dát aplikuj prípadný zdieľaný banner (ak lokálny nie je nastavený)
       applyHeaderBackground();
       renderCards();
       refreshExistingSelect();
@@ -676,7 +674,17 @@
         const cover=document.createElement('div'); cover.className='cover';
         if(w.photoUrl && String(w.photoUrl).trim()){
           const img=new Image(); img.alt='Foto vinaře'; img.src=w.photoUrl; img.loading='lazy';
-          img.onerror=function(){ cover.style.background='#e9eef2'; };
+          // Retry pri chybe (napr. po návrate z pozadia)
+          img.onerror=function(){
+            if(!img.dataset._retried){
+              img.dataset._retried='1';
+              const u = new URL(w.photoUrl, location.href);
+              u.searchParams.set('_t', Date.now().toString());
+              img.src = u.toString();
+            }else{
+              cover.style.background='#e9eef2';
+            }
+          };
           cover.appendChild(img);
         }else{
           cover.style.background='#e9eef2';
@@ -851,13 +859,11 @@
           if(uploadedUrl){ byId('bgUrl').value = uploadedUrl; }
         }catch(err){ console.error(err); alert('Upload pozadí selhal: '+err.message); }
       }
-      // Lokálne nastavenie (pôvodné správanie)
       state.cfg.bgImageUrl = byId('bgUrl').value.trim();
       state.cfg.bgOpacity = Math.max(0, Math.min(1, Number(byId('bgOpacity').value)/100));
       saveCfg(state.cfg);
       applyHeaderBackground();
 
-      // NOVÉ: ak máme token, zapíšeme banner aj do data JSON, aby sa zdieľal na iných zariadeniach
       if(hasToken()){
         state.data.bannerBgUrl = state.cfg.bgImageUrl || '';
         state.data.bannerBgOpacity = state.cfg.bgOpacity;
@@ -869,7 +875,6 @@
           alert('Sdílené uložení banneru selhalo: '+e.message);
         }
       }else{
-        // Bez tokenu ostáva lokálne
         alert('Pozadí horního banneru nastaveno lokálně. Pro sdílení na ostatní zařízení uložte s GitHub tokenem.');
       }
     });
@@ -915,7 +920,12 @@
       alert('Uložený token smazán.');
     });
 
+    // --- BOOT + OPRAVA PRE MOBILY: obnova po návrate z bfcache ---
+    let appBooted = false;
     async function init(){
+      if(appBooted) return; // ochrana proti duplicitnému bindu
+      appBooted = true;
+
       state.admin.logged = sessionStorage.getItem(SS_ADMIN)==='1';
       state.admin.token  = sessionStorage.getItem(SS_PAT) || localStorage.getItem(LS_PAT) || null;
       setAdminVisibility();
@@ -939,6 +949,18 @@
       showCards();
     }
     document.addEventListener('DOMContentLoaded', init);
+
+    // Dôležité: pri návrate z pozadia/bfcache
+    window.addEventListener('pageshow', function(e){
+      // e.persisted = true pri bfcache; na niektorých Androidoch môže byť false, napriek obnoveniu z cache
+      applyHeaderBackground();
+      // ak by bol obsah prázdny, rýchly re-render + revalidácia
+      if(!byId('cardsContainer').children.length){
+        renderCards();
+      }
+      // jemná revalidácia dát (načítanie obrázkov/JSON po prebdení procesu)
+      setTimeout(function(){ fetchData(); }, 80);
+    });
   </script>
 </body>
 </html>
