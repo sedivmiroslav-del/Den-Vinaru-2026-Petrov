@@ -84,7 +84,7 @@
 
     .btn{ border:1px solid transparent; border-radius:999px; padding:.7rem 1rem; cursor:pointer; font-weight:800; transition:transform .05s, filter .15s, background-color .15s, box-shadow .15s; display:inline-flex; align-items:center; gap:.5rem; }
     .btn:active{ transform: translateY(1px) }
-    .btn-primary{ background:var(--blue); color:var(--white); box-shadow: var(--shadow-soft); }
+    .btn-primary{ background:var(--blue); color:var(--white); box-shadow:var(--shadow-soft); }
     .btn-primary:hover{ filter:brightness(.98) }
     .btn-ghost{ background: var(--white); color: var(--black); border-color: var(--border) }
     .btn-soft{ background: var(--stone); color: var(--black) }
@@ -386,7 +386,13 @@
     }
 
     function rawDataUrl(){ return 'https://raw.githubusercontent.com/'+state.cfg.owner+'/'+state.cfg.repo+'/'+state.cfg.branch+'/'+state.cfg.dataPath; }
-    function apiContentUrl(path){ return 'https://api.github.com/repos/'+state.cfg.owner+'/'+state.cfg.repo+'/contents/'+encodeURIComponent(path); }
+
+    // FIX: správne kódovanie ciest pre GitHub Contents API (encodujú sa len segmenty, nie lomítka)
+    function apiContentUrl(path){
+      const cleaned = String(path||'').replace(/^\/+|\/+$/g,'');
+      const segs = cleaned.split('/').map(function(s){ return encodeURIComponent(s); }).join('/');
+      return 'https://api.github.com/repos/'+state.cfg.owner+'/'+state.cfg.repo+'/contents/'+segs;
+    }
 
     async function fetchData(){
       try{
@@ -754,18 +760,42 @@
       const url = apiContentUrl(path) + '?ref=' + encodeURIComponent(state.cfg.branch||'main');
       const headers = { 'Accept':'application/vnd.github+json' };
       const tok = resolveToken(); if(tok) headers['Authorization'] = 'Bearer ' + tok;
-      const r = await fetch(url,{headers:headers}); if(r.status===404) return null;
+      const r = await fetch(url,{headers:headers});
+      if(r.status===404) return null;
       if(!r.ok) throw new Error('GitHub GET sha error '+r.status);
       const j = await r.json(); return j.sha || null;
     }
+
+    // FIX: robustný PUT – ak nastane 409/422, znova načíta SHA a skúsí to ešte raz s SHA
     async function putFileBase64(path, contentBase64, message){
       const tok = resolveToken(); if(!tok) throw new Error('Chybí token (PAT).');
-      const url = apiContentUrl(path); const sha = await getFileSha(path);
-      const body = { message: message||'update via app', content: contentBase64, branch: state.cfg.branch||'main' }; if(sha) body.sha = sha;
-      const res = await fetch(url,{ method:'PUT', headers:{ 'Accept':'application/vnd.github+json','Authorization':'Bearer '+tok,'Content-Type':'application/json' }, body: JSON.stringify(body) });
-      if(!res.ok){ const txt=await res.text(); throw new Error('GitHub PUT '+res.status+': '+txt); }
+      const url = apiContentUrl(path);
+      let sha = await getFileSha(path);
+      const bodyObj = { message: message||'update via app', content: contentBase64, branch: state.cfg.branch||'main' };
+      if(sha) bodyObj.sha = sha;
+
+      const doPut = async (payload) => {
+        return fetch(url,{
+          method:'PUT',
+          headers:{ 'Accept':'application/vnd.github+json','Authorization':'Bearer '+tok,'Content-Type':'application/json' },
+          body: JSON.stringify(payload)
+        });
+      };
+
+      let res = await doPut(bodyObj);
+      if(res.status===409 || res.status===422){
+        // re-fetch latest sha and retry once
+        sha = await getFileSha(path);
+        const retryBody = Object.assign({}, bodyObj, { sha: sha || undefined });
+        res = await doPut(retryBody);
+      }
+      if(!res.ok){
+        const txt = await res.text();
+        throw new Error('GitHub PUT '+res.status+': '+txt);
+      }
       return res.json();
     }
+
     async function putJson(path, obj, message){
       const text = JSON.stringify(obj, null, 2);
       const b64 = btoa(unescape(encodeURIComponent(text)));
