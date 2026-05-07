@@ -29,6 +29,22 @@
           "labelColor": "pink"
         }
       ]
+    },
+    {
+      "id": "win_mouz7dodcx00tm",
+      "name": "Vinařství Tomanovský",
+      "cellar": "11",
+      "description": "popis Tomanovský",
+      "photoUrl": "https://raw.githubusercontent.com/sedivmiroslav-del/Den-Vinaru-2026-Petrov/main/assets/uploads/Snímka_obrazovky_2026-05-07_061004.png",
+      "wines": [
+        {
+          "id": "wine_mouz7lrgoix7vw",
+          "variety": "Rulandské bílé",
+          "year": "2025",
+          "price": "250",
+          "labelColor": "yellow"
+        }
+      ]
     }
   ]
 }
